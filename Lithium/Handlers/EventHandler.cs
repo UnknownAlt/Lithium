@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -32,6 +33,15 @@ namespace Lithium.Handlers
         {
             var application = await _client.GetApplicationInfoAsync();
             Log.Information($"Invite: https://discordapp.com/oauth2/authorize?client_id={application.Id}&scope=bot&permissions=2146958591");
+            DatabaseHandler.CheckDB(_client);
+            var dblist = DatabaseHandler.GetFullConfig();
+            foreach (var guild in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
+            {
+                DatabaseHandler.SaveGuild(new GuildModel.Guild
+                {
+                    GuildID = guild.Id
+                });
+            }
         }
 
         private static async Task _client_JoinedGuild(SocketGuild guild)

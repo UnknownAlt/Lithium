@@ -38,21 +38,28 @@ namespace Lithium.Commands
             }
         }
 
-        [Command("InitDB")]
-        [Summary("InitDB")]
-        [Remarks("Initialise the Database")]
-        public async Task IDB()
-        {
-            DatabaseHandler.InitDB(Context.Guild);
-
-        }
-
         [Command("GetDB")]
-        [Summary("GetDB")]
+        [Summary("GetDB <serverID>")]
         [Remarks("Get current server from the Database")]
-        public async Task GetFromDB()
+        public async Task GetFromDB(ulong guildID = 0)
         {
-            var gobj = DatabaseHandler.GetGuild(Context.Guild);
+            IGuild guild;
+            if (guildID == 0)
+            {
+                guild = Context.Guild;
+            }
+            else
+            {
+                var chkguild = Context.Client.GetGuild(guildID);
+                if (chkguild == null)
+                {
+                    await ReplyAsync("Error, Guild not found!");
+                    return;
+                }
+
+                guild = chkguild;
+            }
+            var gobj = DatabaseHandler.GetGuild(guild);
             await ReplyAsync($"{gobj?.GuildID.ToString() ?? "N/A"}");
         }
 

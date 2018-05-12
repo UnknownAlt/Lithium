@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Lithium.Models
 {
@@ -11,9 +11,11 @@ namespace Lithium.Models
         {
             public ulong GuildID { get; set; }
             public Moderation ModerationSetup { get; set; } = new Moderation();
-            public Settings settings { get; set; } = new Settings();
-            public autochannels AutoMessageChannels { get; set; } = new autochannels();
+            public settings Settings { get; set; } = new settings();
+            public autochannels AutoMessage { get; set; } = new autochannels();
             public antispams Antispam { get; set; } = new antispams();
+
+
             public class Moderation
             {
                 public List<ulong> ModeratorRoles { get; set; } = new List<ulong>();
@@ -52,18 +54,50 @@ namespace Lithium.Models
                 }
             }
 
-            public class Settings
+            public class settings
             {
                 public string Prefix { get; set; } = Config.Load().DefaultPrefix;
             }
 
             public class autochannels
             {
-                public bool enabled { get; set; } = false;
-                public ulong channelID { get; set; }
-                public int messages { get; set; } = 0;
-                public string automessage { get; set; } = "PassiveBOT";
-                public int sendlimit { get; set; } = 50;
+                public List<autochannel> AutoChannels { get; set; } = new List<autochannel>();
+                public class autochannel
+                {
+                    public acsettings Settings { get; set; } = new acsettings();
+                    public class acsettings
+                    {
+                        public bool enabled { get; set; } = false;
+                        public int msgcount { get; set; } = 0;
+                        public int sendlimit { get; set; } = 50;
+                    }
+
+                    public bool enabled { get; set; } = false;
+                    public ulong channelID { get; set; }
+
+                    public string title { get; set; } = "AutoMessage";
+                    public string automessage { get; set; } = "PassiveBOT";
+                    public string ImgURL { get; set; } = null;
+                }
+            }
+
+            public tags Tags { get; set; } = new tags();
+            public class tags
+            {
+                public tsettings Settings { get; set; } = new tsettings();
+                public class tsettings
+                {
+                    public bool AllowAllUsersToCreate { get; set; } = false;
+                }
+                public List<tag> Tags = new List<tag>();
+                public class tag
+                {
+                    public string name { get; set; }
+                    public string content { get; set; }
+                    public string imgURL { get; set; } = null;
+                    public int uses { get; set; } = 0;
+                    public ulong ownerID { get; set; }
+                }
             }
 
             public class antispams
@@ -106,8 +140,6 @@ namespace Lithium.Models
                     public List<BlacklistWords> BlacklistWordSet { get; set; } = new List<BlacklistWords>();
                     public string DefaultBlacklistMessage { get; set; } = "";
 
-                    //toggle wether or not to filter diatrics and replace certain numbers with their letter counterparts etc.
-                    public bool BlacklistBetterFilter { get; set; } = false;
                     public bool WarnOnDetection { get; set; } = false;
 
                     public class BlacklistWords
