@@ -15,7 +15,6 @@ namespace Lithium.Models
             public autochannels AutoMessage { get; set; } = new autochannels();
             public antispams Antispam { get; set; } = new antispams();
 
-
             public class Moderation
             {
                 public List<ulong> ModeratorRoles { get; set; } = new List<ulong>();
@@ -23,6 +22,32 @@ namespace Lithium.Models
                 public List<kick> Kicks { get; set; } = new List<kick>();
                 public List<warn> Warns { get; set; } = new List<warn>();
                 public List<ban> Bans { get; set; } = new List<ban>();
+                public msettings Settings { get; set; } = new msettings();
+                public class msettings
+                {
+                    //Warnings before doing a specific action.
+                    public int warnlimit { get; set; } = int.MaxValue;
+                    public warnLimitAction WarnLimitAction { get; set; } = warnLimitAction.NoAction;
+                    public enum warnLimitAction
+                    {
+                        NoAction,
+                        Kick,
+                        Ban
+                    }
+                }
+
+                public class muted
+                {
+                    public ulong mutedrole { get; set; } = 0;
+                    public List<muteduser> MutedUsers { get; set; } = new List<muteduser>();
+                    public class muteduser
+                    {
+                        public ulong userid { get; set; }
+                        public bool expired { get; set; } = false;
+                        public DateTime expiry { get; set; } = DateTime.UtcNow;
+                    }
+                }
+
                 public class kick
                 {
                     public ulong userID { get; set; }
@@ -50,13 +75,20 @@ namespace Lithium.Models
                     public string modname { get; set; }
                     public ulong modID { get; set; }
 
-                    public DateTime Expires { get; set; } = DateTime.MaxValue;
+                    public bool Expires { get; set; } = false;
+                    public DateTime ExpiryDate { get; set; } = DateTime.MaxValue;
                 }
             }
 
             public class settings
             {
                 public string Prefix { get; set; } = Config.Load().DefaultPrefix;
+                public visibilityconfig DisabledParts { get; set; } = new visibilityconfig();
+                public class visibilityconfig
+                {
+                    public List<string> BlacklistedModules { get; set; } = new List<string>();
+                    public List<string> BlacklistedCommands { get; set; } = new List<string>();
+                }
             }
 
             public class autochannels
@@ -72,7 +104,6 @@ namespace Lithium.Models
                         public int sendlimit { get; set; } = 50;
                     }
 
-                    public bool enabled { get; set; } = false;
                     public ulong channelID { get; set; }
 
                     public string title { get; set; } = "AutoMessage";
