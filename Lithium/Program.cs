@@ -5,14 +5,16 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Lithium.Models;
+using Lithium.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using EventHandler = Lithium.Handlers.EventHandler;
 
 namespace Lithium
 {
     public class Program
     {
-        private CommandHandler _handler;
+        private EventHandler _handler;
         public DiscordSocketClient Client;
 
         public static void Main(string[] args)
@@ -24,22 +26,19 @@ namespace Lithium
         {
             Console.Title = "Lithium Discord Bot by Passive";
 
-
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "setup/")))
                 Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "setup/"));
 
             Config.CheckExistence();
-            var token = Config.Load().Token;
-            Console.Title = Config.Load().BotName;
-
             Client = new DiscordSocketClient(new DiscordSocketConfig
             {
-                LogLevel = LogSeverity.Info
+                LogLevel = LogSeverity.Info,
+                MessageCacheSize = 50
             });
 
             try
             {
-                await Client.LoginAsync(TokenType.Bot, token);
+                await Client.LoginAsync(TokenType.Bot, Config.Load().BotToken);
                 await Client.StartAsync();
             }
             catch (Exception e)
@@ -53,7 +52,7 @@ namespace Lithium
 
 
             var serviceProvider = ConfigureServices();
-            _handler = new CommandHandler(serviceProvider);
+            _handler = new EventHandler(serviceProvider);
             await _handler.ConfigureAsync();
 
             Client.Log += Client_Log;

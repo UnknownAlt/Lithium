@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Lithium.Services;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -12,10 +13,8 @@ namespace Lithium.Models
 
         public static string ConfigPath = Path.Combine(AppContext.BaseDirectory, "setup/config.json");
 
-        public string BotName { get; set; } = "Discord bot base by PassiveModding";
-        public string Prefix { get; set; } = "=";
-        public string Token { get; set; } = "Token";
-        public string HomeInvite { get; set; } = "https://discord.gg/n2Vs38n";
+        public string DefaultPrefix { get; set; } = "=";
+        public string BotToken { get; set; } = "Token";
         public bool AutoRun { get; set; }
 
         public void Save(string dir = "setup/config.json")
@@ -68,19 +67,14 @@ namespace Lithium.Models
                 var cfg = new Config();
 
                 Logger.LogInfo(
-                    @"Please enter a name for your bot");
-                Console.Write("Name: ");
-                cfg.BotName = Console.ReadLine();
-
-                Logger.LogInfo(
                    @"Please enter a prefix for the bot eg. '+' (do not include the '' outside of the prefix)");
                 Console.Write("Prefix: ");
-                cfg.Prefix = Console.ReadLine();
+                cfg.DefaultPrefix = Console.ReadLine();
 
                 Log.Information(
                     @"After you input your token, a config will be generated at 'setup/config.json'");
                 Console.Write("Token: ");
-                cfg.Token = Console.ReadLine();
+                cfg.BotToken = Console.ReadLine();
 
                 Logger.LogInfo("Would you like to AutoRun the bot from now on? Y/N");
                 var type2 = Console.ReadKey();
@@ -93,8 +87,8 @@ namespace Lithium.Models
             }
 
             Logger.LogInfo("Config Loaded!");
-            Logger.LogInfo($"Prefix: {Load().Prefix}");
-            Logger.LogInfo($"Token Length: {Load().Token.Length} (should be 59)");
+            Logger.LogInfo($"Prefix: {Load().DefaultPrefix}");
+            Logger.LogInfo($"Token Length: {Load().BotToken.Length} (should be 59)");
             Logger.LogInfo($"Autorun: {Load().AutoRun}");
         }
     }

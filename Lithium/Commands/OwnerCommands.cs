@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Lithium.Handlers;
 
 namespace Lithium.Commands
 {
@@ -35,6 +36,24 @@ namespace Lithium.Commands
                 }
 
             }
+        }
+
+        [Command("InitDB")]
+        [Summary("InitDB")]
+        [Remarks("Initialise the Database")]
+        public async Task IDB()
+        {
+            DatabaseHandler.InitDB(Context.Guild);
+
+        }
+
+        [Command("GetDB")]
+        [Summary("GetDB")]
+        [Remarks("Get current server from the Database")]
+        public async Task GetFromDB()
+        {
+            var gobj = DatabaseHandler.GetGuild(Context.Guild);
+            await ReplyAsync($"{gobj?.GuildID.ToString() ?? "N/A"}");
         }
 
         [Command("Stats")]

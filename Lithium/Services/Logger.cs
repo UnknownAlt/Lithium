@@ -1,6 +1,6 @@
 ﻿using Serilog;
 
-namespace Lithium
+namespace Lithium.Services
 {
     public class Logger
     {

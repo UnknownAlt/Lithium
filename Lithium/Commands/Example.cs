@@ -28,7 +28,7 @@ namespace Lithium.Commands
                 Color = new Color(114, 137, 218),
                 Title = $"{Context.Client.CurrentUser.Username} Commands"
             };
-            var prefix = Config.Load().Prefix;
+            var prefix = Config.Load().DefaultPrefix;
             if (modulearg == null) //ShortHelp
             {
                 var modules = _service.Modules.Where(x => x.Commands.Count > 0).Select(x => new simplemoduleobj
