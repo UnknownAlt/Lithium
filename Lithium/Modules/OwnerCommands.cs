@@ -1,16 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Lithium.Discord.Contexts;
+using Lithium.Discord.Contexts.Paginator;
 
 namespace Lithium.Modules
 {
     [RequireOwner]
-    public class OwnerCommands : ModuleBase<SocketCommandContext>
+    public class OwnerCommands : Base
     {
+        
         [Command("SetGame")]
         [Summary("SetGame <game>")]
         [Remarks("Set the bot's Current Game.")]
@@ -24,7 +28,7 @@ namespace Lithium.Modules
             {
                 try
                 {
-                    await Context.Client.SetGameAsync(game);
+                    await Context.Socket.Client.SetGameAsync(game);
                     await ReplyAsync($"{Context.Client.CurrentUser.Username}'s game has been set to:\n" +
                                      $"{game}");
                 }
@@ -35,8 +39,33 @@ namespace Lithium.Modules
                 }
             }
         }
+        
 
+        [Command("Pages")]
+        [Summary("Pages")]
+        [Remarks("Paginator")]
+        public async Task Pages()
+        {
+            var pages = new List<PaginatedMessage.Page>
+            {
+                new PaginatedMessage.Page
+                {
+                    description = "1"
+                },
+                new PaginatedMessage.Page
+                {
+                    description = "2"
+                }
+            };
+            var gager = new PaginatedMessage
+            {
+                Title = "Pages",
+                Pages = pages
+            };
+            await PagedReplyAsync(gager);
+        }
 
+        
         [Command("Stats")]
         [Summary("Stats")]
         [Remarks("Display Bot Statistics")]
@@ -48,16 +77,17 @@ namespace Lithium.Modules
             var uptime = (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss");
 
             embed.AddField($"{Context.Client.CurrentUser.Username} Statistics",
-                $"Servers: {Context.Client.Guilds.Count}\n" +
-                $"Users: {Context.Client.Guilds.Select(x => x.Users.Count).Sum()}\n" +
-                $"Unique Users: {Context.Client.Guilds.SelectMany(x => x.Users.Select(y => y.Id)).Distinct().Count()}\n" +
-                $"Server Channels: {Context.Client.Guilds.Select(x => x.Channels.Count).Sum()}\n" +
-                $"DM Channels: {Context.Client.DMChannels.Count}\n\n" +
+                $"Servers: {Context.Socket.Client.Guilds.Count}\n" +
+                $"Users: {Context.Socket.Client.Guilds.Select(x => x.Users.Count).Sum()}\n" +
+                $"Unique Users: {Context.Socket.Client.Guilds.SelectMany(x => x.Users.Select(y => y.Id)).Distinct().Count()}\n" +
+                $"Server Channels: {Context.Socket.Client.Guilds.Select(x => x.Channels.Count).Sum()}\n" +
+                $"DM Channels: {Context.Socket.Client.DMChannels.Count}\n\n" +
                 $"Uptime: {uptime}\n" +
                 $"Heap Size: {heap}\n" +
                 $"Discord Version: {DiscordConfig.Version}");
 
             await ReplyAsync("", false, embed.Build());
         }
+        
     }
 }

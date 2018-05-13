@@ -165,7 +165,7 @@ namespace Lithium.Modules
             try
             {
                 await Context.Guild.AddBanAsync(user, 1, reason);
-                await ReplyAsync("User has been Banned and messages from the last 24 hours have been cleared");
+                await ReplyAsync("User has been Soft Banned and messages from the last 24 hours have been cleared");
                 Context.Server.Save();
                 await SendEmbedAsync(new EmbedBuilder
                 {
@@ -173,7 +173,8 @@ namespace Lithium.Modules
                     Description = $"User: {user.Username}#{user.Discriminator}\n" +
                                   $"UserID: {user.Id}\n" +
                                   $"Mod: {Context.User.Username}#{Context.User.Discriminator}\n" +
-                                  $"Mod ID: {Context.User.Id}\n\n" +
+                                  $"Mod ID: {Context.User.Id}\n" +
+                                  $"Expires After: {hours} hours\n\n" +
                                   "Reason:\n" +
                                   $"{reason ?? "N/A"}"
                 });

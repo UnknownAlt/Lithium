@@ -3,6 +3,7 @@ using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Preconditions;
+using Lithium.Handlers;
 
 namespace Lithium.Modules
 {

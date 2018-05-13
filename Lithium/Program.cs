@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Lithium.Discord.Contexts;
 using Lithium.Handlers;
 using Lithium.Models;
 using Lithium.Services;
@@ -78,6 +79,8 @@ namespace Lithium
                     Urls = new[] {DatabaseHandler.ServerURL}
                 }.Initialize())
                 .AddSingleton(new DatabaseHandler())
+                .AddSingleton(new TimerService(Client))
+                .AddSingleton(new InteractiveService(Client))
                 .AddSingleton(new CommandService(
                     new CommandServiceConfig
                     {

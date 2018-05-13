@@ -14,7 +14,7 @@ namespace Lithium.Handlers
     {
         //This is out configuration for the database handler, DBName is the database you created in RavenDB when setting it up
         //ServerURL is the URL to the local server. NOTE: This bot has not been configured to use public addresses
-        public static string DBName { get; set; } = "PassiveBOT";
+        public static string DBName { get; set; } = "Lithium";
         public static string ServerURL { get; set; } = "http://127.0.0.1:8080";
 
         public static void CheckDB(DiscordSocketClient client)

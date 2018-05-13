@@ -17,6 +17,7 @@ namespace Lithium.Handlers
     {
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
+        private readonly TimerService _timerservice;
         public IServiceProvider Provider;
 
         public EventHandler(IServiceProvider provider)
@@ -24,6 +25,7 @@ namespace Lithium.Handlers
             Provider = provider;
             _client = Provider.GetService<DiscordSocketClient>();
             _commands = new CommandService();
+            _timerservice = new TimerService(_client);
 
             _client.MessageReceived += DoCommand;
             _client.JoinedGuild += _client_JoinedGuild;
@@ -42,6 +44,7 @@ namespace Lithium.Handlers
                 {
                     DatabaseHandler.AddGuild(guild.Id);
                 }
+                _timerservice.Restart();
             }
             catch (Exception e)
             {
