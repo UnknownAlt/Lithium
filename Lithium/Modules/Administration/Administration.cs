@@ -27,6 +27,35 @@ namespace Lithium.Modules.Administration
             Context.Server.ModerationSetup.Mutes.mutedrole = role.Id;
             Context.Server.Save();
             await ReplyAsync($"Success! Users will be given the role {role.Name} upon being muted.");
+
+            string perms;
+            var channels = "";
+            try
+            {
+                var unverifiedPerms =
+                    new OverwritePermissions(sendMessages: PermValue.Deny, addReactions: PermValue.Deny);
+                foreach (var channel in Context.Socket.Guild.TextChannels)
+                    try
+                    {
+                        await channel.AddPermissionOverwriteAsync(role, unverifiedPerms);
+                        channels += $"`#{channel.Name}` Perms Modified\n";
+                    }
+                    catch
+                    {
+                        channels += $"`#{channel.Name}` Perms Not Modified\n";
+                    }
+
+                perms = "Role Can No longer Send Messages, or Add Reactions";
+            }
+            catch
+            {
+                perms = "Role Unable to be modified, ask an administrator to do this manually.";
+            }
+
+
+            await ReplyAsync($"Channels Modified for Mute Role:\n" +
+                             $"{perms}\n" +
+                             $"{channels}");
         }
 
         [Command("SetWarnLimit")]
