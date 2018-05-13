@@ -19,6 +19,15 @@ namespace Lithium.Modules.Administration
         {
             _service = service;
         }
+        [Command("SetMutedRole")]
+        [Summary("Admin SetMutedRole <@Role>")]
+        [Remarks("set role users are given upon being muted")]
+        public async Task MuteRole(IRole role)
+        {
+            Context.Server.ModerationSetup.Mutes.mutedrole = role.Id;
+            Context.Server.Save();
+            await ReplyAsync($"Success! Users will be given the role {role.Name} upon being muted.");
+        }
 
         [Command("SetWarnLimit")]
         [Summary("Admin SetWarnLimit <Limit>")]
