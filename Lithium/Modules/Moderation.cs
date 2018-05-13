@@ -15,7 +15,7 @@ namespace Lithium.Modules
     {
 
         [Command("Warn")]
-        [Summary("Warn <@user>")]
+        [Summary("Warn <@user> <reason>")]
         [Remarks("Warn the specified user")]
         public async Task WarnUser(IGuildUser user, [Remainder] string reason = null)
         {
@@ -42,7 +42,7 @@ namespace Lithium.Modules
         }
 
         [Command("Kick")]
-        [Summary("Kick <@user>")]
+        [Summary("Kick <@user> <reason>")]
         [Remarks("Kick the specified user")]
         public async Task KickUser(IGuildUser user, [Remainder] string reason = null)
         {
@@ -89,7 +89,7 @@ namespace Lithium.Modules
         }
 
         [Command("Ban")]
-        [Summary("Ban <@user>")]
+        [Summary("Ban <@user> <reason>")]
         [Remarks("Ban the specified user")]
         public async Task BanUser(IGuildUser user, [Remainder] string reason = null)
         {
@@ -105,13 +105,62 @@ namespace Lithium.Modules
                 return;
             }
 
-            Context.Server.ModerationSetup.Kicks.Add(new GuildModel.Guild.Moderation.kick
+            Context.Server.ModerationSetup.Bans.Add(new GuildModel.Guild.Moderation.ban
             {
                 userID = user.Id,
                 modID = Context.User.Id,
                 modname = Context.User.Username,
                 reason = reason,
                 username = user.Username
+            });
+            try
+            {
+                await Context.Guild.AddBanAsync(user, 1, reason);
+                await ReplyAsync("User has been Banned and messages from the last 24 hours have been cleared");
+                Context.Server.Save();
+                await SendEmbedAsync(new EmbedBuilder
+                {
+                    Title = $"{user.Username} has been banned",
+                    Description = $"User: {user.Username}#{user.Discriminator}\n" +
+                                  $"UserID: {user.Id}\n" +
+                                  $"Mod: {Context.User.Username}#{Context.User.Discriminator}\n" +
+                                  $"Mod ID: {Context.User.Id}\n\n" +
+                                  "Reason:\n" +
+                                  $"{reason ?? "N/A"}"
+                });
+            }
+            catch
+            {
+                await ReplyAsync("User is unable to be Banned. ");
+            }
+        }
+
+        [Command("SoftBan")]
+        [Summary("SoftBan <@user> <hours> <reason>")]
+        [Remarks("Ban the specified user for the specified amount of hours")]
+        public async Task SoftBanUser(IGuildUser user, int hours, [Remainder] string reason = null)
+        {
+            if (Permissions.CheckHeirachy(user, Context.Client))
+            {
+                await ReplyAsync("This user has higher permissions than me. I cannot perform this action on them");
+                return;
+            }
+
+            if (user.GuildPermissions.Administrator || user.GuildPermissions.BanMembers)
+            {
+                await ReplyAsync("This user has admin or user ban permissions, therefore I cannot perform this action on them");
+                return;
+            }
+
+            Context.Server.ModerationSetup.Bans.Add(new GuildModel.Guild.Moderation.ban
+            {
+                userID = user.Id,
+                modID = Context.User.Id,
+                modname = Context.User.Username,
+                reason = reason,
+                username = user.Username,
+                ExpiryDate = DateTime.UtcNow + TimeSpan.FromHours(hours),
+                Expires = true
             });
             try
             {
