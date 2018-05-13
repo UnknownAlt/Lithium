@@ -101,7 +101,7 @@ namespace Lithium.Modules
 
             if (user.GuildPermissions.Administrator || user.GuildPermissions.BanMembers)
             {
-                await ReplyAsync("This user has admin or user kick permissions, therefore I cannot perform this action on them");
+                await ReplyAsync("This user has admin or user ban permissions, therefore I cannot perform this action on them");
                 return;
             }
 
