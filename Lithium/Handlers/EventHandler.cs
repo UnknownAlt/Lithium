@@ -64,6 +64,35 @@ namespace Lithium.Handlers
             await guild.DefaultChannel.SendMessageAsync("", false, embed.Build());
         }
 
+        public bool CheckHidden(LithiumContext context)
+        {
+            var guild = context.Server;
+            if (guild.Settings.DisabledParts.BlacklistedCommands.Any() || guild.Settings.DisabledParts.BlacklistedModules.Any())
+            {
+                CommandInfo CMDCheck = null;
+                var argPos = 0;
+                var cmdSearch = _commands.Search(context, argPos);
+                if (cmdSearch.IsSuccess)
+                {
+                    CMDCheck = cmdSearch.Commands.FirstOrDefault().Command;
+                }
+
+                if (CMDCheck != null)
+                {
+                    var guser = (IGuildUser)context.User;
+                    if (!guser.GuildPermissions.Administrator && !guild.ModerationSetup.AdminRoles.Any(x => guser.RoleIds.Contains(x)))
+                    {
+                        if (guild.Settings.DisabledParts.BlacklistedCommands.Any(x => string.Equals(x, CMDCheck.Name, StringComparison.CurrentCultureIgnoreCase)) ||
+                            guild.Settings.DisabledParts.BlacklistedModules.Any(x => string.Equals(x, CMDCheck.Module.Name, StringComparison.CurrentCultureIgnoreCase)))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
 
         public async Task DoCommand(SocketMessage parameterMessage)
         {
@@ -72,16 +101,18 @@ namespace Lithium.Handlers
                 if (!(parameterMessage is SocketUserMessage message)) return;
                 var argPos = 0;
                 var context = new LithiumContext(_client, message, Provider);
-
-
+                
                 //Do not react to commands initiated by a bot
-                if (context.User.IsBot)
-                    return;
+                if (context.User.IsBot) return;
+
+
 
                 //Ensure that commands are only executed if thet start with the bot's prefix
                 if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) ||
                       message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos))) return;
 
+                //Ensure that the message passes all checks before running as a command
+                if (CheckHidden(context)) return;
 
                 var result = await _commands.ExecuteAsync(context, argPos, Provider);
 
