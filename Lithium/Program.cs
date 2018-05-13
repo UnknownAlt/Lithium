@@ -38,6 +38,8 @@ namespace Lithium
                 MessageCacheSize = 50
             });
 
+            
+
             try
             {
                 await Client.LoginAsync(TokenType.Bot, Config.Load().BotToken);
@@ -56,7 +58,6 @@ namespace Lithium
             var serviceProvider = ConfigureServices();
             _handler = new EventHandler(serviceProvider);
             await _handler.ConfigureAsync();
-
             Client.Log += Client_Log;
             await Task.Delay(-1);
         }

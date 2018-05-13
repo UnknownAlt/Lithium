@@ -12,9 +12,10 @@ namespace Lithium.Handlers
 {
     public class DatabaseHandler
     {
+        //This is out configuration for the database handler, DBName is the database you created in RavenDB when setting it up
+        //ServerURL is the URL to the local server. NOTE: This bot has not been configured to use public addresses
         public static string DBName { get; set; } = "PassiveBOT";
         public static string ServerURL { get; set; } = "http://127.0.0.1:8080";
-        public static string GuildDocName { get; set; } = "Guilds";
 
         public static void CheckDB(DiscordSocketClient client)
         {
@@ -45,6 +46,11 @@ namespace Lithium.Handlers
             }
         }
 
+        /// <summary>
+        /// This adds a new guild to the RavenDB
+        /// </summary>
+        /// <param name="Id">The Server's ID</param>
+        /// <param name="Name">Optionally say the server name was added to the DB</param>
         public static void AddGuild(ulong Id, string Name = null)
         {
             using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
@@ -63,7 +69,12 @@ namespace Lithium.Handlers
             Logger.LogInfo(string.IsNullOrWhiteSpace(Name) ? $"Added Server With Id: {Id}" : $"Created Config For {Name}");
         }
 
-        public async Task DatabaseCheck(DiscordSocketClient client)
+        /// <summary>
+        /// Check to see wether or not the RavenDB is running
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public static async Task DatabaseCheck(DiscordSocketClient client)
         {
             if (Process.GetProcesses().FirstOrDefault(x => x.ProcessName == "Raven.Server") == null)
             {

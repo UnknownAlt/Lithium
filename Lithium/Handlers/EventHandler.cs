@@ -34,9 +34,9 @@ namespace Lithium.Handlers
         {
             try
             {
+                await DatabaseHandler.DatabaseCheck(_client);
                 var application = await _client.GetApplicationInfoAsync();
                 Log.Information($"Invite: https://discordapp.com/oauth2/authorize?client_id={application.Id}&scope=bot&permissions=2146958591");
-                DatabaseHandler.CheckDB(_client);
                 var dblist = DatabaseHandler.GetFullConfig();
                 foreach (var guild in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
                 {
