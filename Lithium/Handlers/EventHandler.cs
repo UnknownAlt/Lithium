@@ -76,7 +76,7 @@ namespace Lithium.Handlers
             await _client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {_client.Guilds.Sum(x => x.MemberCount)} Users!");
         }
 
-        private static async Task _client_JoinedGuild(SocketGuild guild)
+        private async Task _client_JoinedGuild(SocketGuild guild)
         {
             //Ensure that we notify new servers how to use the bot by telling them how to get use th ehelp command.
             var embed = new EmbedBuilder
@@ -86,6 +86,11 @@ namespace Lithium.Handlers
                 Color = Color.Blue
             };
             await guild.DefaultChannel.SendMessageAsync("", false, embed.Build());
+            var dblist = DatabaseHandler.GetFullConfig();
+            foreach (var guildb in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
+            {
+                DatabaseHandler.AddGuild(guildb.Id);
+            }
         }
 
         public bool CheckHidden(LithiumContext context)
@@ -451,7 +456,7 @@ namespace Lithium.Handlers
 
 
                 //Ensure that commands are only executed if they start with the bot's prefix
-                if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) || message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos) || message.HasStringPrefix(context.Server?.Settings.Prefix, ref argPos))) return;
+                if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) || message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos) || message.HasStringPrefix(context.Server?.Settings.Prefix , ref argPos))) return;
 
                 //Ensure that the message passes all checks before running as a command
                 if (CheckHidden(context)) return;
