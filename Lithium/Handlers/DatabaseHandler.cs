@@ -74,6 +74,19 @@ namespace Lithium.Handlers
             Logger.LogInfo(string.IsNullOrWhiteSpace(Name) ? $"Added Server With Id: {Id}" : $"Created Config For {Name}");
         }
 
+        public static void RemoveGuild(ulong Id, string Name = null)
+        {
+            using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            {
+                using (var Session = ds.OpenSession(DBName))
+                {
+                    Session.Delete($"{Id}");
+                }
+            }
+
+            Logger.LogInfo(string.IsNullOrWhiteSpace(Name) ? $"Added Server With Id: {Id}" : $"Created Config For {Name}");
+        }
+
         /// <summary>
         /// Check to see wether or not the RavenDB is running
         /// </summary>
@@ -118,19 +131,6 @@ namespace Lithium.Handlers
                     return Session.Load<GuildModel.Guild>(Id.ToString());
                 }
             }
-        }
-
-        public void RemoveGuild(ulong Id, string Name = null)
-        {
-            using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
-            {
-                using (var Session = ds.OpenSession(DBName))
-                {
-                    Session.Delete(Id.ToString());
-                }
-            }
-
-            Logger.LogInfo(string.IsNullOrWhiteSpace(Name) ? $"Removed Server With Id: {Id}" : $"Removed Config For {Name}");
         }
 
         public static List<GuildModel.Guild> GetFullConfig()

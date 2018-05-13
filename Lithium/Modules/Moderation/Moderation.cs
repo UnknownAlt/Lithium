@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -10,16 +9,13 @@ using Lithium.Discord.Contexts.Paginator;
 using Lithium.Discord.Extensions;
 using Lithium.Discord.Preconditions;
 using Lithium.Models;
-using Raven.Client.Documents.Smuggler;
-using Serilog.Parsing;
 
-namespace Lithium.Modules
+namespace Lithium.Modules.Moderation
 {
     [RequireRole.RequireModerator]
     [Group("Mod")]
     public class Moderation : Base
     {
-
         [Command("Warn")]
         [Summary("Warn <@user> <reason>")]
         [Remarks("Warn the specified user")]
