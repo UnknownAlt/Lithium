@@ -15,6 +15,51 @@ namespace Lithium.Modules.Moderation
     [RequireRole.RequireModerator][Group("Mod")]
     public class Moderation : Base
     {
+        [Command("Mute")]
+        [Summary("Mod Mute <@user> <hours>")]
+        [Remarks("Warn the specified user")]
+        public async Task MuteUser(IGuildUser user, int hours = -1)
+        {
+            var mutedrole = Context.Guild.GetRole(Context.Server.ModerationSetup.Mutes.mutedrole);
+            if (mutedrole == null)
+            {
+                await ReplyAsync("Muted Role has not been configured in this server");
+                return;
+            }
+
+            if (Permissions.CheckHeirachy(user, Context.Client))
+            {
+                await ReplyAsync("This user has higher permissions than me. I cannot perform this action on them");
+                return;
+            }
+
+            if (user.GuildPermissions.Administrator)
+            {
+                await ReplyAsync("This user has admin or user kick permissions, therefore I cannot perform this action on them");
+                return;
+            }
+
+            if (!user.RoleIds.Contains(mutedrole.Id))
+            {
+                await user.AddRoleAsync(mutedrole);
+                Context.Server.ModerationSetup.Mutes.MutedUsers.Add(new GuildModel.Guild.Moderation.muted.muteduser
+                {
+                    expires = hours != -1,
+                    expiry = DateTime.UtcNow + TimeSpan.FromHours(hours),
+                    userid = user.Id
+                });
+                await ReplyAsync($"User Muted for {hours} hours (-1 is unlimited)");
+
+            }
+            else
+            {
+                await user.RemoveRoleAsync(mutedrole);
+                Context.Server.ModerationSetup.Mutes.MutedUsers.Remove(Context.Server.ModerationSetup.Mutes.MutedUsers.FirstOrDefault(x => x.userid == user.Id));
+                await ReplyAsync($"User Unmuted");
+            }
+            Context.Server.Save();
+        }
+
         [Command("Warn")]
         [Summary("Mod Warn <@user> <reason>")]
         [Remarks("Warn the specified user")]

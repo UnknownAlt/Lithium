@@ -111,7 +111,7 @@ namespace Lithium.Models
                 public List<warn> Warns { get; set; } = new List<warn>();
                 public List<ban> Bans { get; set; } = new List<ban>();
                 public msettings Settings { get; set; } = new msettings();
-
+                public muted Mutes { get; set; } = new muted();
                 public class msettings
                 {
                     public enum warnLimitAction
@@ -134,7 +134,7 @@ namespace Lithium.Models
                     public class muteduser
                     {
                         public ulong userid { get; set; }
-                        public bool expired { get; set; } = false;
+                        public bool expires { get; set; } = false;
                         public DateTime expiry { get; set; } = DateTime.UtcNow;
                     }
                 }

@@ -24,6 +24,7 @@ namespace Lithium.Services
                     foreach (var guild in client.Guilds)
                     {
                         TimerLoops.checkbans(guild);
+                        TimerLoops.checkmutes(guild);
                     }
                     LastFireTime = DateTime.UtcNow;
                 },
@@ -51,25 +52,73 @@ namespace Lithium.Services
     {
         public static async void checkbans(IGuild guild)
         {
-            var guildobj = DatabaseHandler.GetGuild(guild.Id);
-
-            if (!guildobj.ModerationSetup.Bans.Any(x => x.Expires && x.ExpiryDate < DateTime.UtcNow)) return;
-            var bans = await guild.GetBansAsync();
-            foreach (var ban in guildobj.ModerationSetup.Bans.Where(x => x.Expires && x.ExpiryDate < DateTime.UtcNow).ToList())
+            try
             {
-                var gban = bans.FirstOrDefault(x => x.User.Id == ban.userID);
-                if (gban == null) continue;
+                var guildobj = DatabaseHandler.GetGuild(guild.Id);
+                if (!guildobj.ModerationSetup.Bans.Any(x => x.Expires && x.ExpiryDate < DateTime.UtcNow)) return;
+                var bans = await guild.GetBansAsync();
+                foreach (var ban in guildobj.ModerationSetup.Bans.Where(x => x.Expires && x.ExpiryDate < DateTime.UtcNow).ToList())
+                {
+                    var gban = bans.FirstOrDefault(x => x.User.Id == ban.userID);
+                    if (gban == null) continue;
+                    try
+                    {
+                        await guild.RemoveBanAsync(ban.userID);
+                        guildobj.ModerationSetup.Bans.Remove(ban);
+                    }
+                    catch
+                    {
+                        //
+                    }
+                }
+
+                guildobj.Save();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e.ToString());
+            }
+        }
+
+        public static async void checkmutes(IGuild guild)
+        {
+            var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (!guildobj.ModerationSetup.Mutes.MutedUsers.Any()) return;
+            var mutedrole = guild.Roles.FirstOrDefault(x => x.Id == guildobj.ModerationSetup.Mutes.mutedrole);
+            if (mutedrole == null) return;
+            foreach (var mute in guildobj.ModerationSetup.Mutes.MutedUsers.ToList())
+            {
                 try
                 {
-                    await guild.RemoveBanAsync(ban.userID);
-                    guildobj.ModerationSetup.Bans.Remove(ban);
+                    if (!mute.expires) continue;
+                    bool removemute = false;
+                    var muteduser = await guild.GetUserAsync(mute.userid);
+                    if (muteduser == null)
+                    {
+                        removemute = true;
+                    }
+                    else
+                    {
+                        if (mute.expiry < DateTime.UtcNow)
+                        {
+                            removemute = true;
+                            if (!muteduser.RoleIds.Contains(mutedrole.Id))
+                            {
+                                await muteduser.RemoveRoleAsync(mutedrole);
+                            }
+                        }
+                    }
+
+                    if (removemute)
+                    {
+                        guildobj.ModerationSetup.Mutes.MutedUsers.Remove(mute);
+                    }
                 }
-                catch
+                catch (Exception e)
                 {
-                    //
+                    Logger.LogError(e.ToString());
                 }
             }
-
             guildobj.Save();
         }
     }
