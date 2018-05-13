@@ -72,6 +72,8 @@ namespace Lithium.Handlers
             {
                 Console.WriteLine(e);
             }
+
+            await _client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {_client.Guilds.Sum(x => x.MemberCount)} Users!");
         }
 
         private static async Task _client_JoinedGuild(SocketGuild guild)

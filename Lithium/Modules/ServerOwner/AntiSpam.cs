@@ -314,7 +314,7 @@ namespace Lithium.Modules.ServerOwner
 
         [Command("SkipAntiSpam")]
         [Summary("SkipAntiSpam <message>")]
-        [Remarks("Skip antispam on messages starting with the given message (useful for gambling commands)")]
+        [Remarks("Skip antispam on messages starting with the given message")]
         public async Task SkipAntiSpam([Remainder] string message = null)
         {
             if (message == null)
