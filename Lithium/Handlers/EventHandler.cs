@@ -439,7 +439,7 @@ namespace Lithium.Handlers
 
                             if (guild.Antispam.Blacklist.WarnOnDetection)
                             {
-                                guild.ModerationSetup.Warns.Add(QuickWarn("AutoMod - Blacklist", context.User, context.Client.CurrentUser);
+                                guild.ModerationSetup.Warns.Add(QuickWarn("AutoMod - Blacklist", context.User, context.Client.CurrentUser));
                                 guild.Save();
                                 await context.Channel.SendMessageAsync("", false, new EmbedBuilder
                                 {
