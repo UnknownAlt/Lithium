@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Preconditions;
+using Lithium.Models;
 
 namespace Lithium.Modules.Administration
 {
@@ -17,6 +18,37 @@ namespace Lithium.Modules.Administration
         private Administration(CommandService service)
         {
             _service = service;
+        }
+
+        [Command("SetWarnLimit")]
+        [Summary("Admin SetWarnLimit <Limit>")]
+        [Remarks("set amount of warns before autokick or autoban")]
+        public async Task WarnLimit(int limit = int.MaxValue)
+        {
+            Context.Server.ModerationSetup.Settings.warnlimit = limit;
+            Context.Server.Save();
+            await ReplyAsync($"Success! After {limit} warnings, an auto-action will be taken on the user");
+        }
+        [Command("SetWarnLimitAction")]
+        [Summary("Admin SetWarnLimitAction <Limit>")]
+        [Remarks("set what happens to users who exceed the warn limit")]
+        public async Task WarnAction(GuildModel.Guild.Moderation.msettings.warnLimitAction action)
+        {
+            Context.Server.ModerationSetup.Settings.WarnLimitAction = action;
+            Context.Server.Save();
+            await ReplyAsync($"Success! {action.ToString()} will be taken upon warn limit being exceeded");
+        }
+        [Command("SetWarnLimitAction")]
+        [Summary("Admin SetWarnLimitAction")]
+        [Remarks("Overload With Info")]
+        public async Task WarnAction()
+        {
+            await ReplyAsync($"Types:\n" +
+                             $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.NoAction}`\n" +
+                             $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.Kick}`\n" +
+                             $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.Ban}`\n\n" +
+                             $"Command Use:\n" +
+                             $"`SetWarnLimitAction <Type>`");
         }
 
         [Command("HideModule")]
