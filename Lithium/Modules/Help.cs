@@ -122,8 +122,8 @@ namespace Lithium.Modules
                 {
                     new PaginatedMessage.Page
                     {
-                        dynamictitle = $"PassiveBOT | Modules | Prefix: {isserver}",
-                        description = $"Here is a list of all the PassiveBOT command modules\n" +
+                        dynamictitle = $"{Context.Client.CurrentUser.Username} | Modules | Prefix: {isserver}",
+                        description = $"Here is a list of all the {Context.Client.CurrentUser.Username} command modules\n" +
                                       $"There are {_service.Commands.Count()} commands\n" +
                                       $"Click the arrows to view each one!\n" +
                                       $"{(Context.Channel is IDMChannel ? "\n" : "Or Click :1234: and reply with the page number you would like\n\n")}" +
@@ -131,7 +131,7 @@ namespace Lithium.Modules
                     },
                     new PaginatedMessage.Page
                     {
-                        dynamictitle = $"PassiveBOT | All Commands | Prefix: {isserver}",
+                        dynamictitle = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
                         description = string.Join("\n",
                             _service.Modules.Where(x =>
                                     x.Commands.Count > 0 && !gobj.Settings.DisabledParts.BlacklistedModules.Any(bm =>
@@ -142,7 +142,7 @@ namespace Lithium.Modules
                     },
                     new PaginatedMessage.Page
                     {
-                        dynamictitle = $"PassiveBOT | All Commands | Prefix: {isserver}",
+                        dynamictitle = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
                         description = string.Join("\n",
                             _service.Modules.Where(x =>
                                     x.Commands.Count > 0 && !gobj.Settings.DisabledParts.BlacklistedModules.Any(bm =>
@@ -168,7 +168,7 @@ namespace Lithium.Modules
             var embed = new EmbedBuilder
             {
                 Color = new Color(114, 137, 218),
-                Title = $"PassiveBOT | Commands | Prefix: {isserver}"
+                Title = $"{Context.Client.CurrentUser.Username} | Commands | Prefix: {isserver}"
             };
             if (mod == null)
             {
