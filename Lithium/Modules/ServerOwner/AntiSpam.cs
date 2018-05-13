@@ -23,6 +23,17 @@ namespace Lithium.Modules.ServerOwner
             Context.Server.Save();
             await ReplyAsync($"NoInvite: {Context.Server.Antispam.Advertising.Invite}");
         }
+        [Command("NoInviteMessage")]
+        [Summary("NoInviteMessage <message>")]
+        [Remarks("set the no invites message")]
+        public async Task NoinviteMSG([Remainder] string noinvmessage = null)
+        {
+            Context.Server.Antispam.Advertising.NoInviteMessage = noinvmessage;
+            Context.Server.Save();
+
+            await ReplyAsync("The No Invites message is now:\n" +
+                             $"{Context.Server.Antispam.Advertising.NoInviteMessage ?? "Default"}");
+        }
         [Command("NoMentionAll")]
         [Summary("NoMentionAll")]
         [Remarks("Disable the use of @everyone and @here for users")]
@@ -294,11 +305,80 @@ namespace Lithium.Modules.ServerOwner
                     $"`5` - IP Addresses\n" +
                     $"`6` - Toxicity\n\n" +
                     $"__usage__\n" +
-                    $"`{Config.Load().Prefix} 1 @role` - this allows the role to spam without being limited/removed\n" +
+                    $"`{Config.Load().DefaultPrefix} 1 @role` - this allows the role to spam without being limited/removed\n" +
                     $"You can use commas to use multiple settings on the same role\n." +
-                    $"`{Config.Load().Prefix} 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
-                    $"`{Config.Load().Prefix} 0 @role` - resets the ignore config and will add all limits back to the role"
+                    $"`{Config.Load().DefaultPrefix} 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
+                    $"`{Config.Load().DefaultPrefix} 0 @role` - resets the ignore config and will add all limits back to the role"
             }.Build());
         }
+
+        [Command("SkipAntiSpam")]
+        [Summary("SkipAntiSpam <message>")]
+        [Remarks("Skip antispam on messages starting with the given message (useful for gambling commands)")]
+        public async Task SkipAntiSpam([Remainder] string message = null)
+        {
+            if (message == null)
+            {
+                await ReplyAsync("Please provide a message that will be skipped.");
+                return;
+            }
+
+            if (Context.Server.Antispam.Antispam.AntiSpamSkip.Any(x =>
+                string.Equals(x, message, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                await ReplyAsync($"`{message}` is already included in the SkipAntiSpam list");
+                return;
+            }
+
+            Context.Server.Antispam.Antispam.AntiSpamSkip.Add(message);
+
+            Context.Server.Save();
+            await ReplyAsync("Complete.");
+        }
+
+        [Command("RemoveSkipAntiSpam")]
+        [Summary("RemoveSkipAntiSpam <message>")]
+        [Remarks("Remove a message from anti spam skipper")]
+        public async Task RemSkipAntiSpam([Remainder] string message = null)
+        {
+            if (message == null)
+            {
+                await ReplyAsync("Please provide a message that will be removed.");
+                return;
+            }
+
+            if (!Context.Server.Antispam.Antispam.AntiSpamSkip.Any(x =>
+                string.Equals(x, message, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                await ReplyAsync($"`{message}` is already not included in the SkipAntiSpam list");
+                return;
+            }
+
+            Context.Server.Antispam.Antispam.AntiSpamSkip.Remove(message);
+
+            Context.Server.Save();
+            await ReplyAsync("Complete.");
+        }
+
+        [Command("ClearSkipAntiSpam")]
+        [Summary("ClearSkipAntiSpam")]
+        [Remarks("Clear the SkipAntiSpam List")]
+        public async Task ClearAntiSpam()
+        {
+            Context.Server.Antispam.Antispam.AntiSpamSkip = new List<string>();
+
+            Context.Server.Save();
+            await ReplyAsync("Complete.");
+        }
+
+        [Command("SkipAntiSpamList")]
+        [Summary("SkipAntiSpamList")]
+        [Remarks("List of messages antispam will skip")]
+        public async Task SkipAntiSpam()
+        {
+            var embed = new EmbedBuilder { Description = string.Join("\n", Context.Server.Antispam.Antispam.AntiSpamSkip) };
+            await ReplyAsync("", false, embed.Build());
+        }
+
     }
 }
