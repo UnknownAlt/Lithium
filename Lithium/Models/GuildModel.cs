@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Lithium.Handlers;
 using Raven.Client.Documents;
+using Sparrow.Platform.Posix.macOS;
 
 namespace Lithium.Models
 {
@@ -25,6 +29,76 @@ namespace Lithium.Models
                     {
                         Session.Store(this, GuildID.ToString());
                         Session.SaveChanges();
+                    }
+                }
+            }
+
+            public async Task AddWarn(string reason, IGuildUser User, IUser mod, IMessageChannel channel)
+            {
+                this.ModerationSetup.Warns.Add(new Moderation.warn
+                {
+                    modID = mod.Id,
+                    modname = mod.Username,
+                    reason = reason,
+                    userID = User.Id,
+                    username = User.Username
+                });
+                await channel.SendMessageAsync("", false, new EmbedBuilder
+                {
+                    Title = $"{User.Username} has been Auto Warned",
+                    Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                  $"UserID: {User.Id}\n" +
+                                  $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                  $"Mod ID: {mod.Id}\n" +
+                                  "Reason:\n" +
+                                  $"{reason}"
+                });
+                if (this.ModerationSetup.Warns.Count(x => x.userID == User.Id) > this.ModerationSetup.Settings.warnlimit && this.ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
+                {
+                    if (this.ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Ban)
+                    {
+                        this.ModerationSetup.Bans.Add(new Moderation.ban
+                        {
+                            modID = mod.Id,
+                            modname = mod.Username,
+                            reason = reason,
+                            userID = User.Id,
+                            username = User.Username,
+                            Expires = false
+                        });
+                        await User.Guild.AddBanAsync(User, 1, $"AutoBan, Warnlimit Exceeded by user!");
+                        await channel.SendMessageAsync("", false, new EmbedBuilder
+                        {
+                            Title = $"{User.Username} has been Auto banned",
+                            Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                          $"UserID: {User.Id}\n" +
+                                          $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                          $"Mod ID: {mod.Id}\n" +
+                                          "Reason:\n" +
+                                          $"AutoBan, Warnlimit Exceeded by user!"
+                        });
+                    }
+                    else
+                    {
+                        this.ModerationSetup.Kicks.Add(new Moderation.kick
+                        {
+                            modID = mod.Id,
+                            modname = mod.Username,
+                            reason = reason,
+                            userID = User.Id,
+                            username = User.Username
+                        });
+                        await User.KickAsync($"AutoKick, WarnLimit Exceeded by user!");
+                        await channel.SendMessageAsync("", false, new EmbedBuilder
+                        {
+                            Title = $"{User.Username} has been Auto Kicked",
+                            Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                          $"UserID: {User.Id}\n" +
+                                          $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                          $"Mod ID: {mod.Id}\n" +
+                                          "Reason:\n" +
+                                          $"Auto Kick, Warnlimit Exceeded by user!"
+                        });
                     }
                 }
             }

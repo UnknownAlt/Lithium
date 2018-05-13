@@ -222,34 +222,22 @@ namespace Lithium.Handlers
                                             Title = $"{context.User} - No Spamming!!"
                                         };
                                         await context.Channel.SendMessageAsync("", false, emb.Build());
+                                        if (guild.Antispam.Antispam.WarnOnDetection)
+                                        {
+                                            await guild.AddWarn("AutoMod - AntiSpam", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                                            guild.Save();
+                                        }
                                     }
                                     else
                                     {
-                                        AntiSpamMsgDelays.Add(new EventHandler.Delays
+                                        AntiSpamMsgDelays.Add(new Delays
                                         {
                                             _delay = DateTime.UtcNow.AddSeconds(5),
                                             GuildID = guild.GuildID
                                         });
                                     }
 
-                                    if (guild.Antispam.Antispam.WarnOnDetection)
-                                    {
-                                        guild.ModerationSetup.Warns.Add(new GuildModel.Guild.Moderation.warn
-                                        {
-                                            modname = context.Client.CurrentUser.Username,
-                                            modID = context.Client.CurrentUser.Id,
-                                            reason = "AutoMod - AntiSpam",
-                                            username = context.User.Username,
-                                            userID = context.User.Id
-                                        });
-                                        guild.Save();
-                                        await context.Channel.SendMessageAsync("", false, new EmbedBuilder
-                                        {
-                                            Title = $"{context.Client.CurrentUser.Username} AutoMod - AntiSpam",
-                                            Description = "Warning Added!\n" +
-                                                          $"Count: {guild.ModerationSetup.Warns.Count(x => x.userID == context.User.Id)}"
-                                        }.Build());
-                                    }
+
 
                                     return true;
                                 }
@@ -280,14 +268,9 @@ namespace Lithium.Handlers
                         // 3. The user does not have one of the invite excempt roles
                         if (guild.Antispam.Advertising.WarnOnDetection)
                         {
-                            guild.ModerationSetup.Warns.Add(QuickWarn("AutoMod - Anti Advertising", context.User, context.Client.CurrentUser));
+                            await guild.AddWarn("AutoMod - Anti Advertising", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
                             guild.Save();
-                            await context.Channel.SendMessageAsync("", false, new EmbedBuilder
-                            {
-                                Title = $"{context.Client.CurrentUser.Username} AutoMod - AntiInvite",
-                                Description = "Warning Added!\n" +
-                                              $"Count: {guild.ModerationSetup.Warns.Count(x => x.userID == context.User.Id)}"
-                            }.Build());
+                            guild.Save();
                         }
                         return true;
                     }
@@ -313,14 +296,8 @@ namespace Lithium.Handlers
                             await context.Channel.SendMessageAsync("", false, emb.Build());
                             if (guild.Antispam.Mention.WarnOnDetection)
                             {
-                                guild.ModerationSetup.Warns.Add(QuickWarn("AutoMod - Remove Mass Mention", context.User, context.Client.CurrentUser));
+                                await guild.AddWarn("AutoMod - Mass Mention", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
                                 guild.Save();
-                                await context.Channel.SendMessageAsync("", false, new EmbedBuilder
-                                {
-                                    Title = $"{context.Client.CurrentUser.Username} AutoMod - Remove Mass Mention",
-                                    Description = "Warning Added!\n" +
-                                                  $"Count: {guild.ModerationSetup.Warns.Count(x => x.userID == context.User.Id)}"
-                                }.Build());
                             }
                             return true;
                         }
@@ -344,14 +321,8 @@ namespace Lithium.Handlers
                             await context.Channel.SendMessageAsync("", false, emb.Build());
                             if (guild.Antispam.Mention.WarnOnDetection)
                             {
-                                guild.ModerationSetup.Warns.Add(QuickWarn("AutoMod - Remove Mention All", context.User, context.Client.CurrentUser));
+                                await guild.AddWarn("AutoMod - Mention All", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
                                 guild.Save();
-                                await context.Channel.SendMessageAsync("", false, new EmbedBuilder
-                                {
-                                    Title = $"{context.Client.CurrentUser.Username} AutoMod - Remove Mention All",
-                                    Description = "Warning Added!\n" +
-                                                  $"Count: {guild.ModerationSetup.Warns.Count(x => x.userID == context.User.Id)}"
-                                }.Build());
                             }
                             return true;
                             //if
@@ -380,14 +351,8 @@ namespace Lithium.Handlers
                         await context.Channel.SendMessageAsync("", false, emb.Build());
                         if (guild.Antispam.Privacy.WarnOnDetection)
                         {
-                            guild.ModerationSetup.Warns.Add(QuickWarn("Automod - Anti IP", context.User, context.Client.CurrentUser));
+                            await guild.AddWarn("AutoMod - Anti IP", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
                             guild.Save();
-                            await context.Channel.SendMessageAsync("", false, new EmbedBuilder
-                            {
-                                Title = $"{context.Client.CurrentUser.Username} AutoMod - Anti IP",
-                                Description = "Warning Added!\n" +
-                                              $"Count: {guild.ModerationSetup.Warns.Count(x => x.userID == context.User.Id)}"
-                            }.Build());
                         }
                         return true;
                     }
@@ -441,14 +406,8 @@ namespace Lithium.Handlers
 
                             if (guild.Antispam.Blacklist.WarnOnDetection)
                             {
-                                guild.ModerationSetup.Warns.Add(QuickWarn("AutoMod - Blacklist", context.User, context.Client.CurrentUser));
+                                await guild.AddWarn("AutoMod - Blacklist", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
                                 guild.Save();
-                                await context.Channel.SendMessageAsync("", false, new EmbedBuilder
-                                {
-                                    Title = $"{context.Client.CurrentUser.Username} AutoMod - Blacklist",
-                                    Description = "Warning Added!\n" +
-                                                  $"Count: {guild.ModerationSetup.Warns.Count(x => x.userID == context.User.Id)}"
-                                }.Build());
                             }
 
                             return true;
@@ -459,7 +418,7 @@ namespace Lithium.Handlers
 
             return false;
         }
-        public List<EventHandler.Delays> AntiSpamMsgDelays = new List<EventHandler.Delays>();
+        public List<Delays> AntiSpamMsgDelays = new List<Delays>();
         public class Delays
         {
             public DateTime _delay { get; set; } = DateTime.UtcNow;

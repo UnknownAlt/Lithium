@@ -20,26 +20,8 @@ namespace Lithium.Modules.Moderation
         [Remarks("Warn the specified user")]
         public async Task WarnUser(IGuildUser user, [Remainder] string reason = null)
         {
-            Context.Server.ModerationSetup.Warns.Add(new GuildModel.Guild.Moderation.warn
-            {
-                userID = user.Id,
-                modID = Context.User.Id,
-                modname = Context.User.Username,
-                reason = reason,
-                username = user.Username
-            });
-            await ReplyAsync("User has been warned");
+            await Context.Server.AddWarn(reason, user, Context.Client.CurrentUser, Context.Channel);
             Context.Server.Save();
-
-            await SendEmbedAsync(new EmbedBuilder
-            {
-                Description = $"User: {user.Username}#{user.Discriminator}\n" +
-                              $"UserID: {user.Id}\n" +
-                              $"Mod: {Context.User.Username}#{Context.User.Discriminator}\n" +
-                              $"Mod ID: {Context.User.Id}\n\n" +
-                              "Reason:\n" +
-                              $"{reason ?? "N/A"}"
-            });
         }
 
         [Command("Kick")]
