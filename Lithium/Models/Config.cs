@@ -45,6 +45,7 @@ namespace Lithium.Models
             {
                 auto = false;
             }
+
             if (auto)
             {
             }
@@ -67,7 +68,7 @@ namespace Lithium.Models
                 var cfg = new Config();
 
                 Logger.LogInfo(
-                   @"Please enter a prefix for the bot eg. '+' (do not include the '' outside of the prefix)");
+                    @"Please enter a prefix for the bot eg. '+' (do not include the '' outside of the prefix)");
                 Console.Write("Prefix: ");
                 cfg.DefaultPrefix = Console.ReadLine();
 

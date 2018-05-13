@@ -47,7 +47,6 @@ namespace Lithium.Handlers
             {
                 Console.WriteLine(e);
             }
-
         }
 
         private static async Task _client_JoinedGuild(SocketGuild guild)
@@ -60,45 +59,51 @@ namespace Lithium.Handlers
                 Color = Color.Blue
             };
             await guild.DefaultChannel.SendMessageAsync("", false, embed.Build());
-
         }
 
 
         public async Task DoCommand(SocketMessage parameterMessage)
         {
-            if (!(parameterMessage is SocketUserMessage message)) return;
-            var argPos = 0;
-            var context = new SocketCommandContext(_client, message);
-
-
-            //Do not react to commands initiated by a bot
-            if (context.User.IsBot)
-                return;
-
-            //Ensure that commands are only executed if thet start with the bot's prefix
-            if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) ||
-                  message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos))) return;
-
-
-            var result = await _commands.ExecuteAsync(context, argPos, Provider);
-
-            var commandsuccess = result.IsSuccess;
-
-
-            if (!commandsuccess)
+            try
             {
-                var embed = new EmbedBuilder
+                if (!(parameterMessage is SocketUserMessage message)) return;
+                var argPos = 0;
+                var context = new LithiumContext(_client, message, Provider);
+
+
+                //Do not react to commands initiated by a bot
+                if (context.User.IsBot)
+                    return;
+
+                //Ensure that commands are only executed if thet start with the bot's prefix
+                if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) ||
+                      message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos))) return;
+
+
+                var result = await _commands.ExecuteAsync(context, argPos, Provider);
+
+                var commandsuccess = result.IsSuccess;
+
+
+                if (!commandsuccess)
                 {
-                    Title = $"ERROR: {result.Error.ToString().ToUpper()}",
-                    Description = $"Command: {context.Message}\n" +
-                                    $"Error: {result.ErrorReason}"
-                };
-                await context.Channel.SendMessageAsync("", false, embed.Build());
-                Logger.LogError($"{message.Content} || {message.Author}");
+                    var embed = new EmbedBuilder
+                    {
+                        Title = $"ERROR: {result.Error.ToString().ToUpper()}",
+                        Description = $"Command: {context.Message}\n" +
+                                      $"Error: {result.ErrorReason}"
+                    };
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                    Logger.LogError($"{message.Content} || {message.Author}");
+                }
+                else
+                {
+                    Logger.LogInfo($"{message.Content} || {message.Author}");
+                }
             }
-            else
+            catch (Exception e)
             {
-                Logger.LogInfo($"{message.Content} || {message.Author}");
+                Console.WriteLine(e);
             }
         }
 

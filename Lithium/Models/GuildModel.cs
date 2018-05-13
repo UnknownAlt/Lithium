@@ -1,32 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using Lithium.Handlers;
 using Raven.Client.Documents;
 
 namespace Lithium.Models
 {
     public class GuildModel
     {
-        private static IDocumentStore Store { get; set; }
-        public GuildModel(IDocumentStore store) => Store = store;
-
         public class Guild
         {
-            public void Save(Guild Server)
-            {
-                if (Server == null) return;
-                using (var Session = Store.OpenSession())
-                {
-                    Session.Store(Server, Server.GuildID.ToString());
-                    Session.SaveChanges();
-                }
-            }
-
             public ulong GuildID { get; set; }
             public Moderation ModerationSetup { get; set; } = new Moderation();
             public settings Settings { get; set; } = new settings();
             public autochannels AutoMessage { get; set; } = new autochannels();
             public antispams Antispam { get; set; } = new antispams();
+
+            public tags Tags { get; set; } = new tags();
+
+            public void Save()
+            {
+                using (var ds = new DocumentStore {Urls = new[] {DatabaseHandler.ServerURL}}.Initialize())
+                {
+                    using (var Session = ds.OpenSession(DatabaseHandler.DBName))
+                    {
+                        Session.Store(this, GuildID.ToString());
+                        Session.SaveChanges();
+                    }
+                }
+            }
 
             public class Moderation
             {
@@ -36,23 +37,26 @@ namespace Lithium.Models
                 public List<warn> Warns { get; set; } = new List<warn>();
                 public List<ban> Bans { get; set; } = new List<ban>();
                 public msettings Settings { get; set; } = new msettings();
+
                 public class msettings
                 {
-                    //Warnings before doing a specific action.
-                    public int warnlimit { get; set; } = int.MaxValue;
-                    public warnLimitAction WarnLimitAction { get; set; } = warnLimitAction.NoAction;
                     public enum warnLimitAction
                     {
                         NoAction,
                         Kick,
                         Ban
                     }
+
+                    //Warnings before doing a specific action.
+                    public int warnlimit { get; set; } = int.MaxValue;
+                    public warnLimitAction WarnLimitAction { get; set; } = warnLimitAction.NoAction;
                 }
 
                 public class muted
                 {
                     public ulong mutedrole { get; set; } = 0;
                     public List<muteduser> MutedUsers { get; set; } = new List<muteduser>();
+
                     public class muteduser
                     {
                         public ulong userid { get; set; }
@@ -70,6 +74,7 @@ namespace Lithium.Models
                     public string modname { get; set; }
                     public ulong modID { get; set; }
                 }
+
                 public class warn
                 {
                     public ulong userID { get; set; }
@@ -79,6 +84,7 @@ namespace Lithium.Models
                     public string modname { get; set; }
                     public ulong modID { get; set; }
                 }
+
                 public class ban
                 {
                     public ulong userID { get; set; }
@@ -97,6 +103,7 @@ namespace Lithium.Models
             {
                 public string Prefix { get; set; } = Config.Load().DefaultPrefix;
                 public visibilityconfig DisabledParts { get; set; } = new visibilityconfig();
+
                 public class visibilityconfig
                 {
                     public List<string> BlacklistedModules { get; set; } = new List<string>();
@@ -107,33 +114,36 @@ namespace Lithium.Models
             public class autochannels
             {
                 public List<autochannel> AutoChannels { get; set; } = new List<autochannel>();
+
                 public class autochannel
                 {
                     public acsettings Settings { get; set; } = new acsettings();
-                    public class acsettings
-                    {
-                        public bool enabled { get; set; } = false;
-                        public int msgcount { get; set; } = 0;
-                        public int sendlimit { get; set; } = 50;
-                    }
 
                     public ulong channelID { get; set; }
 
                     public string title { get; set; } = "AutoMessage";
                     public string automessage { get; set; } = "PassiveBOT";
                     public string ImgURL { get; set; } = null;
+
+                    public class acsettings
+                    {
+                        public bool enabled { get; set; } = false;
+                        public int msgcount { get; set; } = 0;
+                        public int sendlimit { get; set; } = 50;
+                    }
                 }
             }
 
-            public tags Tags { get; set; } = new tags();
             public class tags
             {
+                public List<tag> Tags = new List<tag>();
                 public tsettings Settings { get; set; } = new tsettings();
+
                 public class tsettings
                 {
                     public bool AllowAllUsersToCreate { get; set; } = false;
                 }
-                public List<tag> Tags = new List<tag>();
+
                 public class tag
                 {
                     public string name { get; set; }

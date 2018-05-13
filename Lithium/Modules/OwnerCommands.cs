@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Lithium.Handlers;
 
 namespace Lithium.Modules
 {
@@ -25,7 +24,7 @@ namespace Lithium.Modules
             {
                 try
                 {
-                    await (Context.Client).SetGameAsync(game);
+                    await Context.Client.SetGameAsync(game);
                     await ReplyAsync($"{Context.Client.CurrentUser.Username}'s game has been set to:\n" +
                                      $"{game}");
                 }
@@ -34,34 +33,9 @@ namespace Lithium.Modules
                     await ReplyAsync($"{e.Message}\n" +
                                      $"Unable to set the game");
                 }
-
             }
         }
 
-        [Command("GetDB")]
-        [Summary("GetDB <serverID>")]
-        [Remarks("Get current server from the Database")]
-        public async Task GetFromDB(ulong guildID = 0)
-        {
-            IGuild guild;
-            if (guildID == 0)
-            {
-                guild = Context.Guild;
-            }
-            else
-            {
-                var chkguild = Context.Client.GetGuild(guildID);
-                if (chkguild == null)
-                {
-                    await ReplyAsync("Error, Guild not found!");
-                    return;
-                }
-
-                guild = chkguild;
-            }
-            //var gobj = DatabaseHandler.GetGuild(guild.Id);
-            //await ReplyAsync($"{gobj?.GuildID.ToString() ?? "N/A"}");
-        }
 
         [Command("Stats")]
         [Summary("Stats")]
@@ -73,7 +47,7 @@ namespace Lithium.Modules
             var heap = Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2).ToString(CultureInfo.InvariantCulture);
             var uptime = (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss");
 
-            embed.AddField($"{Context.Client.CurrentUser.Username} Statistics", 
+            embed.AddField($"{Context.Client.CurrentUser.Username} Statistics",
                 $"Servers: {Context.Client.Guilds.Count}\n" +
                 $"Users: {Context.Client.Guilds.Select(x => x.Users.Count).Sum()}\n" +
                 $"Unique Users: {Context.Client.Guilds.SelectMany(x => x.Users.Select(y => y.Id)).Distinct().Count()}\n" +

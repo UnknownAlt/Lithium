@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Discord;
 using Discord.WebSocket;
 using Lithium.Models;
 using Lithium.Services;
-using Raven.Client;
 using Raven.Client.Documents;
-using Raven.Client.Documents.Session;
 
 namespace Lithium.Handlers
 {
@@ -23,7 +18,7 @@ namespace Lithium.Handlers
 
         public static void CheckDB(DiscordSocketClient client)
         {
-            using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
             {
                 using (var session = ds.OpenSession(DBName))
                 {
@@ -43,6 +38,7 @@ namespace Lithium.Handlers
                         {
                             session.Store(gobj, gobj.GuildID.ToString());
                         }
+
                         session.SaveChanges();
                     }
                 }
@@ -55,14 +51,12 @@ namespace Lithium.Handlers
             {
                 using (var Session = ds.OpenSession(DBName))
                 {
-
                     if (Session.Advanced.Exists($"{Id}")) return;
                     Session.Store(new GuildModel.Guild
                     {
                         GuildID = Id
-                    });
+                    }, Id.ToString());
                     Session.SaveChanges();
-
                 }
             }
 
@@ -82,9 +76,9 @@ namespace Lithium.Handlers
         }
 
 
-        public GuildModel.Guild GetGuild(ulong Id)
+        public static GuildModel.Guild GetGuild(ulong Id)
         {
-            using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
             {
                 using (var Session = ds.OpenSession(DBName))
                 {
@@ -95,18 +89,20 @@ namespace Lithium.Handlers
 
         public void RemoveGuild(ulong Id, string Name = null)
         {
-            using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
             {
                 using (var Session = ds.OpenSession(DBName))
                 {
                     Session.Delete(Id.ToString());
                 }
             }
-           Logger.LogInfo(string.IsNullOrWhiteSpace(Name) ? $"Removed Server With Id: {Id}" : $"Removed Config For {Name}");
+
+            Logger.LogInfo(string.IsNullOrWhiteSpace(Name) ? $"Removed Server With Id: {Id}" : $"Removed Config For {Name}");
         }
+
         public static List<GuildModel.Guild> GetFullConfig()
         {
-            using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
             {
                 using (var session = ds.OpenSession(DBName))
                 {

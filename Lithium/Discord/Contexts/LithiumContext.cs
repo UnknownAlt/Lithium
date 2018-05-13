@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection.Metadata;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.Rest;
-using Discord.WebSocket;
 using Lithium.Handlers;
 using Lithium.Models;
 using Lithium.Services;
@@ -18,7 +11,7 @@ using Raven.Client.Documents.Session;
 
 namespace Lithium.Discord.Contexts
 {
-    public class Base : ModuleBase<LithiumBase>
+    public abstract class Base : ModuleBase<LithiumContext>
     {
         public async Task<IUserMessage> ReplyAsync(string Message, Embed Embed = null)
         {
@@ -34,12 +27,11 @@ namespace Lithium.Discord.Contexts
             return Msg;
         }
 
-        void SaveDocuments()
+
+        private void SaveDocuments()
         {
-
-            Context.Server.Save(Context.Server);
-            bool Check = !Context.Session.Advanced.HasChanges;
-
+            Context.Server.Save();
+            var Check = !Context.Session.Advanced.HasChanges;
             if (Check == false) Logger.LogInfo($"Failed to save document.");
         }
 
@@ -49,26 +41,25 @@ namespace Lithium.Discord.Contexts
         }
     }
 
-    public class LithiumBase : ICommandContext
+    public class LithiumContext : ICommandContext
     {
-        public IUser User { get; }
-        public IGuild Guild { get; }
-        public GuildModel.Guild Server { get; }
-        public IDiscordClient Client { get; }
-        public IUserMessage Message { get; }
-        public IMessageChannel Channel { get; }
-        public IDocumentSession Session { get; }
-
-        public LithiumBase(IDiscordClient ClientParam, IUserMessage MessageParam, IServiceProvider ServiceProvider)
+        public LithiumContext(IDiscordClient ClientParam, IUserMessage MessageParam, IServiceProvider ServiceProvider)
         {
             Client = ClientParam;
             Message = MessageParam;
             User = MessageParam.Author;
             Channel = MessageParam.Channel;
             Guild = (MessageParam.Channel as IGuildChannel).Guild;
-            Server = ServiceProvider.GetRequiredService<DatabaseHandler>().GetGuild(Guild.Id);
+            Server = DatabaseHandler.GetGuild(Guild.Id);
             Session = ServiceProvider.GetRequiredService<IDocumentStore>().OpenSession();
         }
 
+        public GuildModel.Guild Server { get; }
+        public IDocumentSession Session { get; }
+        public IUser User { get; }
+        public IGuild Guild { get; }
+        public IDiscordClient Client { get; }
+        public IUserMessage Message { get; }
+        public IMessageChannel Channel { get; }
     }
 }
