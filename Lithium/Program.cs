@@ -31,7 +31,8 @@ namespace Lithium
 
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "setup/")))
                 Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "setup/"));
-
+            if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "setup/backups")))
+                Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "setup/backups"));
             Config.CheckExistence();
             Client = new DiscordSocketClient(new DiscordSocketConfig
             {

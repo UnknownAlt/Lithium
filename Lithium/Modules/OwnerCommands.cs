@@ -8,6 +8,7 @@ using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Contexts.Paginator;
+using Lithium.Handlers;
 
 namespace Lithium.Modules
 {
@@ -39,7 +40,15 @@ namespace Lithium.Modules
                 }
             }
         }
-        
+
+        [Command("Backup")]
+        [Summary("Backup")]
+        [Remarks("Database Backup")]
+        public async Task backup()
+        {
+            await DatabaseHandler.DatabaseBackup(Context.Socket.Client);
+        }
+
 
         [Command("Pages")]
         [Summary("Pages")]

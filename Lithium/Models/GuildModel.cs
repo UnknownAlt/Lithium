@@ -122,7 +122,7 @@ namespace Lithium.Models
                     public ulong channelID { get; set; }
 
                     public string title { get; set; } = "AutoMessage";
-                    public string automessage { get; set; } = "PassiveBOT";
+                    public string automessage { get; set; } = "Lithium";
                     public string ImgURL { get; set; } = null;
 
                     public class acsettings

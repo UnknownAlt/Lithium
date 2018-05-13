@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Lithium.Models;
 using Lithium.Services;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Operations.Backups;
+using Raven.Client.ServerWide;
+using Raven.Client.ServerWide.Operations;
 
 namespace Lithium.Handlers
 {
@@ -14,8 +19,8 @@ namespace Lithium.Handlers
     {
         //This is out configuration for the database handler, DBName is the database you created in RavenDB when setting it up
         //ServerURL is the URL to the local server. NOTE: This bot has not been configured to use public addresses
-        public static string DBName { get; set; } = "Lithium";
-        public static string ServerURL { get; set; } = "http://127.0.0.1:8080";
+        public static string DBName { get; set; } = Config.Load().DBName;
+        public static string ServerURL { get; set; } = Config.Load().ServerURL;
 
         public static void CheckDB(DiscordSocketClient client)
         {
@@ -39,9 +44,9 @@ namespace Lithium.Handlers
                         {
                             session.Store(gobj, gobj.GuildID.ToString());
                         }
-
                         session.SaveChanges();
                     }
+                    SetDatabasebackupTask(client);
                 }
             }
         }
@@ -86,6 +91,23 @@ namespace Lithium.Handlers
             CheckDB(client);
         }
 
+        public static void SetDatabasebackupTask(DiscordSocketClient client)
+        {
+            using (var Store = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            {
+                Logger.LogInfo("Setting up backup operation...");
+                Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(new PeriodicBackupConfiguration
+                {
+                    Name = "Backup",
+                    BackupType = BackupType.Backup,
+                    FullBackupFrequency = "*/10 * * * *",
+                    IncrementalBackupFrequency = "0 2 * * *",
+                    LocalSettings = new LocalSettings { FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/") }
+                })).ConfigureAwait(false);
+
+                Logger.LogInfo("Finished backup operation!");
+            }
+        }
 
         public static GuildModel.Guild GetGuild(ulong Id)
         {

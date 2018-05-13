@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using Lithium.Services;
 using Newtonsoft.Json;
 using Serilog;
@@ -16,6 +17,8 @@ namespace Lithium.Models
         public string DefaultPrefix { get; set; } = "=";
         public string BotToken { get; set; } = "Token";
         public bool AutoRun { get; set; }
+        public string ServerURL { get; set; } = "http://127.0.0.1:8080";
+        public string DBName { get; set; } = "Lithium";
 
         public void Save(string dir = "setup/config.json")
         {
@@ -46,10 +49,7 @@ namespace Lithium.Models
                 auto = false;
             }
 
-            if (auto)
-            {
-            }
-            else
+            if (!auto)
             {
                 Logger.LogInfo("Run (Y for run, N for setup Config)");
 
@@ -62,29 +62,26 @@ namespace Lithium.Models
                     Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "setup/"));
             }
 
-
             if (!File.Exists(ConfigPath))
             {
-                var cfg = new Config();
+                var config = new Config();
 
-                Logger.LogInfo(
-                    @"Please enter a prefix for the bot eg. '+' (do not include the '' outside of the prefix)");
+                Logger.LogInfo(@"Please enter a prefix for the bot eg. '+' (do not include the '' outside of the prefix)");
                 Console.Write("Prefix: ");
-                cfg.DefaultPrefix = Console.ReadLine();
+                config.DefaultPrefix = Console.ReadLine();
 
-                Log.Information(
-                    @"After you input your token, a config will be generated at 'setup/config.json'");
+                Logger.LogInfo(@"After you input your token, a config will be generated at 'setup/config.json'");
                 Console.Write("Token: ");
-                cfg.BotToken = Console.ReadLine();
+                config.BotToken = Console.ReadLine();
 
                 Logger.LogInfo("Would you like to AutoRun the bot from now on? Y/N");
-                var type2 = Console.ReadKey();
-                if (type2.KeyChar == 'y' || type2.KeyChar == 'Y')
-                    cfg.AutoRun = true;
+                var key = Console.ReadKey();
+                if (key.KeyChar == 'y' || key.KeyChar == 'Y')
+                    config.AutoRun = true;
                 else
-                    cfg.AutoRun = false;
+                    config.AutoRun = false;
 
-                cfg.Save();
+                config.Save();
             }
 
             Logger.LogInfo("Config Loaded!");
