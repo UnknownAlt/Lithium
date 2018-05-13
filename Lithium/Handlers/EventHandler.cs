@@ -66,6 +66,7 @@ namespace Lithium.Handlers
 
         public bool CheckHidden(LithiumContext context)
         {
+            if (context.Guild == null) return false;
             var guild = context.Server;
             if (guild.Settings.DisabledParts.BlacklistedCommands.Any() || guild.Settings.DisabledParts.BlacklistedModules.Any())
             {
@@ -105,11 +106,8 @@ namespace Lithium.Handlers
                 //Do not react to commands initiated by a bot
                 if (context.User.IsBot) return;
 
-
-
-                //Ensure that commands are only executed if thet start with the bot's prefix
-                if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) ||
-                      message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos))) return;
+                //Ensure that commands are only executed if they start with the bot's prefix
+                if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) || message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos) || message.HasStringPrefix(context.Server?.Settings.Prefix, ref argPos))) return;
 
                 //Ensure that the message passes all checks before running as a command
                 if (CheckHidden(context)) return;
@@ -117,8 +115,7 @@ namespace Lithium.Handlers
                 var result = await _commands.ExecuteAsync(context, argPos, Provider);
 
                 var commandsuccess = result.IsSuccess;
-
-
+                
                 if (!commandsuccess)
                 {
                     var embed = new EmbedBuilder

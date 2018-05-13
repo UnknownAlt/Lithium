@@ -82,7 +82,7 @@ namespace Lithium.Discord.Contexts
             Message = MessageParam;
             User = MessageParam.Author;
             Channel = MessageParam.Channel;
-            Guild = (MessageParam.Channel as IGuildChannel).Guild;
+            Guild = (MessageParam.Channel is IDMChannel) ? null : (MessageParam.Channel as IGuildChannel).Guild;
 
             //
             Socket = new SocketContext
@@ -95,7 +95,7 @@ namespace Lithium.Discord.Contexts
             };
 
             //These are our custom additions to the context, giving access to the server object and all server objects through Context.
-            Server = DatabaseHandler.GetGuild(Guild.Id);
+            Server = (Channel is IDMChannel) ? null : DatabaseHandler.GetGuild(Guild.Id);
             Session = ServiceProvider.GetRequiredService<IDocumentStore>().OpenSession();
         }
 
