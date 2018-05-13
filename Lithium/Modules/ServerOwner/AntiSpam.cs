@@ -12,6 +12,7 @@ using Lithium.Models;
 namespace Lithium.Modules.ServerOwner
 {
     [RequireRole.RequireAdmin]
+    [Group("guild")]
     public class AntiSpam : Base
     {
         [Command("NoInvite")]
