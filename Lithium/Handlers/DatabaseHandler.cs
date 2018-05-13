@@ -22,10 +22,15 @@ namespace Lithium.Handlers
         public static string DBName { get; set; } = Config.Load().DBName;
         public static string ServerURL { get; set; } = Config.Load().ServerURL;
 
-        public static void CheckDB(DiscordSocketClient client)
+        public static async void CheckDB(DiscordSocketClient client)
         {
             using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
             {
+                if (ds.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).All(x => x != DBName))
+                {
+                    await ds.Maintenance.Server.SendAsync(new CreateDatabaseOperation(new DatabaseRecord(DBName)));
+                }
+
                 using (var session = ds.OpenSession(DBName))
                 {
                     try
