@@ -143,7 +143,7 @@ namespace Lithium.Models
                 {
                     public ulong userID { get; set; }
                     public string username { get; set; }
-                    public string reason { get; set; }
+                    public string reason { get; set; } = "N/A";
 
                     public string modname { get; set; }
                     public ulong modID { get; set; }
@@ -153,7 +153,7 @@ namespace Lithium.Models
                 {
                     public ulong userID { get; set; }
                     public string username { get; set; }
-                    public string reason { get; set; }
+                    public string reason { get; set; } = "N/A";
 
                     public string modname { get; set; }
                     public ulong modID { get; set; }
@@ -163,7 +163,7 @@ namespace Lithium.Models
                 {
                     public ulong userID { get; set; }
                     public string username { get; set; }
-                    public string reason { get; set; }
+                    public string reason { get; set; } = "N/A";
 
                     public string modname { get; set; }
                     public ulong modID { get; set; }
