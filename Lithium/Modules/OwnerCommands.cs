@@ -7,7 +7,7 @@ using Discord;
 using Discord.Commands;
 using Lithium.Handlers;
 
-namespace Lithium.Commands
+namespace Lithium.Modules
 {
     [RequireOwner]
     public class OwnerCommands : ModuleBase<SocketCommandContext>
@@ -59,8 +59,8 @@ namespace Lithium.Commands
 
                 guild = chkguild;
             }
-            var gobj = DatabaseHandler.GetGuild(guild);
-            await ReplyAsync($"{gobj?.GuildID.ToString() ?? "N/A"}");
+            //var gobj = DatabaseHandler.GetGuild(guild.Id);
+            //await ReplyAsync($"{gobj?.GuildID.ToString() ?? "N/A"}");
         }
 
         [Command("Stats")]

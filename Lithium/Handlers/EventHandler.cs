@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Lithium.Discord.Contexts;
 using Lithium.Models;
 using Lithium.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,17 +32,22 @@ namespace Lithium.Handlers
 
         private async Task _client_Ready()
         {
-            var application = await _client.GetApplicationInfoAsync();
-            Log.Information($"Invite: https://discordapp.com/oauth2/authorize?client_id={application.Id}&scope=bot&permissions=2146958591");
-            DatabaseHandler.CheckDB(_client);
-            var dblist = DatabaseHandler.GetFullConfig();
-            foreach (var guild in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
+            try
             {
-                DatabaseHandler.SaveGuild(new GuildModel.Guild
+                var application = await _client.GetApplicationInfoAsync();
+                Log.Information($"Invite: https://discordapp.com/oauth2/authorize?client_id={application.Id}&scope=bot&permissions=2146958591");
+                DatabaseHandler.CheckDB(_client);
+                var dblist = DatabaseHandler.GetFullConfig();
+                foreach (var guild in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
                 {
-                    GuildID = guild.Id
-                });
+                    DatabaseHandler.AddGuild(guild.Id);
+                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
         }
 
         private static async Task _client_JoinedGuild(SocketGuild guild)

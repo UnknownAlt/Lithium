@@ -4,9 +4,12 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Lithium.Discord.Contexts;
+using Lithium.Handlers;
 using Lithium.Models;
 using Lithium.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Raven.Client.Documents;
 using Serilog;
 using EventHandler = Lithium.Handlers.EventHandler;
 
@@ -69,8 +72,18 @@ namespace Lithium
         {
             var services = new ServiceCollection()
                 .AddSingleton(Client)
+                .AddSingleton(new DocumentStore
+                    {
+                        Database = DatabaseHandler.DBName,
+                        Urls = new[] { DatabaseHandler.ServerURL }
+                    }.Initialize())
                 .AddSingleton(new CommandService(
-                    new CommandServiceConfig { CaseSensitiveCommands = false, ThrowOnError = false }));
+                    new CommandServiceConfig
+                    {
+                        CaseSensitiveCommands = false,
+                        ThrowOnError = false,
+                        DefaultRunMode = RunMode.Async
+                    }));
 
             return services.BuildServiceProvider();
         }

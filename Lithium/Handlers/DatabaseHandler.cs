@@ -30,7 +30,7 @@ namespace Lithium.Handlers
                     try
                     {
                         //Check to see wether or not we can actually load the Guilds List saved in our RavenDB
-                        var dbg = session.Load<GuildModel>(GuildDocName).Guilds;
+                        var dbGuilds = session.Query<GuildModel.Guild>().ToList();
                     }
                     catch
                     {
@@ -39,38 +39,34 @@ namespace Lithium.Handlers
                         {
                             GuildID = x.Id
                         }).ToList();
-                        var Model = new GuildModel
+                        foreach (var gobj in glist)
                         {
-                            Guilds = glist
-                        };
-                        session.Store(Model, GuildDocName);
+                            session.Store(gobj, gobj.GuildID.ToString());
+                        }
                         session.SaveChanges();
                     }
                 }
             }
         }
 
-        public static void SaveGuild(GuildModel.Guild GuildObj)
+        public static void AddGuild(ulong Id, string Name = null)
         {
-            using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
             {
-                using (var session = ds.OpenSession(DBName))
+                using (var Session = ds.OpenSession(DBName))
                 {
-                    var model = session.Load<GuildModel>(GuildDocName);
-                    var gobj = model.Guilds.FirstOrDefault(x => x.GuildID == GuildObj.GuildID);
-                    if (gobj == null)
+
+                    if (Session.Advanced.Exists($"{Id}")) return;
+                    Session.Store(new GuildModel.Guild
                     {
-                        model.Guilds.Add(GuildObj);
-                    }
-                    else
-                    {
-                        model.Guilds.Remove(gobj);
-                        model.Guilds.Add(GuildObj);
-                    }
-                    session.Store(model, GuildDocName);
-                    session.SaveChanges();
+                        GuildID = Id
+                    });
+                    Session.SaveChanges();
+
                 }
             }
+
+            Logger.LogInfo(string.IsNullOrWhiteSpace(Name) ? $"Added Server With Id: {Id}" : $"Created Config For {Name}");
         }
 
         public async Task DatabaseCheck(DiscordSocketClient client)
@@ -86,27 +82,45 @@ namespace Lithium.Handlers
         }
 
 
-        public static GuildModel.Guild GetGuild(IGuild guild)
+        public GuildModel.Guild GetGuild(ulong Id)
         {
             using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
             {
-                using (var session = ds.OpenSession(DBName))
+                using (var Session = ds.OpenSession(DBName))
                 {
-                    var dbGuilds = session.Load<GuildModel>(GuildDocName).Guilds;
-                    var currentguild = dbGuilds.FirstOrDefault(x => x.GuildID == guild.Id);
-                    return currentguild;
+                    return Session.Load<GuildModel.Guild>(Id.ToString());
                 }
             }
         }
 
+        public void RemoveGuild(ulong Id, string Name = null)
+        {
+            using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            {
+                using (var Session = ds.OpenSession(DBName))
+                {
+                    Session.Delete(Id.ToString());
+                }
+            }
+           Logger.LogInfo(string.IsNullOrWhiteSpace(Name) ? $"Removed Server With Id: {Id}" : $"Removed Config For {Name}");
+        }
         public static List<GuildModel.Guild> GetFullConfig()
         {
             using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
             {
                 using (var session = ds.OpenSession(DBName))
                 {
-                    var dbGuilds = session.Load<GuildModel>(GuildDocName);
-                    return dbGuilds.Guilds;
+                    List<GuildModel.Guild> dbGuilds;
+                    try
+                    {
+                        dbGuilds = session.Query<GuildModel.Guild>().ToList();
+                    }
+                    catch
+                    {
+                        dbGuilds = new List<GuildModel.Guild>();
+                    }
+
+                    return dbGuilds;
                 }
             }
         }

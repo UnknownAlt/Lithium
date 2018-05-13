@@ -1,14 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Raven.Client.Documents;
 
 namespace Lithium.Models
 {
     public class GuildModel
     {
-        public List<Guild> Guilds { get; set; }= new List<Guild>();
+        private static IDocumentStore Store { get; set; }
+        public GuildModel(IDocumentStore store) => Store = store;
+
         public class Guild
         {
+            public void Save(Guild Server)
+            {
+                if (Server == null) return;
+                using (var Session = Store.OpenSession())
+                {
+                    Session.Store(Server, Server.GuildID.ToString());
+                    Session.SaveChanges();
+                }
+            }
+
             public ulong GuildID { get; set; }
             public Moderation ModerationSetup { get; set; } = new Moderation();
             public settings Settings { get; set; } = new settings();
@@ -225,7 +238,6 @@ namespace Lithium.Models
                     public bool Toxicity { get; set; } = false;
                 }
             }
-
         }
     }
 }
