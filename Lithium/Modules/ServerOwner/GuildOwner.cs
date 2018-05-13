@@ -10,7 +10,6 @@ using Lithium.Models;
 namespace Lithium.Modules.ServerOwner
 {
     [RequireOwner.ServerOwner]
-    [Group("guild")]
     public class Serverowner : Base
     {
         [Command("addmod")]

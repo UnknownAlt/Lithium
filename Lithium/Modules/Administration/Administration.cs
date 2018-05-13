@@ -9,7 +9,7 @@ using Lithium.Discord.Preconditions;
 namespace Lithium.Modules.Administration
 {
     [RequireRole.RequireAdmin]
-    [Group("admin")]
+    [Group("Admin")]
     public class Administration : Base
     {
         private readonly CommandService _service;
@@ -20,7 +20,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("HideModule")]
-        [Summary("HideModule <modulename>")]
+        [Summary("Admin HideModule <modulename>")]
         [Remarks("Disable a module from being used by users")]
         public async Task HideModule([Remainder] string modulename = null)
         {
@@ -38,7 +38,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("HideCommand")]
-        [Summary("HideCommand <commandname>")]
+        [Summary("Admin HideCommand <commandname>")]
         [Remarks("Disable a command from being used by users")]
         public async Task HideCommand([Remainder] string cmdname = null)
         {
@@ -55,7 +55,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("UnHideModule")]
-        [Summary("UnHideModule <modulename>")]
+        [Summary("Admin UnHideModule <modulename>")]
         [Remarks("Re-Enable a module to be used by users")]
         public async Task UnHideModule([Remainder] string modulename = null)
         {
@@ -72,7 +72,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("UnHideCommand")]
-        [Summary("UnHideCommand <commandname>")]
+        [Summary("Admin UnHideCommand <commandname>")]
         [Remarks("Re-Enable a command to be used by users")]
         public async Task UnHideCommand([Remainder] string cmdname = null)
         {
@@ -90,7 +90,7 @@ namespace Lithium.Modules.Administration
 
         [Command("HiddenCommands")]
         [Alias("HiddenModules")]
-        [Summary("HiddenCommands")]
+        [Summary("Admin HiddenCommands")]
         [Remarks("list all hidden commands and modules")]
         public async Task HiddenCMDs([Remainder] string cmdname = null)
         {

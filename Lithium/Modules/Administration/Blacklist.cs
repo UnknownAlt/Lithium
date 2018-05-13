@@ -12,10 +12,9 @@ using Lithium.Models;
 namespace Lithium.Modules.Administration
 {
     [RequireRole.RequireAdmin]
-    [Group("Blacklist")]
     public class Blacklist : Base
     {
-        [Command]
+        [Command("Blacklist")]
         [Summary("blacklist")]
         [Remarks("displays the blacklist")]
         public async Task B()
@@ -52,7 +51,7 @@ namespace Lithium.Modules.Administration
             await PagedReplyAsync(pager, true, true, true);
         }
 
-        [Command("formathelp")]
+        [Command("blacklist formathelp")]
         [Summary("blacklist formathelp")]
         [Remarks("help with adding multiple phrases or words to the blacklist at once")]
         public async Task FormatHelp()
@@ -76,7 +75,7 @@ namespace Lithium.Modules.Administration
             });
         }
 
-        [Command("add")]
+        [Command("blacklist add")]
         [Summary("blacklist add <word> <response>")]
         [Remarks("adds a word to the blacklist, leave response blank to use the default message, use the same response for different blacklisted words to be grouped. Also separate sentences like so: hi_there_person for the keyword")]
         public async Task Ab(string keyword, [Remainder] string response = null)
@@ -116,7 +115,7 @@ namespace Lithium.Modules.Administration
             Context.Server.Save();
         }
 
-        [Command("del")]
+        [Command("blacklist del")]
         [Summary("blacklist del <word>")]
         [Remarks("removes a word from the blacklist")]
         public async Task Db(string initkeyword)
@@ -145,7 +144,7 @@ namespace Lithium.Modules.Administration
             Context.Server.Save();
         }
 
-        [Command("clear")]
+        [Command("blacklist clear")]
         [Summary("blacklist clear")]
         [Remarks("clears the blacklist")]
         public async Task Clear()
@@ -157,7 +156,7 @@ namespace Lithium.Modules.Administration
             await ReplyAsync("The blacklist has been cleared.");
         }
 
-        [Command("defaultmessage")]
+        [Command("blacklist defaultmessage")]
         [Summary("blacklist defaultmessage <message>")]
         [Remarks("set the default blacklist message")]
         public async Task BlMessage([Remainder] string blmess = "")

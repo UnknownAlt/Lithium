@@ -12,12 +12,11 @@ using Lithium.Models;
 
 namespace Lithium.Modules.Moderation
 {
-    [RequireRole.RequireModerator]
-    [Group("Mod")]
+    [RequireRole.RequireModerator][Group("Mod")]
     public class Moderation : Base
     {
         [Command("Warn")]
-        [Summary("Warn <@user> <reason>")]
+        [Summary("Mod Warn <@user> <reason>")]
         [Remarks("Warn the specified user")]
         public async Task WarnUser(IGuildUser user, [Remainder] string reason = null)
         {
@@ -44,7 +43,7 @@ namespace Lithium.Modules.Moderation
         }
 
         [Command("Kick")]
-        [Summary("Kick <@user> <reason>")]
+        [Summary("Mod Kick <@user> <reason>")]
         [Remarks("Kick the specified user")]
         public async Task KickUser(IGuildUser user, [Remainder] string reason = null)
         {
@@ -91,7 +90,7 @@ namespace Lithium.Modules.Moderation
         }
 
         [Command("Ban")]
-        [Summary("Ban <@user> <reason>")]
+        [Summary("Mod Ban <@user> <reason>")]
         [Remarks("Ban the specified user")]
         public async Task BanUser(IGuildUser user, [Remainder] string reason = null)
         {
@@ -138,7 +137,7 @@ namespace Lithium.Modules.Moderation
         }
 
         [Command("SoftBan")]
-        [Summary("SoftBan <@user> <hours> <reason>")]
+        [Summary("Mod SoftBan <@user> <hours> <reason>")]
         [Remarks("Ban the specified user for the specified amount of hours")]
         public async Task SoftBanUser(IGuildUser user, int hours, [Remainder] string reason = null)
         {
@@ -189,7 +188,7 @@ namespace Lithium.Modules.Moderation
 
 
         [Command("Warns")]
-        [Summary("Warns")]
+        [Summary("Mod Warns")]
         [Remarks("List all logged server warnings")]
         public async Task Warns()
         {
@@ -235,7 +234,7 @@ namespace Lithium.Modules.Moderation
         }
 
         [Command("Kicks")]
-        [Summary("Kicks")]
+        [Summary("Mod Kicks")]
         [Remarks("List all logged server Kicks")]
         public async Task Kicks()
         {
@@ -281,7 +280,7 @@ namespace Lithium.Modules.Moderation
         }
 
         [Command("Bans")]
-        [Summary("Bans")]
+        [Summary("Mod Bans")]
         [Remarks("List all logged server Bans")]
         public async Task Bans()
         {
