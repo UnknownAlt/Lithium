@@ -41,15 +41,6 @@ namespace Lithium.Modules
             }
         }
 
-        [Command("Backup")]
-        [Summary("Backup")]
-        [Remarks("Database Backup")]
-        public async Task backup()
-        {
-            await DatabaseHandler.DatabaseBackup(Context.Socket.Client);
-        }
-
-
         [Command("Pages")]
         [Summary("Pages")]
         [Remarks("Paginator")]
