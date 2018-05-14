@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Lithium.Handlers;
@@ -21,6 +20,35 @@ namespace Lithium.Services
         {
             _timer = new Timer(async _ =>
                 {
+                    try
+                    {
+                        var rnd = new Random();
+                        switch (rnd.Next(0, 6))
+                        {
+                            case 0:
+                                await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {client.Guilds.Count} Guilds!");
+                                break;
+                            case 1:
+                                await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {client.Guilds.Sum(x => x.MemberCount)} Users!");
+                                break;
+                            case 2:
+                                await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {Config.Load().ServerURL}");
+                                break;
+                            case 3:
+                                await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // Making Pancakes!");
+                                break;
+                            case 4:
+                                await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // Banning Spammers");
+                                break;
+                            case 5:
+                                await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // AutoModerating!");
+                                break;
+                        }
+                    }
+                    catch
+                    {
+                        //
+                    }
                     /*
                     foreach (var guild in client.Guilds)
                     {
