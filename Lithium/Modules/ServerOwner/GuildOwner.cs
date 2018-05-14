@@ -1,11 +1,9 @@
-﻿using System.Reflection.Metadata;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Preconditions;
 using Lithium.Handlers;
-using Lithium.Models;
 
 namespace Lithium.Modules.ServerOwner
 {

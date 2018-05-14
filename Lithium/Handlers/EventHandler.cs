@@ -20,26 +20,9 @@ namespace Lithium.Handlers
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly TimerService _timerservice;
-        private readonly Perspective.Api ToxicityAPI;
         private readonly List<NoSpamGuild> NoSpam = new List<NoSpamGuild>();
-
-        private class NoSpamGuild
-        {
-            public ulong GuildID { get; set; }
-            public List<NoSpam> Users { get; set; } = new List<NoSpam>();
-
-            public class NoSpam
-            {
-                public ulong UserID { get; set; }
-                public List<Msg> Messages { get; set; } = new List<Msg>();
-
-                public class Msg
-                {
-                    public string LastMessage { get; set; }
-                    public DateTime LastMessageDate { get; set; }
-                }
-            }
-        }
+        private readonly Perspective.Api ToxicityAPI;
+        public List<Delays> AntiSpamMsgDelays = new List<Delays>();
 
         public IServiceProvider Provider;
 
@@ -68,6 +51,7 @@ namespace Lithium.Handlers
                 {
                     DatabaseHandler.AddGuild(guild.Id);
                 }
+
                 _timerservice.Restart();
             }
             catch (Exception e)
@@ -111,7 +95,7 @@ namespace Lithium.Handlers
 
                 if (CMDCheck != null)
                 {
-                    var guser = (IGuildUser)context.User;
+                    var guser = (IGuildUser) context.User;
                     if (!guser.GuildPermissions.Administrator && !guild.ModerationSetup.AdminRoles.Any(x => guser.RoleIds.Contains(x)))
                     {
                         if (guild.Settings.DisabledParts.BlacklistedCommands.Any(x => string.Equals(x, CMDCheck.Name, StringComparison.CurrentCultureIgnoreCase)) ||
@@ -122,6 +106,7 @@ namespace Lithium.Handlers
                     }
                 }
             }
+
             return false;
         }
 
@@ -135,7 +120,7 @@ namespace Lithium.Handlers
                 var exemptcheck = new List<GuildModel.Guild.antispams.IgnoreRole>();
                 if (guild.Antispam.IgnoreRoles.Any())
                 {
-                    exemptcheck = guild.Antispam.IgnoreRoles.Where(x => ((IGuildUser)context.User).RoleIds.Contains(x.RoleID)).ToList();
+                    exemptcheck = guild.Antispam.IgnoreRoles.Where(x => ((IGuildUser) context.User).RoleIds.Contains(x.RoleID)).ToList();
                 }
 
                 if (guild.Antispam.Antispam.NoSpam)
@@ -247,7 +232,6 @@ namespace Lithium.Handlers
                                         }
 
 
-
                                         return true;
                                     }
                                 }
@@ -281,6 +265,7 @@ namespace Lithium.Handlers
                                 guild.Save();
                                 guild.Save();
                             }
+
                             return true;
                         }
                     }
@@ -308,6 +293,7 @@ namespace Lithium.Handlers
                                     await guild.AddWarn("AutoMod - Mass Mention", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
                                     guild.Save();
                                 }
+
                                 return true;
                             }
                         }
@@ -333,6 +319,7 @@ namespace Lithium.Handlers
                                     await guild.AddWarn("AutoMod - Mention All", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
                                     guild.Save();
                                 }
+
                                 return true;
                                 //if
                                 // 1. The server Has Mention Deletions turned on
@@ -363,11 +350,11 @@ namespace Lithium.Handlers
                                 await guild.AddWarn("AutoMod - Anti IP", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
                                 guild.Save();
                             }
+
                             return true;
                         }
                     }
                 }
-
 
 
                 if (guild.Antispam.Blacklist.BlacklistWordSet.Any() || guild.Antispam.Toxicity.UsePerspective)
@@ -412,7 +399,6 @@ namespace Lithium.Handlers
                                         result = Regex.Replace(result, "{channel.mention}",
                                             ((SocketTextChannel) context.Channel).Mention, RegexOptions.IgnoreCase);
                                         await context.Channel.SendMessageAsync(result);
-
                                     }
 
                                     if (guild.Antispam.Blacklist.WarnOnDetection)
@@ -496,12 +482,6 @@ namespace Lithium.Handlers
 
             return false;
         }
-        public List<Delays> AntiSpamMsgDelays = new List<Delays>();
-        public class Delays
-        {
-            public DateTime _delay { get; set; } = DateTime.UtcNow;
-            public ulong GuildID { get; set; }
-        }
 
         public GuildModel.Guild.Moderation.warn QuickWarn(string reason, IUser user, IUser mod)
         {
@@ -522,14 +502,14 @@ namespace Lithium.Handlers
                 if (!(parameterMessage is SocketUserMessage message)) return;
                 var argPos = 0;
                 var context = new LithiumContext(_client, message, Provider);
-                
+
                 //Do not react to commands initiated by a bot
                 if (context.User.IsBot) return;
 
                 if (await antispam(context)) return;
 
                 //Ensure that commands are only executed if they start with the bot's prefix
-                if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) || message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos) || message.HasStringPrefix(context.Server?.Settings.Prefix , ref argPos))) return;
+                if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) || message.HasStringPrefix(Config.Load().DefaultPrefix, ref argPos) || message.HasStringPrefix(context.Server?.Settings.Prefix, ref argPos))) return;
 
                 //Ensure that the message passes all checks before running as a command
                 if (CheckHidden(context)) return;
@@ -537,7 +517,7 @@ namespace Lithium.Handlers
                 var result = await _commands.ExecuteAsync(context, argPos, Provider);
 
                 var commandsuccess = result.IsSuccess;
-                
+
                 if (!commandsuccess)
                 {
                     var embed = new EmbedBuilder
@@ -563,6 +543,30 @@ namespace Lithium.Handlers
         public async Task ConfigureAsync()
         {
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+        }
+
+        private class NoSpamGuild
+        {
+            public ulong GuildID { get; set; }
+            public List<NoSpam> Users { get; set; } = new List<NoSpam>();
+
+            public class NoSpam
+            {
+                public ulong UserID { get; set; }
+                public List<Msg> Messages { get; set; } = new List<Msg>();
+
+                public class Msg
+                {
+                    public string LastMessage { get; set; }
+                    public DateTime LastMessageDate { get; set; }
+                }
+            }
+        }
+
+        public class Delays
+        {
+            public DateTime _delay { get; set; } = DateTime.UtcNow;
+            public ulong GuildID { get; set; }
         }
     }
 }

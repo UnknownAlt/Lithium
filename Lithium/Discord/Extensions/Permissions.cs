@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using Discord;
 using Discord.WebSocket;
 
@@ -10,7 +7,7 @@ namespace Lithium.Discord.Extensions
     public class Permissions
     {
         /// <summary>
-        /// Returns true if the specified user has a higher position (rank) in the guild than the bot
+        ///     Returns true if the specified user has a higher position (rank) in the guild than the bot
         /// </summary>
         /// <param name="targetuser"></param>
         /// <param name="client"></param>

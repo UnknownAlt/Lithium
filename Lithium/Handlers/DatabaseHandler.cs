@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Lithium.Models;
@@ -49,15 +48,17 @@ namespace Lithium.Handlers
                         {
                             session.Store(gobj, gobj.GuildID.ToString());
                         }
+
                         session.SaveChanges();
                     }
+
                     SetDatabasebackupTask(client);
                 }
             }
         }
 
         /// <summary>
-        /// This adds a new guild to the RavenDB
+        ///     This adds a new guild to the RavenDB
         /// </summary>
         /// <param name="Id">The Server's ID</param>
         /// <param name="Name">Optionally say the server name was added to the DB</param>
@@ -81,7 +82,7 @@ namespace Lithium.Handlers
 
         public static void RemoveGuild(ulong Id, string Name = null)
         {
-            using (var ds = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            using (var ds = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
             {
                 using (var Session = ds.OpenSession(DBName))
                 {
@@ -93,7 +94,7 @@ namespace Lithium.Handlers
         }
 
         /// <summary>
-        /// Check to see wether or not the RavenDB is running
+        ///     Check to see wether or not the RavenDB is running
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
@@ -111,7 +112,7 @@ namespace Lithium.Handlers
 
         public static void SetDatabasebackupTask(DiscordSocketClient client)
         {
-            using (var Store = new DocumentStore { Urls = new[] { ServerURL } }.Initialize())
+            using (var Store = new DocumentStore {Urls = new[] {ServerURL}}.Initialize())
             {
                 Logger.LogInfo("Setting up backup operation...");
                 Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(new PeriodicBackupConfiguration
@@ -120,7 +121,7 @@ namespace Lithium.Handlers
                     BackupType = BackupType.Backup,
                     FullBackupFrequency = "*/10 * * * *",
                     IncrementalBackupFrequency = "0 2 * * *",
-                    LocalSettings = new LocalSettings { FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/") }
+                    LocalSettings = new LocalSettings {FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/")}
                 })).ConfigureAwait(false);
 
                 Logger.LogInfo("Finished backup operation!");

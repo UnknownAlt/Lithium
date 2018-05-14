@@ -40,7 +40,6 @@ namespace Lithium
                 MessageCacheSize = 50
             });
 
-            
 
             try
             {

@@ -34,9 +34,9 @@ namespace Lithium.Models
 
             public async Task ModLog(EmbedBuilder embed, IGuild guild)
             {
-                if (this.ModerationSetup.Settings.ModLogChannel != 0)
+                if (ModerationSetup.Settings.ModLogChannel != 0)
                 {
-                    if (await guild.GetChannelAsync(this.ModerationSetup.Settings.ModLogChannel) is IMessageChannel channel)
+                    if (await guild.GetChannelAsync(ModerationSetup.Settings.ModLogChannel) is IMessageChannel channel)
                     {
                         try
                         {
@@ -52,7 +52,7 @@ namespace Lithium.Models
 
             public async Task AddWarn(string reason, IGuildUser User, IUser mod, IMessageChannel channel)
             {
-                this.ModerationSetup.Warns.Add(new Moderation.warn
+                ModerationSetup.Warns.Add(new Moderation.warn
                 {
                     modID = mod.Id,
                     modname = mod.Username,
@@ -75,12 +75,12 @@ namespace Lithium.Models
 
                 await channel.SendMessageAsync("", false, embed.Build());
                 await ModLog(embed, User.Guild);
-                if (this.ModerationSetup.Warns.Count(x => x.userID == User.Id) > this.ModerationSetup.Settings.warnlimit && this.ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
+                if (ModerationSetup.Warns.Count(x => x.userID == User.Id) > ModerationSetup.Settings.warnlimit && ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
                 {
                     var embedmsg = new EmbedBuilder();
-                    if (this.ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Ban)
+                    if (ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Ban)
                     {
-                        this.ModerationSetup.Bans.Add(new Moderation.ban
+                        ModerationSetup.Bans.Add(new Moderation.ban
                         {
                             modID = mod.Id,
                             modname = mod.Username,
@@ -101,7 +101,7 @@ namespace Lithium.Models
                     }
                     else
                     {
-                        this.ModerationSetup.Kicks.Add(new Moderation.kick
+                        ModerationSetup.Kicks.Add(new Moderation.kick
                         {
                             modID = mod.Id,
                             modname = mod.Username,
@@ -134,6 +134,7 @@ namespace Lithium.Models
                 public List<ban> Bans { get; set; } = new List<ban>();
                 public msettings Settings { get; set; } = new msettings();
                 public muted Mutes { get; set; } = new muted();
+
                 public class msettings
                 {
                     public enum warnLimitAction
@@ -192,7 +193,7 @@ namespace Lithium.Models
                     public string modname { get; set; }
                     public ulong modID { get; set; }
 
-                    public bool Expires { get; set; } = false;
+                    public bool Expires { get; set; }
                     public DateTime ExpiryDate { get; set; } = DateTime.MaxValue;
                 }
             }

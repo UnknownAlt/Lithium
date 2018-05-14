@@ -8,7 +8,6 @@ using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Contexts.Paginator;
-using Lithium.Handlers;
 using Lithium.Models;
 
 namespace Lithium.Modules
@@ -16,7 +15,6 @@ namespace Lithium.Modules
     [RequireOwner]
     public class OwnerCommands : Base
     {
-        
         [Command("SetGame")]
         [Summary("SetGame <game>")]
         [Remarks("Set the bot's Current Game.")]
@@ -67,7 +65,7 @@ namespace Lithium.Modules
             await PagedReplyAsync(gager);
         }
 
-        
+
         [Command("Stats")]
         [Summary("Stats")]
         [Remarks("Display Bot Statistics")]

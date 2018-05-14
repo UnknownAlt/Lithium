@@ -12,7 +12,8 @@ using Lithium.Models;
 
 namespace Lithium.Modules.Moderation
 {
-    [RequireRole.RequireModerator][Group("Mod")]
+    [RequireRole.RequireModerator]
+    [Group("Mod")]
     public class Moderation : Base
     {
         [Command("Mute")]
@@ -49,7 +50,6 @@ namespace Lithium.Modules.Moderation
                     userid = user.Id
                 });
                 await ReplyAsync($"User Muted for {hours} hours (-1 is unlimited)");
-
             }
             else
             {
@@ -57,6 +57,7 @@ namespace Lithium.Modules.Moderation
                 Context.Server.ModerationSetup.Mutes.MutedUsers.Remove(Context.Server.ModerationSetup.Mutes.MutedUsers.FirstOrDefault(x => x.userid == user.Id));
                 await ReplyAsync($"User Unmuted");
             }
+
             Context.Server.Save();
         }
 
@@ -103,11 +104,11 @@ namespace Lithium.Modules.Moderation
                 {
                     Title = $"{user.Username} has been kicked",
                     Description = $"User: {user.Username}#{user.Discriminator}\n" +
-                              $"UserID: {user.Id}\n" +
-                              $"Mod: {Context.User.Username}#{Context.User.Discriminator}\n" +
-                              $"Mod ID: {Context.User.Id}\n\n" +
-                              "Reason:\n" +
-                              $"{reason ?? "N/A"}"
+                                  $"UserID: {user.Id}\n" +
+                                  $"Mod: {Context.User.Username}#{Context.User.Discriminator}\n" +
+                                  $"Mod ID: {Context.User.Id}\n\n" +
+                                  "Reason:\n" +
+                                  $"{reason ?? "N/A"}"
                 });
             }
             catch
@@ -232,6 +233,7 @@ namespace Lithium.Modules.Moderation
                     dstr += $"Warned By: {(await Context.Client.GetUserAsync(first.modID)).Username ?? warn.modname} `[{warn.modID}]`\n" +
                             $"Reason: {warn.reason}\n";
                 }
+
                 dstr += $"-Count: {warngroup.Count()}\n";
                 desc += dstr;
                 if (desc.Length > 800)
@@ -240,6 +242,7 @@ namespace Lithium.Modules.Moderation
                     {
                         desc = desc.Substring(0, 1023);
                     }
+
                     pages.Add(new PaginatedMessage.Page
                     {
                         description = desc
@@ -247,6 +250,7 @@ namespace Lithium.Modules.Moderation
                     desc = "";
                 }
             }
+
             pages.Add(new PaginatedMessage.Page
             {
                 description = desc
@@ -278,6 +282,7 @@ namespace Lithium.Modules.Moderation
                     dstr += $"Kicked By: {(await Context.Client.GetUserAsync(first.modID)).Username ?? kick.modname} `[{kick.modID}]`\n" +
                             $"Reason: {kick.reason}\n";
                 }
+
                 dstr += $"-Count: {kickgroup.Count()}\n";
                 desc += dstr;
                 if (desc.Length > 800)
@@ -286,6 +291,7 @@ namespace Lithium.Modules.Moderation
                     {
                         desc = desc.Substring(0, 1023);
                     }
+
                     pages.Add(new PaginatedMessage.Page
                     {
                         description = desc
@@ -293,6 +299,7 @@ namespace Lithium.Modules.Moderation
                     desc = "";
                 }
             }
+
             pages.Add(new PaginatedMessage.Page
             {
                 description = desc
@@ -325,6 +332,7 @@ namespace Lithium.Modules.Moderation
                             $"SoftBan: {(ban.Expires ? $"{(ban.ExpiryDate - DateTime.UtcNow).TotalMinutes} Minutes Remaining" : "Permanent Ban")}" +
                             $"Reason: {ban.reason}\n";
                 }
+
                 desc += dstr;
                 if (desc.Length > 800)
                 {
@@ -332,6 +340,7 @@ namespace Lithium.Modules.Moderation
                     {
                         desc = desc.Substring(0, 1023);
                     }
+
                     pages.Add(new PaginatedMessage.Page
                     {
                         description = desc
@@ -339,6 +348,7 @@ namespace Lithium.Modules.Moderation
                     desc = "";
                 }
             }
+
             pages.Add(new PaginatedMessage.Page
             {
                 description = desc

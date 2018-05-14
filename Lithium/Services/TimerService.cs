@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Discord;
@@ -62,7 +61,7 @@ namespace Lithium.Services
                     {
                         Console.WriteLine(e);
                     }
-                    
+
                     LastFireTime = DateTime.UtcNow;
                 },
                 null, TimeSpan.Zero, TimeSpan.FromMinutes(FirePreiod));
@@ -174,8 +173,8 @@ namespace Lithium.Services
                     Logger.LogError(e.ToString());
                 }
             }
-            guildobj.Save();
 
+            guildobj.Save();
         }
     }
 }

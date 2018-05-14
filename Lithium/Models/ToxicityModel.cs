@@ -50,7 +50,7 @@ namespace Lithium.Models
             public AnalyzeCommentResponse QueryToxicity(string input)
             {
                 var requestedAttributeses =
-                    new Dictionary<string, RequestedAttributes> { { "TOXICITY", new RequestedAttributes() } };
+                    new Dictionary<string, RequestedAttributes> {{"TOXICITY", new RequestedAttributes()}};
                 var req = new AnalyzeCommentRequest(input, requestedAttributeses);
                 var res = SendRequest(req);
                 return res;
@@ -63,7 +63,7 @@ namespace Lithium.Models
             public string clientToken;
             public Comment comment;
             public bool doNotStore;
-            public string[] languages = { "en" };
+            public string[] languages = {"en"};
             public Dictionary<string, RequestedAttributes> requestedAttributes;
 
             public AnalyzeCommentRequest(string comment,

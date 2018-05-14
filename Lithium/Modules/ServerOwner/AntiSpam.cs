@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -23,6 +22,7 @@ namespace Lithium.Modules.ServerOwner
             Context.Server.Save();
             await ReplyAsync($"NoSpam: {Context.Server.Antispam.Advertising.Invite}");
         }
+
         [Command("NoInvite")]
         [Summary("NoInvite")]
         [Remarks("Disable the posting of discord invite links in the server")]
@@ -32,6 +32,7 @@ namespace Lithium.Modules.ServerOwner
             Context.Server.Save();
             await ReplyAsync($"NoInvite: {Context.Server.Antispam.Advertising.Invite}");
         }
+
         [Command("NoInviteMessage")]
         [Summary("NoInviteMessage <message>")]
         [Remarks("set the no invites message")]
@@ -43,6 +44,7 @@ namespace Lithium.Modules.ServerOwner
             await ReplyAsync("The No Invites message is now:\n" +
                              $"{Context.Server.Antispam.Advertising.NoInviteMessage ?? "Default"}");
         }
+
         [Command("NoMentionAll")]
         [Summary("NoMentionAll")]
         [Remarks("Disable the use of @everyone and @here for users")]
@@ -52,15 +54,17 @@ namespace Lithium.Modules.ServerOwner
             Context.Server.Save();
             await ReplyAsync($"NoMentionAll: {Context.Server.Antispam.Mention.MentionAll}");
         }
+
         [Command("NoMentionMessage")]
         [Summary("NoMentionMessage")]
         [Remarks("Set the No Mention Message response")]
-        public async Task NoMentionAll([Remainder]string message = null)
+        public async Task NoMentionAll([Remainder] string message = null)
         {
             Context.Server.Antispam.Mention.MentionAllMessage = message;
             Context.Server.Save();
             await ReplyAsync($"No Mention Message: {message ?? "N/A"}");
         }
+
         [Command("NoMassMention")]
         [Summary("NoMassMention")]
         [Remarks("Toggle auto-deletion of messages with 5+ role or user mentions")]
@@ -70,6 +74,7 @@ namespace Lithium.Modules.ServerOwner
             Context.Server.Save();
             await ReplyAsync($"NoMassMention: {Context.Server.Antispam.Mention.RemoveMassMention}");
         }
+
         [Command("NoIPs")]
         [Summary("NoIps")]
         [Remarks("Toggle auto-deletion of messages containing valid IP addresses")]
@@ -79,6 +84,7 @@ namespace Lithium.Modules.ServerOwner
             Context.Server.Save();
             await ReplyAsync($"No IP Addresses: {Context.Server.Antispam.Privacy.RemoveIPs}");
         }
+
         [Command("NoToxicity")]
         [Summary("NoToxicity <threshhold>")]
         [Remarks("Toggle auto-deletion of messages that are too toxic")]
@@ -89,6 +95,7 @@ namespace Lithium.Modules.ServerOwner
                 await ReplyAsync("Pick a threshhold between 50 and 99");
                 return;
             }
+
             Context.Server.Antispam.Toxicity.ToxicityThreshHold = threshhold;
             Context.Server.Antispam.Toxicity.UsePerspective = !Context.Server.Antispam.Toxicity.UsePerspective;
             Context.Server.Save();
@@ -218,7 +225,7 @@ namespace Lithium.Modules.ServerOwner
         [Command("WarnSpammers")]
         [Summary("WarnSpammers <type>")]
         [Remarks("Toggle Auto-Warning of people detected by any of the antispam methods")]
-        public async Task WarnSpammers([Remainder]string selection)
+        public async Task WarnSpammers([Remainder] string selection)
         {
             var intselections = selection.Split(',');
 
@@ -280,12 +287,12 @@ namespace Lithium.Modules.ServerOwner
                 var embed = new EmbedBuilder
                 {
                     Description = $"__AutoMod Antispam Detections__\n" +
-                                    $"Warn on Antispam: {Context.Server.Antispam.Antispam.WarnOnDetection}\n" +
-                                    $"Warn on Blacklist: {Context.Server.Antispam.Blacklist.WarnOnDetection}\n" +
-                                    $"Warn on Mention Everyone and 5+ Role Mentions: {Context.Server.Antispam.Mention.WarnOnDetection}\n" +
-                                    $"Warn on Invite Link Removal: {Context.Server.Antispam.Advertising.WarnOnDetection}\n" +
-                                    $"Warn on IP Removal: {Context.Server.Antispam.Privacy.WarnOnDetection}\n" +
-                                    $"Warn on Toxicity Check: {Context.Server.Antispam.Toxicity.WarnOnDetection}"
+                                  $"Warn on Antispam: {Context.Server.Antispam.Antispam.WarnOnDetection}\n" +
+                                  $"Warn on Blacklist: {Context.Server.Antispam.Blacklist.WarnOnDetection}\n" +
+                                  $"Warn on Mention Everyone and 5+ Role Mentions: {Context.Server.Antispam.Mention.WarnOnDetection}\n" +
+                                  $"Warn on Invite Link Removal: {Context.Server.Antispam.Advertising.WarnOnDetection}\n" +
+                                  $"Warn on IP Removal: {Context.Server.Antispam.Privacy.WarnOnDetection}\n" +
+                                  $"Warn on Toxicity Check: {Context.Server.Antispam.Toxicity.WarnOnDetection}"
                 };
                 await ReplyAsync("", false, embed.Build());
                 Context.Server.Save();
@@ -385,9 +392,8 @@ namespace Lithium.Modules.ServerOwner
         [Remarks("List of messages antispam will skip")]
         public async Task SkipAntiSpam()
         {
-            var embed = new EmbedBuilder { Description = string.Join("\n", Context.Server.Antispam.Antispam.AntiSpamSkip) };
+            var embed = new EmbedBuilder {Description = string.Join("\n", Context.Server.Antispam.Antispam.AntiSpamSkip)};
             await ReplyAsync("", false, embed.Build());
         }
-
     }
 }

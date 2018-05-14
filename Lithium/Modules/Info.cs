@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -74,7 +72,7 @@ namespace Lithium.Modules
         [RequireContext(ContextType.Guild)]
         public async Task RoleInfoAsync(IRole role)
         {
-            var srole = ((SocketRole)role).Permissions;
+            var srole = ((SocketRole) role).Permissions;
             var l = new List<string>();
             if (srole.AddReactions)
                 l.Add("Can Add Reactions");

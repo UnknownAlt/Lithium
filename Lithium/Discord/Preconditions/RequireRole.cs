@@ -23,7 +23,8 @@ namespace Lithium.Discord.Preconditions
 
             public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command,
                 IServiceProvider services)
-            {//Ensure that the command is only run in a server and not in DMs
+            {
+                //Ensure that the command is only run in a server and not in DMs
 
                 if (context.Channel is IDMChannel) return Task.FromResult(PreconditionResult.FromError("User is not a Moderator or an Admin and Command is only accessible within a guild"));
 

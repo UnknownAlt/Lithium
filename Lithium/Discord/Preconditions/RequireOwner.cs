@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Lithium.Handlers;
 
 namespace Lithium.Discord.Preconditions
 {
@@ -16,7 +12,8 @@ namespace Lithium.Discord.Preconditions
         {
             public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command,
                 IServiceProvider services)
-            {//Ensure that the command is only run in a server and not in DMs
+            {
+                //Ensure that the command is only run in a server and not in DMs
 
                 if (context.Channel is IDMChannel) return Task.FromResult(PreconditionResult.FromError("This is a guild specific command."));
 

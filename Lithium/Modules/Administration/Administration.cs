@@ -19,6 +19,7 @@ namespace Lithium.Modules.Administration
         {
             _service = service;
         }
+
         [Command("SetMutedRole")]
         [Summary("Admin SetMutedRole <@Role>")]
         [Remarks("set role users are given upon being muted")]
@@ -67,6 +68,7 @@ namespace Lithium.Modules.Administration
             Context.Server.Save();
             await ReplyAsync($"Success! After {limit} warnings, an auto-action will be taken on the user");
         }
+
         [Command("SetWarnLimitAction")]
         [Summary("Admin SetWarnLimitAction <Limit>")]
         [Remarks("set what happens to users who exceed the warn limit")]
@@ -76,6 +78,7 @@ namespace Lithium.Modules.Administration
             Context.Server.Save();
             await ReplyAsync($"Success! {action.ToString()} will be taken upon warn limit being exceeded");
         }
+
         [Command("SetWarnLimitAction")]
         [Summary("Admin SetWarnLimitAction")]
         [Remarks("Overload With Info")]
@@ -157,6 +160,7 @@ namespace Lithium.Modules.Administration
                 await ReplyAsync("No warns found for this user.");
             }
         }
+
         [Command("ClearKicks")]
         [Summary("ClearKicks <@user>")]
         [Remarks("Clear all kick logs for the specified user")]
@@ -180,6 +184,7 @@ namespace Lithium.Modules.Administration
                 await ReplyAsync("No Kicks found for this user.");
             }
         }
+
         [Command("ClearBans")]
         [Summary("ClearBans <@user>")]
         [Remarks("Clear all ban logs for the specified user")]

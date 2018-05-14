@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
 using Lithium.Services;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace Lithium.Models
 {

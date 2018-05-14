@@ -9,7 +9,6 @@ using Lithium.Discord.Contexts.Criteria;
 using Lithium.Discord.Contexts.Paginator;
 using Lithium.Handlers;
 using Lithium.Models;
-using Lithium.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
@@ -47,7 +46,7 @@ namespace Lithium.Discord.Contexts
             return Interactive.NextMessageAsync(LithiumSocketContext(), criterion, timeout);
         }
 
-        SocketCommandContext LithiumSocketContext()
+        private SocketCommandContext LithiumSocketContext()
         {
             return new SocketCommandContext(Context.Client as DiscordSocketClient, Context.Message as SocketUserMessage);
         }
@@ -82,7 +81,7 @@ namespace Lithium.Discord.Contexts
             Message = MessageParam;
             User = MessageParam.Author;
             Channel = MessageParam.Channel;
-            Guild = (MessageParam.Channel is IDMChannel) ? null : (MessageParam.Channel as IGuildChannel).Guild;
+            Guild = MessageParam.Channel is IDMChannel ? null : (MessageParam.Channel as IGuildChannel).Guild;
 
             //
             Socket = new SocketContext
@@ -95,18 +94,19 @@ namespace Lithium.Discord.Contexts
             };
 
             //These are our custom additions to the context, giving access to the server object and all server objects through Context.
-            Server = (Channel is IDMChannel) ? null : DatabaseHandler.GetGuild(Guild.Id);
+            Server = Channel is IDMChannel ? null : DatabaseHandler.GetGuild(Guild.Id);
             Session = ServiceProvider.GetRequiredService<IDocumentStore>().OpenSession();
         }
 
         public GuildModel.Guild Server { get; }
         public IDocumentSession Session { get; }
+        public SocketContext Socket { get; }
         public IUser User { get; }
         public IGuild Guild { get; }
         public IDiscordClient Client { get; }
         public IUserMessage Message { get; }
         public IMessageChannel Channel { get; }
-        public SocketContext Socket { get; }
+
         public class SocketContext
         {
             public SocketUser User { get; set; }
