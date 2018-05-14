@@ -31,7 +31,7 @@ namespace Lithium.Services
                                 await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {client.Guilds.Sum(x => x.MemberCount)} Users!");
                                 break;
                             case 2:
-                                await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {Config.Load().ServerURL}");
+                                await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {Config.Load().SupportServer}");
                                 break;
                             case 3:
                                 await client.SetGameAsync($"{Config.Load().DefaultPrefix}help // Making Pancakes!");

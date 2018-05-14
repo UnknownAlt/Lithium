@@ -16,6 +16,7 @@ namespace Lithium.Models
         public string BotToken { get; set; } = "Token";
         public bool AutoRun { get; set; }
         public string ServerURL { get; set; } = "http://127.0.0.1:8080";
+        public string SupportServer { get; set; } = "http://discord.me/passive";
         public string DBName { get; set; } = "Lithium";
         public string ToxicityToken { get; set; } = null;
 

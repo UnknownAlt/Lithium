@@ -227,10 +227,10 @@ namespace Lithium.Modules.Moderation
                 var first = warngroup.FirstOrDefault();
                 var user = await Context.Client.GetUserAsync(first.userID);
 
-                var dstr = $"**{user.Username ?? first.username} `[{first.userID}]`**\n";
+                var dstr = $"**{user?.Username ?? first.username} `[{first?.userID}]`**\n";
                 foreach (var warn in warngroup)
                 {
-                    dstr += $"Warned By: {(await Context.Client.GetUserAsync(first.modID)).Username ?? warn.modname} `[{warn.modID}]`\n" +
+                    dstr += $"Warned By: {(await Context.Client.GetUserAsync(first.modID))?.Username ?? warn.modname} `[{warn.modID}]`\n" +
                             $"Reason: {warn.reason}\n";
                 }
 
@@ -276,10 +276,10 @@ namespace Lithium.Modules.Moderation
                 var first = kickgroup.FirstOrDefault();
                 var user = await Context.Client.GetUserAsync(first.userID);
 
-                var dstr = $"**{user.Username ?? first.username} `[{first.userID}]`**\n";
+                var dstr = $"**{user?.Username ?? first.username} `[{first?.userID}]`**\n";
                 foreach (var kick in kickgroup)
                 {
-                    dstr += $"Kicked By: {(await Context.Client.GetUserAsync(first.modID)).Username ?? kick.modname} `[{kick.modID}]`\n" +
+                    dstr += $"Kicked By: {(await Context.Client.GetUserAsync(first.modID))?.Username ?? kick.modname} `[{kick.modID}]`\n" +
                             $"Reason: {kick.reason}\n";
                 }
 
@@ -325,10 +325,10 @@ namespace Lithium.Modules.Moderation
                 var first = bangroup.FirstOrDefault();
                 var user = await Context.Client.GetUserAsync(first.userID);
 
-                var dstr = $"**{user.Username ?? first.username} `[{first.userID}]`**\n";
+                var dstr = $"**{user?.Username ?? first.username} `[{first.userID}]`**\n";
                 foreach (var ban in bangroup)
                 {
-                    dstr += $"Banned By: {(await Context.Client.GetUserAsync(first.modID)).Username ?? ban.modname} `[{ban.modID}]`\n" +
+                    dstr += $"Banned By: {(await Context.Client.GetUserAsync(first.modID))?.Username ?? ban.modname} `[{ban.modID}]`\n" +
                             $"SoftBan: {(ban.Expires ? $"{(ban.ExpiryDate - DateTime.UtcNow).TotalMinutes} Minutes Remaining" : "Permanent Ban")}" +
                             $"Reason: {ban.reason}\n";
                 }
