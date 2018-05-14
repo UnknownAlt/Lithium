@@ -19,6 +19,7 @@ namespace Lithium.Models
         public bool AutoRun { get; set; }
         public string ServerURL { get; set; } = "http://127.0.0.1:8080";
         public string DBName { get; set; } = "Lithium";
+        public string ToxicityToken { get; set; } = null;
 
         public void Save(string dir = "setup/config.json")
         {

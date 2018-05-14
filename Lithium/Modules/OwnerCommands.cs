@@ -9,6 +9,7 @@ using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Contexts.Paginator;
 using Lithium.Handlers;
+using Lithium.Models;
 
 namespace Lithium.Modules
 {
@@ -40,6 +41,7 @@ namespace Lithium.Modules
                 }
             }
         }
+
 
         [Command("Pages")]
         [Summary("Pages")]
@@ -88,6 +90,21 @@ namespace Lithium.Modules
 
             await ReplyAsync("", false, embed.Build());
         }
-        
+
+        [Group("Tokens")]
+        public class Tokens : Base
+        {
+            [Command("Perspective")]
+            [Summary("Perspective <token>")]
+            [Remarks("Set the toxicity token")]
+            public async Task SetPerspectiveToken([Remainder] string token = null)
+            {
+                var cfg = Config.Load();
+                cfg.ToxicityToken = token;
+                cfg.Save();
+
+                await ReplyAsync("Success Token Set (or reset if nothing was supplied)");
+            }
+        }
     }
 }

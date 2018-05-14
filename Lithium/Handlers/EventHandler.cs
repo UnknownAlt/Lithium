@@ -20,6 +20,7 @@ namespace Lithium.Handlers
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly TimerService _timerservice;
+        private Perspective.Api ToxicityAPI;
         private readonly List<NoSpamGuild> NoSpam = new List<NoSpamGuild>();
 
         private class NoSpamGuild
@@ -48,6 +49,7 @@ namespace Lithium.Handlers
             _client = Provider.GetService<DiscordSocketClient>();
             _commands = new CommandService();
             _timerservice = new TimerService(_client);
+            ToxicityAPI = new Perspective.Api(Config.Load().ToxicityToken);
 
             _client.MessageReceived += DoCommand;
             _client.JoinedGuild += _client_JoinedGuild;
@@ -366,7 +368,7 @@ namespace Lithium.Handlers
 
 
 
-            if (guild.Antispam.Blacklist.BlacklistWordSet.Any())
+            if (guild.Antispam.Blacklist.BlacklistWordSet.Any() || guild.Antispam.Toxicity.UsePerspective)
             {
                 CommandInfo CMDCheck = null;
                 var argPos = 0;
@@ -376,46 +378,109 @@ namespace Lithium.Handlers
                     CMDCheck = cmdSearch.Commands.FirstOrDefault().Command;
                 }
 
-                if (CMDCheck == null)
+                if (guild.Antispam.Blacklist.BlacklistWordSet.Any())
                 {
-                    var BypassBlacklist = exemptcheck.Any(x => x.Blacklist);
-
-                    if (!BypassBlacklist)
+                    if (CMDCheck == null)
                     {
-                        var blacklistdetected = false;
-                        var blacklistmessage = guild.Antispam.Blacklist.DefaultBlacklistMessage;
-                        var detectedblacklistmodule = guild.Antispam.Blacklist.BlacklistWordSet.FirstOrDefault(blist => blist.WordList.Any(x => context.Message.Content.ToLower().Contains(x.ToLower())));
-                        if (detectedblacklistmodule != null)
+                        var BypassBlacklist = exemptcheck.Any(x => x.Blacklist);
+
+                        if (!BypassBlacklist)
                         {
-                            blacklistdetected = true;
-                            blacklistmessage = detectedblacklistmodule.BlacklistResponse ?? guild.Antispam.Blacklist.DefaultBlacklistMessage;
+                            var blacklistdetected = false;
+                            var blacklistmessage = guild.Antispam.Blacklist.DefaultBlacklistMessage;
+                            var detectedblacklistmodule = guild.Antispam.Blacklist.BlacklistWordSet.FirstOrDefault(blist => blist.WordList.Any(x => context.Message.Content.ToLower().Contains(x.ToLower())));
+                            if (detectedblacklistmodule != null)
+                            {
+                                blacklistdetected = true;
+                                blacklistmessage = detectedblacklistmodule.BlacklistResponse ?? guild.Antispam.Blacklist.DefaultBlacklistMessage;
+                            }
+
+                            if (blacklistdetected)
+                            {
+                                await context.Message.DeleteAsync();
+
+                                if (!string.IsNullOrEmpty(blacklistmessage))
+                                {
+                                    var result = Regex.Replace(blacklistmessage, "{user}", context.User.Username,
+                                        RegexOptions.IgnoreCase);
+                                    result = Regex.Replace(result, "{user.mention}", context.User.Mention,
+                                        RegexOptions.IgnoreCase);
+                                    result = Regex.Replace(result, "{guild}", context.Guild.Name, RegexOptions.IgnoreCase);
+                                    result = Regex.Replace(result, "{channel}", context.Channel.Name, RegexOptions.IgnoreCase);
+                                    result = Regex.Replace(result, "{channel.mention}",
+                                        ((SocketTextChannel) context.Channel).Mention, RegexOptions.IgnoreCase);
+                                    await context.Channel.SendMessageAsync(result);
+
+                                }
+
+                                if (guild.Antispam.Blacklist.WarnOnDetection)
+                                {
+                                    await guild.AddWarn("AutoMod - Blacklist", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                                    guild.Save();
+                                }
+
+                                return true;
+                            }
                         }
+                    }
+                }
 
-                        if (blacklistdetected)
+                if (guild.Antispam.Toxicity.UsePerspective)
+                {
+                    var BypassToxicity = exemptcheck.Any(x => x.Toxicity);
+
+                    if (!BypassToxicity)
+                    {
+                        var CheckUsingToxicity = CMDCheck == null;
+
+                        if (ToxicityAPI != null && CheckUsingToxicity && !string.IsNullOrWhiteSpace(context.Message.Content))
                         {
-                            await context.Message.DeleteAsync();
-
-                            if (!string.IsNullOrEmpty(blacklistmessage))
+                            try
                             {
-                                var result = Regex.Replace(blacklistmessage, "{user}", context.User.Username,
-                                    RegexOptions.IgnoreCase);
-                                result = Regex.Replace(result, "{user.mention}", context.User.Mention,
-                                    RegexOptions.IgnoreCase);
-                                result = Regex.Replace(result, "{guild}", context.Guild.Name, RegexOptions.IgnoreCase);
-                                result = Regex.Replace(result, "{channel}", context.Channel.Name, RegexOptions.IgnoreCase);
-                                result = Regex.Replace(result, "{channel.mention}",
-                                    ((SocketTextChannel) context.Channel).Mention, RegexOptions.IgnoreCase);
-                                await context.Channel.SendMessageAsync(result);
+                                var res = ToxicityAPI.QueryToxicity(context.Message.Content);
+                                if (res.attributeScores.TOXICITY.summaryScore.value * 100 > guild.Antispam.Toxicity.ToxicityThreshHold)
+                                {
+                                    await context.Message.DeleteAsync();
+                                    var emb = new EmbedBuilder
+                                    {
+                                        Title = "Toxicity Threshhold Breached",
+                                        Description = $"{context.User.Mention}"
+                                    };
+                                    await context.Channel.SendMessageAsync("", false, emb.Build());
 
+                                    /*
+                                    if (context.Client.GetChannel(guild.ModLogChannel) is IMessageChannel modchannel)
+                                    {
+                                        try
+                                        {
+                                            emb.Description = "Message Auto-Removed.\n" +
+                                                                $"User: {context.User.Mention}\n" +
+                                                                $"Channel: {context.Channel.Name}\n" +
+                                                                $"Toxicity %: {res.attributeScores.TOXICITY.summaryScore.value * 100}\n" +
+                                                                "Message: \n" +
+                                                                $"{context.Message.Content}";
+                                            await modchannel.SendMessageAsync("", false, emb.Build());
+                                        }
+                                        catch
+                                        {
+                                            //
+                                        }
+                                    }
+                                    */
+
+                                    if (guild.Antispam.Blacklist.WarnOnDetection)
+                                    {
+                                        await guild.AddWarn("AutoMod - Toxicity", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                                        guild.Save();
+                                    }
+
+                                    return true;
+                                }
                             }
-
-                            if (guild.Antispam.Blacklist.WarnOnDetection)
+                            catch
                             {
-                                await guild.AddWarn("AutoMod - Blacklist", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
-                                guild.Save();
+                                //
                             }
-
-                            return true;
                         }
                     }
                 }
