@@ -92,7 +92,7 @@ namespace Lithium.Services
             try
             {
                 var guildobj = DatabaseHandler.GetGuild(guild.Id);
-                if (!guildobj.ModerationSetup.Bans.Any()) return;
+                if (guildobj?.ModerationSetup.Bans.Any() != true) return;
                 if (!guildobj.ModerationSetup.Bans.Any(x => x.Expires && x.ExpiryDate < DateTime.UtcNow)) return;
                 var bans = (await guild.GetBansAsync()).ToList();
                 foreach (var ban in guildobj.ModerationSetup.Bans.Where(x => x.Expires && x.ExpiryDate < DateTime.UtcNow).ToList())
@@ -131,7 +131,7 @@ namespace Lithium.Services
         public static async void checkmutes(IGuild guild)
         {
             var guildobj = DatabaseHandler.GetGuild(guild.Id);
-            if (!guildobj.ModerationSetup.Mutes.MutedUsers.Any()) return;
+            if (guildobj?.ModerationSetup.Mutes.MutedUsers.Any() != true) return;
             var mutedrole = guild.Roles.FirstOrDefault(x => x.Id == guildobj.ModerationSetup.Mutes.mutedrole);
             if (mutedrole == null) return;
             foreach (var mute in guildobj.ModerationSetup.Mutes.MutedUsers.ToList())
