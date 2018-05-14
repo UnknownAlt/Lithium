@@ -89,6 +89,41 @@ namespace Lithium.Modules.Administration
                              $"`SetWarnLimitAction <Type>`");
         }
 
+        [Command("HackBan")]
+        [Summary("HackBan <user ID>")]
+        [Remarks("Ban a user by their user ID even if they are not in the server")]
+        public async Task HackBan(ulong UserID)
+        {
+            Context.Server.ModerationSetup.Bans.Add(new GuildModel.Guild.Moderation.ban
+            {
+                userID = UserID,
+                modID = Context.User.Id,
+                modname = Context.User.Username,
+                reason = "HackBan",
+                username = $"[{UserID}]"
+            });
+            try
+            {
+                await Context.Guild.AddBanAsync(UserID, 1, "HackBan");
+                await ReplyAsync("User has been Banned and messages from the last 24 hours have been cleared");
+                Context.Server.Save();
+                await SendEmbedAsync(new EmbedBuilder
+                {
+                    Title = $"User with ID [{UserID}] has been banned",
+                    Description = $"User: [{UserID}]\n" +
+                                  $"UserID: {UserID}\n" +
+                                  $"Mod: {Context.User.Username}#{Context.User.Discriminator}\n" +
+                                  $"Mod ID: {Context.User.Id}\n\n" +
+                                  "Reason:\n" +
+                                  "HackBan"
+                });
+            }
+            catch
+            {
+                await ReplyAsync("User is unable to be Banned. ");
+            }
+        }
+
         [Command("ClearWarns")]
         [Summary("ClearWarns <@user>")]
         [Remarks("Clear all warnings for the specified user")]
@@ -96,7 +131,7 @@ namespace Lithium.Modules.Administration
         {
             if (Context.Server.ModerationSetup.Warns.Any(x => x.userID == User.Id))
             {
-                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Warns.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n\n"));
+                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Warns.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n"));
                 await SendEmbedAsync(new EmbedBuilder
                 {
                     Title = "The Following warnings have been cleared!",
@@ -119,7 +154,7 @@ namespace Lithium.Modules.Administration
         {
             if (Context.Server.ModerationSetup.Kicks.Any(x => x.userID == User.Id))
             {
-                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Kicks.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n\n"));
+                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Kicks.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n"));
                 await SendEmbedAsync(new EmbedBuilder
                 {
                     Title = "The Following Kicks have been cleared!",
@@ -142,7 +177,7 @@ namespace Lithium.Modules.Administration
         {
             if (Context.Server.ModerationSetup.Bans.Any(x => x.userID == User.Id))
             {
-                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Bans.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n\n"));
+                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Bans.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n"));
                 await SendEmbedAsync(new EmbedBuilder
                 {
                     Title = "The Following Bans have been cleared!",
