@@ -49,13 +49,20 @@ namespace Lithium.Services
                     {
                         //
                     }
-                    /*
-                    foreach (var guild in client.Guilds)
+
+                    try
                     {
-                        TimerLoops.checkbans(guild);
-                        TimerLoops.checkmutes(guild);
+                        foreach (var guild in client.Guilds)
+                        {
+                            TimerLoops.checkbans(guild);
+                            TimerLoops.checkmutes(guild);
+                        }
                     }
-                    */
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                    
                     LastFireTime = DateTime.UtcNow;
                 },
                 null, TimeSpan.Zero, TimeSpan.FromMinutes(FirePreiod));
@@ -85,7 +92,6 @@ namespace Lithium.Services
             try
             {
                 var guildobj = DatabaseHandler.GetGuild(guild.Id);
-                if (guildobj.ModerationSetup.Bans == null) return;
                 if (!guildobj.ModerationSetup.Bans.Any()) return;
                 if (!guildobj.ModerationSetup.Bans.Any(x => x.Expires && x.ExpiryDate < DateTime.UtcNow)) return;
                 var bans = (await guild.GetBansAsync()).ToList();
@@ -95,8 +101,18 @@ namespace Lithium.Services
                     if (gban == null) continue;
                     try
                     {
-                        await guild.RemoveBanAsync(ban.userID);
                         guildobj.ModerationSetup.Bans.Remove(ban);
+                        await guild.RemoveBanAsync(ban.userID);
+                        await guildobj.ModLog(new EmbedBuilder
+                        {
+                            Title = "Ban Auto Removed - Expired",
+                            Description = $"User: {ban.username}\n" +
+                                          $"UserID: {ban.userID}\n" +
+                                          $"Mod: {ban.modname} [{ban.modID}]\n" +
+                                          "Reason:\n" +
+                                          $"{ban.reason}",
+                            Color = Color.DarkGreen
+                        }, guild);
                     }
                     catch
                     {
@@ -115,7 +131,6 @@ namespace Lithium.Services
         public static async void checkmutes(IGuild guild)
         {
             var guildobj = DatabaseHandler.GetGuild(guild.Id);
-            if (guildobj.ModerationSetup.Mutes == null) return;
             if (!guildobj.ModerationSetup.Mutes.MutedUsers.Any()) return;
             var mutedrole = guild.Roles.FirstOrDefault(x => x.Id == guildobj.ModerationSetup.Mutes.mutedrole);
             if (mutedrole == null) return;
@@ -124,7 +139,7 @@ namespace Lithium.Services
                 try
                 {
                     if (!mute.expires) continue;
-                    bool removemute = false;
+                    var removemute = false;
                     var muteduser = await guild.GetUserAsync(mute.userid);
                     if (muteduser == null)
                     {
@@ -145,6 +160,13 @@ namespace Lithium.Services
                     if (removemute)
                     {
                         guildobj.ModerationSetup.Mutes.MutedUsers.Remove(mute);
+                        await guildobj.ModLog(new EmbedBuilder
+                        {
+                            Title = "Mute Auto Removed - Expired",
+                            Description = $"User: {muteduser?.Username}\n" +
+                                          $"UserID: {muteduser?.Id}",
+                            Color = Color.DarkGreen
+                        }, guild);
                     }
                 }
                 catch (Exception e)
@@ -153,6 +175,7 @@ namespace Lithium.Services
                 }
             }
             guildobj.Save();
+
         }
     }
 }

@@ -89,6 +89,16 @@ namespace Lithium.Modules.Administration
                              $"`SetWarnLimitAction <Type>`");
         }
 
+        [Command("SetModLogChannel")]
+        [Summary("Admin SetModLogChannel")]
+        [Remarks("set the moderator logging channel")]
+        public async Task SetModChannel()
+        {
+            Context.Server.ModerationSetup.Settings.ModLogChannel = Context.Channel.Id;
+            Context.Server.Save();
+            await ReplyAsync($"Mod Logs will now be sent in {Context.Channel.Name}");
+        }
+
         [Command("HackBan")]
         [Summary("HackBan <user ID>")]
         [Remarks("Ban a user by their user ID even if they are not in the server")]

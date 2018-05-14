@@ -61,138 +61,138 @@ namespace Lithium.Modules
         [Remarks("all help commands")]
         public async Task HelpAsync([Remainder] string modulearg = null)
         {
-            var gobj = Context.Server;
-            string isserver;
-            if (Context.Channel is IPrivateChannel)
-                isserver = Config.Load().DefaultPrefix;
-            else
-                isserver = gobj?.Settings.Prefix ?? Config.Load().DefaultPrefix;
-
-            if (modulearg == null) //ShortHelp
+            try
             {
-                var pages = new List<PaginatedMessage.Page>();
-                foreach (var module in _service.Modules.Where(x =>
-                    x.Commands.Count > 0 && !gobj.Settings.DisabledParts.BlacklistedModules.Any(bm =>
-                        string.Equals(bm, x.Name, StringComparison.CurrentCultureIgnoreCase))))
-                {
-                    var list = module.Commands.Where(x =>
-                            !gobj.Settings.DisabledParts.BlacklistedCommands.Any(bc =>
-                                string.Equals(x.Name, bc, StringComparison.CurrentCultureIgnoreCase)))
-                        .Select(command => $"`{isserver}{command.Summary}` - {command.Remarks}")
-                        .ToList();
+                var gobj = Context.Server;
+                string isserver;
+                if (Context.Channel is IPrivateChannel)
+                    isserver = Config.Load().DefaultPrefix;
+                else
+                    isserver = gobj?.Settings.Prefix ?? Config.Load().DefaultPrefix;
 
-                    if (module.Commands.Count <= 0) continue;
-                    if (string.Join("\n", list).Length > 1000)
+                if (modulearg == null) //ShortHelp
+                {
+                    var pages = new List<PaginatedMessage.Page>();
+                    foreach (var module in _service.Modules.Where(x => x.Commands.Count > 0 && gobj?.Settings.DisabledParts.BlacklistedModules.Any(bm => string.Equals(bm, x.Name, StringComparison.CurrentCultureIgnoreCase)) != true))
                     {
-                        pages.Add(new PaginatedMessage.Page
+                        var list = module.Commands.Where(x => gobj?.Settings.DisabledParts.BlacklistedCommands.Any(bc => string.Equals(x.Name, bc, StringComparison.CurrentCultureIgnoreCase)) != true)
+                            .Select(command => $"`{isserver}{command.Summary}` - {command.Remarks}")
+                            .ToList();
+
+                        if (module.Commands.Count <= 0) continue;
+                        if (string.Join("\n", list).Length > 1000)
                         {
-                            dynamictitle = $"{module.Name} (1)",
-                            description = string.Join("\n", list.Take(list.Count / 2))
-                        });
-                        pages.Add(new PaginatedMessage.Page
+                            pages.Add(new PaginatedMessage.Page
+                            {
+                                dynamictitle = $"{module.Name} (1)",
+                                description = string.Join("\n", list.Take(list.Count / 2))
+                            });
+                            pages.Add(new PaginatedMessage.Page
+                            {
+                                dynamictitle = $"{module.Name} (2)",
+                                description = string.Join("\n", list.Skip(list.Count / 2))
+                            });
+                        }
+                        else
                         {
-                            dynamictitle = $"{module.Name} (2)",
-                            description = string.Join("\n", list.Skip(list.Count / 2))
-                        });
+                            pages.Add(new PaginatedMessage.Page
+                            {
+                                dynamictitle = module.Name,
+                                description = string.Join("\n", list)
+                            });
+                        }
                     }
-                    else
+
+                    var moduleselect = new List<string>
                     {
-                        pages.Add(new PaginatedMessage.Page
-                        {
-                            dynamictitle = module.Name,
-                            description = string.Join("\n", list)
-                        });
+                        "`1` - This Page",
+                        "`2` - List of all commands(1)",
+                        "`3` - List of all commands(2)"
+                    };
+                    var i = 3;
+                    foreach (var module in pages.Where(x => x.dynamictitle != null))
+                    {
+                        i++;
+                        moduleselect.Add($"`{i}` - {module.dynamictitle}");
                     }
+
+                    var fullpages = new List<PaginatedMessage.Page>
+                    {
+                        new PaginatedMessage.Page
+                        {
+                            dynamictitle = $"{Context.Client.CurrentUser.Username} | Modules | Prefix: {isserver}",
+                            description = $"Here is a list of all the {Context.Client.CurrentUser.Username} command modules\n" +
+                                          $"There are {_service.Commands.Count()} commands\n" +
+                                          $"Click the arrows to view each one!\n" +
+                                          $"{(Context.Channel is IDMChannel ? "\n" : "Or Click :1234: and reply with the page number you would like\n\n")}" +
+                                          string.Join("\n", moduleselect)
+                        },
+                        new PaginatedMessage.Page
+                        {
+                            dynamictitle = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
+                            description = string.Join("\n",
+                                _service.Modules.Where(x => x.Commands.Count > 0 && gobj?.Settings.DisabledParts.BlacklistedModules.Any(bm => string.Equals(bm, x.Name, StringComparison.CurrentCultureIgnoreCase)) != true)
+                                    .Take(_service.Modules.Count() / 2)
+                                    .Select(x =>
+                                        $"__**{x.Name}**__\n{string.Join(", ", x.Commands.Where(c => gobj?.Settings.DisabledParts.BlacklistedCommands.Any(bc => string.Equals(c.Name, bc, StringComparison.CurrentCultureIgnoreCase)) != true).Select(c => c.Name))}"))
+                        },
+                        new PaginatedMessage.Page
+                        {
+                            dynamictitle = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
+                            description = string.Join("\n",
+                                _service.Modules.Where(x => x.Commands.Count > 0 && gobj?.Settings.DisabledParts.BlacklistedModules.Any(bm => string.Equals(bm, x.Name, StringComparison.CurrentCultureIgnoreCase)) != true)
+                                    .Skip(_service.Modules.Count() / 2)
+                                    .Select(x =>
+                                        $"__**{x.Name}**__\n{string.Join(", ", x.Commands.Where(c => gobj?.Settings.DisabledParts.BlacklistedCommands.Any(bc => string.Equals(c.Name, bc, StringComparison.CurrentCultureIgnoreCase)) != true).Select(c => c.Name))}"))
+                        }
+                    };
+                    foreach (var page in pages) fullpages.Add(page);
+
+                    var msg = new PaginatedMessage
+                    {
+                        Color = Color.Green,
+                        Pages = fullpages
+                    };
+                    await PagedReplyAsync(msg, showindex: true);
+                    return;
                 }
 
-                var moduleselect = new List<string>
+                var mod = _service.Modules.FirstOrDefault(x =>
+                    string.Equals(x.Name, modulearg, StringComparison.CurrentCultureIgnoreCase));
+                var embed = new EmbedBuilder
                 {
-                    "`1` - This Page",
-                    "`2` - List of all commands(1)",
-                    "`3` - List of all commands(2)"
+                    Color = new Color(114, 137, 218),
+                    Title = $"{Context.Client.CurrentUser.Username} | Commands | Prefix: {isserver}"
                 };
-                var i = 3;
-                foreach (var module in pages.Where(x => x.dynamictitle != null))
+                if (mod == null)
                 {
-                    i++;
-                    moduleselect.Add($"`{i}` - {module.dynamictitle}");
+                    var list = _service.Modules.Where(x => x.Commands.Count > 0).Select(x => x.Name);
+                    var response = string.Join("\n", list);
+                    embed.AddField("ERROR, Module not found", response);
+                    await ReplyAsync("", false, embed.Build());
+                    return;
                 }
 
-                var fullpages = new List<PaginatedMessage.Page>
+                var commands = mod.Commands.Select(x => $"`{isserver}{x.Summary}` - {x.Remarks}").ToList();
+                if (commands.Count > 8)
                 {
-                    new PaginatedMessage.Page
-                    {
-                        dynamictitle = $"{Context.Client.CurrentUser.Username} | Modules | Prefix: {isserver}",
-                        description = $"Here is a list of all the {Context.Client.CurrentUser.Username} command modules\n" +
-                                      $"There are {_service.Commands.Count()} commands\n" +
-                                      $"Click the arrows to view each one!\n" +
-                                      $"{(Context.Channel is IDMChannel ? "\n" : "Or Click :1234: and reply with the page number you would like\n\n")}" +
-                                      string.Join("\n", moduleselect)
-                    },
-                    new PaginatedMessage.Page
-                    {
-                        dynamictitle = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
-                        description = string.Join("\n",
-                            _service.Modules.Where(x =>
-                                    x.Commands.Count > 0 && !gobj.Settings.DisabledParts.BlacklistedModules.Any(bm =>
-                                        string.Equals(bm, x.Name, StringComparison.CurrentCultureIgnoreCase)))
-                                .Take(_service.Modules.Count() / 2)
-                                .Select(x =>
-                                    $"__**{x.Name}**__\n{string.Join(", ", x.Commands.Where(c => !gobj.Settings.DisabledParts.BlacklistedCommands.Any(bc => string.Equals(c.Name, bc, StringComparison.CurrentCultureIgnoreCase))).Select(c => c.Name))}"))
-                    },
-                    new PaginatedMessage.Page
-                    {
-                        dynamictitle = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
-                        description = string.Join("\n",
-                            _service.Modules.Where(x =>
-                                    x.Commands.Count > 0 && !gobj.Settings.DisabledParts.BlacklistedModules.Any(bm =>
-                                        string.Equals(bm, x.Name, StringComparison.CurrentCultureIgnoreCase)))
-                                .Skip(_service.Modules.Count() / 2)
-                                .Select(x =>
-                                    $"__**{x.Name}**__\n{string.Join(", ", x.Commands.Where(c => !gobj.Settings.DisabledParts.BlacklistedCommands.Any(bc => string.Equals(c.Name, bc, StringComparison.CurrentCultureIgnoreCase))).Select(c => c.Name))}"))
-                    }
-                };
-                foreach (var page in pages) fullpages.Add(page);
-
-                var msg = new PaginatedMessage
+                    embed.AddField($"{mod.Name} Commands (1)",
+                        commands.Count == 0 ? "N/A" : string.Join("\n", commands.Take(commands.Count / 2)));
+                    embed.AddField($"{mod.Name} Commands (2)",
+                        commands.Count == 0 ? "N/A" : string.Join("\n", commands.Skip(commands.Count / 2)));
+                }
+                else
                 {
-                    Color = Color.Green,
-                    Pages = fullpages
-                };
-                await PagedReplyAsync(msg, showindex: true);
-                return;
-            }
+                    embed.AddField($"{mod.Name} Commands", commands.Count == 0 ? "N/A" : string.Join("\n", commands));
+                }
 
-            var mod = _service.Modules.FirstOrDefault(x =>
-                string.Equals(x.Name, modulearg, StringComparison.CurrentCultureIgnoreCase));
-            var embed = new EmbedBuilder
-            {
-                Color = new Color(114, 137, 218),
-                Title = $"{Context.Client.CurrentUser.Username} | Commands | Prefix: {isserver}"
-            };
-            if (mod == null)
-            {
-                var list = _service.Modules.Where(x => x.Commands.Count > 0).Select(x => x.Name);
-                var response = string.Join("\n", list);
-                embed.AddField("ERROR, Module not found", response);
                 await ReplyAsync("", false, embed.Build());
-                return;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
 
-            var commands = mod.Commands.Select(x => $"`{isserver}{x.Summary}` - {x.Remarks}").ToList();
-            if (commands.Count > 8)
-            {
-                embed.AddField($"{mod.Name} Commands (1)",
-                    commands.Count == 0 ? "N/A" : string.Join("\n", commands.Take(commands.Count / 2)));
-                embed.AddField($"{mod.Name} Commands (2)",
-                    commands.Count == 0 ? "N/A" : string.Join("\n", commands.Skip(commands.Count / 2)));
-            }
-            else
-            {
-                embed.AddField($"{mod.Name} Commands", commands.Count == 0 ? "N/A" : string.Join("\n", commands));
-            }
-
-            await ReplyAsync("", false, embed.Build());
         }
     }
 }

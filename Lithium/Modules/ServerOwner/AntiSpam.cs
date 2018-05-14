@@ -14,6 +14,15 @@ namespace Lithium.Modules.ServerOwner
     [RequireRole.RequireAdmin]
     public class AntiSpam : Base
     {
+        [Command("NoSpam")]
+        [Summary("NoSpam")]
+        [Remarks("Toggle Autoremoval of spam messages")]
+        public async Task NoSpam()
+        {
+            Context.Server.Antispam.Antispam.NoSpam = !Context.Server.Antispam.Antispam.NoSpam;
+            Context.Server.Save();
+            await ReplyAsync($"NoSpam: {Context.Server.Antispam.Advertising.Invite}");
+        }
         [Command("NoInvite")]
         [Summary("NoInvite")]
         [Remarks("Disable the posting of discord invite links in the server")]

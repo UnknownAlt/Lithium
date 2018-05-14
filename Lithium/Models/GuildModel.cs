@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Discord;
 using Lithium.Handlers;
 using Raven.Client.Documents;
-using Sparrow.Platform.Posix.macOS;
 
 namespace Lithium.Models
 {
@@ -33,6 +32,24 @@ namespace Lithium.Models
                 }
             }
 
+            public async Task ModLog(EmbedBuilder embed, IGuild guild)
+            {
+                if (this.ModerationSetup.Settings.ModLogChannel != 0)
+                {
+                    if (await guild.GetChannelAsync(this.ModerationSetup.Settings.ModLogChannel) is IMessageChannel channel)
+                    {
+                        try
+                        {
+                            await channel.SendMessageAsync("", false, embed.Build());
+                        }
+                        catch
+                        {
+                            //
+                        }
+                    }
+                }
+            }
+
             public async Task AddWarn(string reason, IGuildUser User, IUser mod, IMessageChannel channel)
             {
                 this.ModerationSetup.Warns.Add(new Moderation.warn
@@ -43,7 +60,8 @@ namespace Lithium.Models
                     userID = User.Id,
                     username = User.Username
                 });
-                await channel.SendMessageAsync("", false, new EmbedBuilder
+
+                var embed = new EmbedBuilder
                 {
                     Title = $"{User.Username} has been Warned",
                     Description = $"User: {User.Username}#{User.Discriminator}\n" +
@@ -51,10 +69,15 @@ namespace Lithium.Models
                                   $"Mod: {mod.Username}#{mod.Discriminator}\n" +
                                   $"Mod ID: {mod.Id}\n" +
                                   "Reason:\n" +
-                                  $"{reason}"
-                });
+                                  $"{reason}",
+                    Color = Color.DarkPurple
+                };
+
+                await channel.SendMessageAsync("", false, embed.Build());
+                await ModLog(embed, User.Guild);
                 if (this.ModerationSetup.Warns.Count(x => x.userID == User.Id) > this.ModerationSetup.Settings.warnlimit && this.ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
                 {
+                    var embedmsg = new EmbedBuilder();
                     if (this.ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Ban)
                     {
                         this.ModerationSetup.Bans.Add(new Moderation.ban
@@ -67,16 +90,14 @@ namespace Lithium.Models
                             Expires = false
                         });
                         await User.Guild.AddBanAsync(User, 1, $"AutoBan, Warnlimit Exceeded by user!");
-                        await channel.SendMessageAsync("", false, new EmbedBuilder
-                        {
-                            Title = $"{User.Username} has been Auto banned",
-                            Description = $"User: {User.Username}#{User.Discriminator}\n" +
-                                          $"UserID: {User.Id}\n" +
-                                          $"Mod: {mod.Username}#{mod.Discriminator}\n" +
-                                          $"Mod ID: {mod.Id}\n" +
-                                          "Reason:\n" +
-                                          $"AutoBan, Warnlimit Exceeded by user!"
-                        });
+                        embedmsg.Title = $"{User.Username} has been Auto banned";
+                        embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                               $"UserID: {User.Id}\n" +
+                                               $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                               $"Mod ID: {mod.Id}\n" +
+                                               "Reason:\n" +
+                                               $"AutoBan, Warnlimit Exceeded by user!";
+                        embedmsg.Color = Color.DarkRed;
                     }
                     else
                     {
@@ -89,17 +110,18 @@ namespace Lithium.Models
                             username = User.Username
                         });
                         await User.KickAsync($"AutoKick, WarnLimit Exceeded by user!");
-                        await channel.SendMessageAsync("", false, new EmbedBuilder
-                        {
-                            Title = $"{User.Username} has been Auto Kicked",
-                            Description = $"User: {User.Username}#{User.Discriminator}\n" +
-                                          $"UserID: {User.Id}\n" +
-                                          $"Mod: {mod.Username}#{mod.Discriminator}\n" +
-                                          $"Mod ID: {mod.Id}\n" +
-                                          "Reason:\n" +
-                                          $"Auto Kick, Warnlimit Exceeded by user!"
-                        });
+                        embedmsg.Title = $"{User.Username} has been Auto Kicked";
+                        embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                               $"UserID: {User.Id}\n" +
+                                               $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                               $"Mod ID: {mod.Id}\n" +
+                                               "Reason:\n" +
+                                               $"Auto Kick, Warnlimit Exceeded by user!";
+                        embedmsg.Color = Color.DarkMagenta;
                     }
+
+                    await channel.SendMessageAsync("", false, embedmsg.Build());
+                    await ModLog(embedmsg, User.Guild);
                 }
             }
 
@@ -124,6 +146,8 @@ namespace Lithium.Models
                     //Warnings before doing a specific action.
                     public int warnlimit { get; set; } = int.MaxValue;
                     public warnLimitAction WarnLimitAction { get; set; } = warnLimitAction.NoAction;
+
+                    public ulong ModLogChannel { get; set; } = 0;
                 }
 
                 public class muted

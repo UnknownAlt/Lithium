@@ -65,7 +65,7 @@ namespace Lithium.Modules.Moderation
         [Remarks("Warn the specified user")]
         public async Task WarnUser(IGuildUser user, [Remainder] string reason = null)
         {
-            await Context.Server.AddWarn(reason, user, Context.Client.CurrentUser, Context.Channel);
+            await Context.Server.AddWarn(reason, user, Context.User, Context.Channel);
             Context.Server.Save();
         }
 

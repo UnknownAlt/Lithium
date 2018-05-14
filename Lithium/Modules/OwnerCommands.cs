@@ -103,7 +103,8 @@ namespace Lithium.Modules
                 cfg.ToxicityToken = token;
                 cfg.Save();
 
-                await ReplyAsync("Success Token Set (or reset if nothing was supplied)");
+                await ReplyAsync("Success Token Set (or reset if nothing was supplied)\n" +
+                                 "NOTE, This requires a bot restart");
             }
         }
     }
