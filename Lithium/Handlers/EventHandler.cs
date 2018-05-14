@@ -73,9 +73,12 @@ namespace Lithium.Handlers
             };
             await guild.DefaultChannel.SendMessageAsync("", false, embed.Build());
             var dblist = DatabaseHandler.GetFullConfig();
-            foreach (var guildb in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
+            if (dblist.All(x => x.GuildID != guild.Id))
             {
-                DatabaseHandler.AddGuild(guildb.Id);
+                foreach (var missingguild in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
+                {
+                    DatabaseHandler.AddGuild(missingguild.Id);
+                }
             }
         }
 
@@ -113,6 +116,8 @@ namespace Lithium.Handlers
         public async Task<bool> antispam(LithiumContext context)
         {
             if (context.Guild == null) return false;
+            if (context.Channel is IDMChannel) return false;
+            if (context.Server == null) return false;
             try
             {
                 var guild = context.Server;
@@ -131,7 +136,7 @@ namespace Lithium.Handlers
                     {
                         NoSpam.Add(new NoSpamGuild
                         {
-                            GuildID = ((SocketGuildUser) context.User).Guild.Id,
+                            GuildID = context.Guild.Id,
                             Users = new List<NoSpamGuild.NoSpam>
                             {
                                 new NoSpamGuild.NoSpam
