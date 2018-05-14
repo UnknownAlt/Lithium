@@ -89,6 +89,78 @@ namespace Lithium.Modules.Administration
                              $"`SetWarnLimitAction <Type>`");
         }
 
+        [Command("ClearWarns")]
+        [Summary("ClearWarns <@user>")]
+        [Remarks("Clear all warnings for the specified user")]
+        public async Task DelWarn(IUser User)
+        {
+            if (Context.Server.ModerationSetup.Warns.Any(x => x.userID == User.Id))
+            {
+                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Warns.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n\n"));
+                await SendEmbedAsync(new EmbedBuilder
+                {
+                    Title = "The Following warnings have been cleared!",
+                    Description = $"**User: {User.Username} [{User.Id}]**\n" +
+                                  $"{warnstring}"
+                });
+
+                Context.Server.ModerationSetup.Warns = Context.Server.ModerationSetup.Warns.Where(x => x.userID != User.Id).ToList();
+                Context.Server.Save();
+            }
+            else
+            {
+                await ReplyAsync("No warns found for this user.");
+            }
+        }
+        [Command("ClearKicks")]
+        [Summary("ClearKicks <@user>")]
+        [Remarks("Clear all kick logs for the specified user")]
+        public async Task DelKick(IUser User)
+        {
+            if (Context.Server.ModerationSetup.Kicks.Any(x => x.userID == User.Id))
+            {
+                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Kicks.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n\n"));
+                await SendEmbedAsync(new EmbedBuilder
+                {
+                    Title = "The Following Kicks have been cleared!",
+                    Description = $"**User: {User.Username} [{User.Id}]**\n" +
+                                  $"{warnstring}"
+                });
+
+                Context.Server.ModerationSetup.Kicks = Context.Server.ModerationSetup.Kicks.Where(x => x.userID != User.Id).ToList();
+                Context.Server.Save();
+            }
+            else
+            {
+                await ReplyAsync("No Kicks found for this user.");
+            }
+        }
+        [Command("ClearBans")]
+        [Summary("ClearBans <@user>")]
+        [Remarks("Clear all ban logs for the specified user")]
+        public async Task delBan(IUser User)
+        {
+            if (Context.Server.ModerationSetup.Bans.Any(x => x.userID == User.Id))
+            {
+                var warnstring = string.Join("\n", Context.Server.ModerationSetup.Bans.Where(x => x.userID == User.Id).Select(x => $"Mod: {x.modname} [{x.modID}]\nReason: {x.reason}\n\n"));
+                await SendEmbedAsync(new EmbedBuilder
+                {
+                    Title = "The Following Bans have been cleared!",
+                    Description = $"**User: {User.Username} [{User.Id}]**\n" +
+                                  $"{warnstring}\n\n" +
+                                  $"NOTE: This does not unban the user."
+                });
+
+                Context.Server.ModerationSetup.Bans = Context.Server.ModerationSetup.Bans.Where(x => x.userID != User.Id).ToList();
+                Context.Server.Save();
+            }
+            else
+            {
+                await ReplyAsync("No Bans found for this user.");
+            }
+        }
+
+
         [Command("HideModule")]
         [Summary("Admin HideModule <modulename>")]
         [Remarks("Disable a module from being used by users")]

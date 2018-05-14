@@ -45,7 +45,7 @@ namespace Lithium.Models
                 });
                 await channel.SendMessageAsync("", false, new EmbedBuilder
                 {
-                    Title = $"{User.Username} has been Auto Warned",
+                    Title = $"{User.Username} has been Warned",
                     Description = $"User: {User.Username}#{User.Discriminator}\n" +
                                   $"UserID: {User.Id}\n" +
                                   $"Mod: {mod.Username}#{mod.Discriminator}\n" +
