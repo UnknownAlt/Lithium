@@ -64,22 +64,41 @@ namespace Lithium.Handlers
 
         private async Task _client_JoinedGuild(SocketGuild guild)
         {
-            //Ensure that we notify new servers how to use the bot by telling them how to get use th ehelp command.
-            var embed = new EmbedBuilder
+            try
             {
-                Title = guild.CurrentUser.Username,
-                Description = $"Hi there, I am {guild.CurrentUser.Username}. Type `{Config.Load().DefaultPrefix}help` to see a list of my commands",
-                Color = Color.Blue
-            };
-            await guild.DefaultChannel.SendMessageAsync("", false, embed.Build());
-            var dblist = DatabaseHandler.GetFullConfig();
-            if (dblist.All(x => x.GuildID != guild.Id))
-            {
-                foreach (var missingguild in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
+                var dblist = DatabaseHandler.GetFullConfig();
+                if (dblist.All(x => x.GuildID != guild.Id))
                 {
-                    DatabaseHandler.AddGuild(missingguild.Id);
+                    foreach (var missingguild in _client.Guilds.Where(g => dblist.All(x => x.GuildID != g.Id)))
+                    {
+                        DatabaseHandler.AddGuild(missingguild.Id);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("Joined Guild Setup Error");
+                Console.WriteLine(e);
+            }
+
+            try
+            {
+                //Ensure that we notify new servers how to use the bot by telling them how to get use th ehelp command.
+                var embed = new EmbedBuilder
+                {
+                    Title = guild.CurrentUser.Username,
+                    Description = $"Hi there, I am {guild.CurrentUser.Username}. Type `{Config.Load().DefaultPrefix}help` to see a list of my commands",
+                    Color = Color.Blue
+                };
+                await guild.DefaultChannel?.SendMessageAsync("", false, embed.Build());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Joined Guild Notify Error");
+                Console.WriteLine(e);
+            }
+
+
         }
 
         public bool CheckHidden(LithiumContext context)
