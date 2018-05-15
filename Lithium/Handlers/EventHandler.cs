@@ -37,6 +37,7 @@ namespace Lithium.Handlers
             _client.MessageReceived += DoCommand;
             _client.JoinedGuild += _client_JoinedGuild;
             _client.Ready += _client_Ready;
+
         }
 
         private async Task _client_Ready()
