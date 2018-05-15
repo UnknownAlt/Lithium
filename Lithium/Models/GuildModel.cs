@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -16,6 +17,7 @@ namespace Lithium.Models
             public settings Settings { get; set; } = new settings();
             public autochannels AutoMessage { get; set; } = new autochannels();
             public antispams Antispam { get; set; } = new antispams();
+            public Eventlogger EventLogger { get; set; } = new Eventlogger();
 
             public tags Tags { get; set; } = new tags();
 
@@ -33,6 +35,24 @@ namespace Lithium.Models
                 if (ModerationSetup.Settings.ModLogChannel != 0)
                 {
                     if (await guild.GetChannelAsync(ModerationSetup.Settings.ModLogChannel) is IMessageChannel channel)
+                    {
+                        try
+                        {
+                            await channel.SendMessageAsync("", false, embed.Build());
+                        }
+                        catch
+                        {
+                            //
+                        }
+                    }
+                }
+            }
+
+            public async Task EventLog(EmbedBuilder embed, IGuild guild)
+            {
+                if (EventLogger.EventChannel != 0 && EventLogger.LogEvents)
+                {
+                    if (await guild.GetChannelAsync(EventLogger.EventChannel) is IMessageChannel channel)
                     {
                         try
                         {
@@ -119,6 +139,12 @@ namespace Lithium.Models
                     await channel.SendMessageAsync("", false, embedmsg.Build());
                     await ModLog(embedmsg, User.Guild);
                 }
+            }
+
+            public class Eventlogger
+            {
+                public bool LogEvents { get; set; } = false;
+                public ulong EventChannel { get; set; } = 0;
             }
 
             public class Moderation

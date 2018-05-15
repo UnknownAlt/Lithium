@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -38,7 +39,277 @@ namespace Lithium.Handlers
             _client.JoinedGuild += _client_JoinedGuild;
             _client.Ready += _client_Ready;
 
+
+            //Guild Event Logging
+            //User
+            _client.UserJoined += _client_UserJoined;
+            _client.UserLeft += _client_UserLeft;
+            _client.UserBanned += _client_UserBanned;
+            _client.UserUnbanned += _client_UserUnbanned;
+            _client.GuildMemberUpdated += _client_GuildMemberUpdated;
+            //Message
+            _client.MessageUpdated += _client_MessageUpdated;
+            _client.MessageDeleted += _client_MessageDeleted;
+            //Channel
+            _client.ChannelCreated += _client_ChannelCreated;
+            _client.ChannelDestroyed += _client_ChannelDestroyed;
+            _client.ChannelUpdated += _client_ChannelUpdated;
+            
+            
         }
+
+        #region EventChannelLogging
+        private async Task _client_GuildMemberUpdated(SocketGuildUser UserBefore, SocketGuildUser UserAfter)
+        {
+            var logmsg = "";
+            if (UserBefore.Nickname != UserAfter.Nickname)
+            { 
+                logmsg += "__**NickName Updated**__\n" +
+                          $"OLD: {UserBefore.Nickname ?? UserBefore.Username}\n" +
+                          $"AFTER: {UserAfter.Nickname ?? UserAfter.Username}\n";
+            }
+
+            if (UserBefore.Roles.Count < UserAfter.Roles.Count)
+            {
+                var result = UserAfter.Roles.Where(b => UserBefore.Roles.All(a => b.Id != a.Id)).ToList();
+                logmsg += "__**Role Added**__\n" +
+                          $"{result[0].Name}\n";
+            }
+            else if (UserBefore.Roles.Count > UserAfter.Roles.Count)
+            {
+                var result = UserBefore.Roles.Where(b => UserAfter.Roles.All(a => b.Id != a.Id)).ToList();
+                logmsg += "__**Role Removed**__\n" +
+                          $"{result[0].Name}\n";
+            }
+
+            if (logmsg == "") return;
+            var GuildConfig = DatabaseHandler.GetGuild(UserAfter.Guild.Id);
+            if (GuildConfig.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "User Updated",
+                    Description = $"**User:** {UserAfter.Mention}\n" +
+                                  $"**ID:** {UserAfter.Id}\n\n" + logmsg,
+                    ThumbnailUrl = UserAfter.GetAvatarUrl(),
+                    Footer = new EmbedFooterBuilder
+                    {
+                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC"
+                    },
+                    Color = Color.Blue
+                };
+                await GuildConfig.EventLog(embed, UserAfter.Guild);
+            }
+        }
+
+        private async Task _client_MessageUpdated(Cacheable<IMessage, ulong> messageOld, SocketMessage messageNew, ISocketMessageChannel cchannel)
+        {
+            if (messageNew.Author.IsBot)
+                return;
+
+            if (string.Equals(messageOld.Value.Content, messageNew.Content, StringComparison.CurrentCultureIgnoreCase))
+                return;
+
+            if (messageOld.Value?.Embeds.Count > 0 || messageNew.Embeds.Count > 0)
+                return;
+
+            var guild = ((SocketGuildChannel)cchannel).Guild;
+
+            var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (guildobj.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "Message Updated",
+                    ThumbnailUrl = messageNew.Author.GetAvatarUrl(),
+                    Footer = new EmbedFooterBuilder
+                    {
+                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
+                    },
+                    Color = Color.Blue
+                };
+                embed.AddField("Old Message:", $"{messageOld.Value.Content}");
+                embed.AddField("New Message:", $"{messageNew.Content}");
+                embed.AddField("Info",
+                    $"**Author:** {messageNew.Author.Username}\n" +
+                    $"**Author ID:** {messageNew.Author.Id}\n" +
+                    $"**Channel:** {messageNew.Channel.Name}\n" +
+                    $"**Embeds:** {messageNew.Embeds.Any()}");
+
+                await guildobj.EventLog(embed, guild);
+            }
+        }
+
+        private async Task _client_ChannelUpdated(SocketChannel s1, SocketChannel s2)
+        {
+            var ChannelBefore = s1 as SocketGuildChannel;
+            var ChannelAfter = s2 as SocketGuildChannel;
+            var guildobj = DatabaseHandler.GetGuild(ChannelAfter.Guild.Id);
+            if (guildobj.EventLogger.LogEvents)
+            {
+                if (ChannelBefore.Position != ChannelAfter.Position)
+                    return;
+                var embed = new EmbedBuilder
+                {
+                    Title = "Channel Updated",
+                    Description = ChannelAfter.Name,
+                    Color = Color.Blue,
+                    Footer = new EmbedFooterBuilder
+                    {
+                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
+                    }
+                };
+                await guildobj.EventLog(embed, ChannelAfter.Guild);
+            }
+        }
+
+        private async Task _client_ChannelDestroyed(SocketChannel sChannel)
+        {
+            var guild = ((SocketGuildChannel)sChannel).Guild;
+            var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (guildobj.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "Channel Deleted",
+                    Description = ((SocketGuildChannel)sChannel)?.Name,
+                    Color = Color.DarkTeal,
+                    Footer = new EmbedFooterBuilder
+                    {
+                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
+                    }
+                };
+                await guildobj.EventLog(embed, guild);
+            }
+        }
+
+        private async Task _client_ChannelCreated(SocketChannel sChannel)
+        {
+            var guild = ((SocketGuildChannel)sChannel).Guild;
+            var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (guildobj.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "Channel Created",
+                    Description = ((SocketGuildChannel)sChannel)?.Name,
+                    Color = Color.Green,
+                    Footer = new EmbedFooterBuilder
+                    {
+                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
+                    }
+                };
+                await guildobj.EventLog(embed, guild);
+            }
+        }
+
+        private async Task _client_MessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
+        {
+            var guild = ((SocketGuildChannel)channel).Guild;
+            var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (guildobj.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder();
+                try
+                {
+                    embed.AddField("Message Deleted", $"Message: {message.Value.Content}\n" +
+                                                      $"Author: {message.Value.Author}\n" +
+                                                      $"Channel: {channel.Name}");
+                }
+                catch
+                {
+                    embed.AddField("Message Deleted", "Message was unable to be retrieved\n" +
+                                                      $"Channel: {channel.Name}");
+                }
+
+                embed.WithFooter(x => { x.WithText($"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"); });
+                embed.Color = Color.DarkTeal;
+
+                await guildobj.EventLog(embed, guild);
+            }
+        }
+
+        private async Task _client_UserUnbanned(SocketUser User, SocketGuild Guild)
+        {
+            var guildobj = DatabaseHandler.GetGuild(Guild.Id);
+            if (guildobj.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "User UnBanned",
+                    ThumbnailUrl = User.GetAvatarUrl(),
+                    Description = $"**Username:** {User.Username}",
+                    Color = Color.DarkTeal,
+                    Footer = new EmbedFooterBuilder
+                    {
+                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
+                    }
+                };
+                await guildobj.EventLog(embed, Guild);
+            }
+        }
+
+        private async Task _client_UserBanned(SocketUser User, SocketGuild Guild)
+        {
+            var guildobj = DatabaseHandler.GetGuild(Guild.Id);
+            if (guildobj.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "User Banned",
+                    ThumbnailUrl = User.GetAvatarUrl(),
+                    Description = $"**Username:** {User.Username}",
+                    Color = Color.DarkRed,
+                    Footer = new EmbedFooterBuilder
+                    {
+                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
+                    }
+                };
+                await guildobj.EventLog(embed, Guild);
+            }
+        }
+
+        private async Task _client_UserLeft(SocketGuildUser user)
+        {
+            var guildobj = DatabaseHandler.GetGuild(user.Guild.Id);
+
+            if (guildobj.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "User Left",
+                    Description = $"{user.Mention} {user.Username}#{user.Discriminator}\n" +
+                                  $"ID: {user.Id}",
+                    ThumbnailUrl = user.GetAvatarUrl(),
+                    Color = Color.Red,
+                    Footer = new EmbedFooterBuilder
+                        { Text = $"{DateTime.UtcNow} UTC TIME" }
+                };
+                await guildobj.EventLog(embed, user.Guild);
+            }
+        }
+
+        private async Task _client_UserJoined(SocketGuildUser user)
+        {
+            var guildobj = DatabaseHandler.GetGuild(user.Guild.Id);
+
+            if (guildobj.EventLogger.LogEvents)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "User Joined",
+                    Description = $"{user.Mention} {user.Username}#{user.Discriminator}\n" +
+                                  $"ID: {user.Id}",
+                    ThumbnailUrl = user.GetAvatarUrl(),
+                    Color = Color.Green,
+                    Footer = new EmbedFooterBuilder
+                        { Text = $"{DateTime.UtcNow} UTC TIME" }
+                };
+                await guildobj.EventLog(embed, user.Guild);
+            }
+        }
+        #endregion
+
 
         private async Task _client_Ready()
         {
@@ -568,6 +839,9 @@ namespace Lithium.Handlers
         {
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
+
+
+
 
         private class NoSpamGuild
         {
