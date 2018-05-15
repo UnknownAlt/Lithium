@@ -11,7 +11,7 @@ namespace Lithium.Services
     public class TimerService
     {
         public static DateTime LastFireTime = DateTime.MinValue;
-        public static int FirePreiod = 1;
+        public static int FirePreiod = 10;
         private readonly Timer _timer;
 
 

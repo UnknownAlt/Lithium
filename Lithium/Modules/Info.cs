@@ -32,6 +32,7 @@ namespace Lithium.Modules
             return input;
         }
 
+        [RequireContext(ContextType.Guild)]
         [Command("serverinfo")]
         [Summary("serverinfo")]
         [Remarks("Displays information about the current server")]
@@ -62,6 +63,28 @@ namespace Lithium.Modules
             embed = SafeEmbed(embed, s.Roles.Count.ToString(), ":spy: Role Count", true);
             embed.ThumbnailUrl = s.IconUrl;
 
+            await ReplyAsync("", false, embed.Build());
+        }
+
+        [RequireContext(ContextType.Guild)]
+        [Command("userinfo")]
+        [Summary("userinfo <@user>")]
+        [Remarks("Displays info about the specified user")]
+        public async Task Userinfo(IGuildUser user = null)
+        {
+            if (user == null)
+            {
+                user = Context.User as IGuildUser;
+            }
+            var embed = new EmbedBuilder();
+            embed.AddField($"Identifiers", $"Username: {user.Username}#{user.Discriminator}\n" +
+                                                 $"Nickname: {user.Nickname ?? "N/A"}\n" +
+                                                 $"ID: {user.Id}");
+            embed.AddField("Joined Guild", $"{(user.JoinedAt.HasValue ? user.JoinedAt.Value.Date.ToShortDateString() : "Unknown")}");
+            embed.AddField("Joined Discord", $"{user.CreatedAt.Date.ToShortDateString()}");
+            embed.AddField($"Avatar", $"{user.GetAvatarUrl() ?? "N/A"}");
+            embed.ThumbnailUrl = user.GetAvatarUrl();
+            embed.AddField("Roles", $"{string.Join("\n", (user as SocketGuildUser).Roles.Select(x => x.Name))}");
             await ReplyAsync("", false, embed.Build());
         }
 

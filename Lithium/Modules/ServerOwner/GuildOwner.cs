@@ -10,6 +10,21 @@ namespace Lithium.Modules.ServerOwner
     [RequireOwner.ServerOwner]
     public class Serverowner : Base
     {
+        [Command("setprefix")]
+        [Summary("setprefix <prefix>")]
+        [Remarks("set a custom prefix for the bot")]
+        public async Task Prefix([Remainder]string newprefix = null)
+        {
+            if (newprefix.StartsWith("(") && newprefix.EndsWith(")"))
+            {
+                newprefix = newprefix.Remove(newprefix.Length - 1, 1).Remove(0, 1);
+            }
+
+            Context.Server.Settings.Prefix = newprefix;
+            Context.Server.Save();
+            await ReplyAsync($"Success, new prefix is: `{newprefix}`");
+        }
+
         [Command("addmod")]
         [Summary("addmod <@role>")]
         [Remarks("Add a new moderator role")]
