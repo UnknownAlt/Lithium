@@ -51,9 +51,9 @@ namespace Lithium.Models
 
             if (!auto)
             {
-                Logger.LogInfo("Run (Y for run, N for setup Config)");
+                Logger.LogMessage("Run (Y for run, N for setup Config)");
 
-                Logger.LogInfo("Y or N: ");
+                Logger.LogMessage("Y or N: ");
                 var res = Console.ReadKey();
                 if (res.KeyChar == 'N' || res.KeyChar == 'n')
                     File.Delete("setup/config.json");
@@ -66,15 +66,15 @@ namespace Lithium.Models
             {
                 var config = new Config();
 
-                Logger.LogInfo(@"Please enter a prefix for the bot eg. '+' (do not include the '' outside of the prefix)");
+                Logger.LogMessage(@"Please enter a prefix for the bot eg. '+' (do not include the '' outside of the prefix)");
                 Console.Write("Prefix: ");
                 config.DefaultPrefix = Console.ReadLine();
 
-                Logger.LogInfo(@"After you input your token, a config will be generated at 'setup/config.json'");
+                Logger.LogMessage(@"After you input your token, a config will be generated at 'setup/config.json'");
                 Console.Write("Token: ");
                 config.BotToken = Console.ReadLine();
 
-                Logger.LogInfo("Would you like to AutoRun the bot from now on? Y/N");
+                Logger.LogMessage("Would you like to AutoRun the bot from now on? Y/N");
                 var key = Console.ReadKey();
                 if (key.KeyChar == 'y' || key.KeyChar == 'Y')
                     config.AutoRun = true;
@@ -84,10 +84,10 @@ namespace Lithium.Models
                 config.Save();
             }
 
-            Logger.LogInfo("Config Loaded!");
-            Logger.LogInfo($"Prefix: {Load().DefaultPrefix}");
-            Logger.LogInfo($"Token Length: {Load().BotToken.Length} (should be 59)");
-            Logger.LogInfo($"Autorun: {Load().AutoRun}");
+            Logger.LogMessage("Config Loaded!");
+            Logger.LogMessage($"Prefix: {Load().DefaultPrefix}");
+            Logger.LogMessage($"Token Length: {Load().BotToken.Length} (should be 59)");
+            Logger.LogMessage($"Autorun: {Load().AutoRun}");
         }
     }
 }

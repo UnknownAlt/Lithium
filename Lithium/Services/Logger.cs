@@ -1,23 +1,40 @@
-﻿using Serilog;
+﻿using Discord;
+using Serilog;
 
 namespace Lithium.Services
 {
     public class Logger
     {
-        public static void LogInfo(string message)
+        public static void LogMessage(string message, LogSeverity severity = LogSeverity.Info)
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
                 .CreateLogger();
-            Log.Information($"{message}");
-        }
 
-        public static void LogError(string message)
-        {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .CreateLogger();
-            Log.Error($"{message}");
+            switch (severity)
+            {
+                case LogSeverity.Info:
+                    Log.Information(message);
+                    break;
+                case LogSeverity.Warning:
+                    Log.Warning(message);
+                    break;
+                case LogSeverity.Error:
+                    Log.Error(message);
+                    break;
+                case LogSeverity.Debug:
+                    Log.Debug(message);
+                    break;
+                case LogSeverity.Critical:
+                    Log.Fatal(message);
+                    break;
+                case LogSeverity.Verbose:
+                    Log.Verbose(message);
+                    break;
+                default:
+                    Log.Information(message);
+                    break;
+            }
         }
     }
 }

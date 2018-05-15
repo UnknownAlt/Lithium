@@ -43,7 +43,8 @@ namespace Lithium.Handlers
         {
             try
             {
-                await DatabaseHandler.DatabaseCheck(_client);
+                DatabaseHandler.DatabaseInitialise(_client);
+                Log.Information($"Database Initialised");
                 var application = await _client.GetApplicationInfoAsync();
                 Log.Information($"Invite: https://discordapp.com/oauth2/authorize?client_id={application.Id}&scope=bot&permissions=2146958591");
                 var dblist = DatabaseHandler.GetFullConfig();
@@ -56,7 +57,7 @@ namespace Lithium.Handlers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.LogMessage(e.ToString(), LogSeverity.Error);
             }
 
             await _client.SetGameAsync($"{Config.Load().DefaultPrefix}help // {_client.Guilds.Sum(x => x.MemberCount)} Users!");
@@ -77,8 +78,8 @@ namespace Lithium.Handlers
             }
             catch (Exception e)
             {
-                Console.WriteLine("Joined Guild Setup Error");
-                Console.WriteLine(e);
+                Logger.LogMessage("Joined Guild Setup Error", LogSeverity.Error);
+                Logger.LogMessage(e.ToString(), LogSeverity.Error);
             }
 
             try
@@ -90,12 +91,24 @@ namespace Lithium.Handlers
                     Description = $"Hi there, I am {guild.CurrentUser.Username}. Type `{Config.Load().DefaultPrefix}help` to see a list of my commands",
                     Color = Color.Blue
                 };
-                await guild.DefaultChannel?.SendMessageAsync("", false, embed.Build());
+                //await guild.DefaultChannel?.SendMessageAsync("", false, embed.Build());
+                var defaultchannel = guild.TextChannels?.FirstOrDefault(x => string.Equals(x.Name, "general", StringComparison.CurrentCultureIgnoreCase));
+                if (defaultchannel != null)
+                {
+                    try
+                    {
+                        await defaultchannel.SendMessageAsync("", false, embed.Build());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogMessage(e.ToString(), LogSeverity.Error);
+                    }
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Joined Guild Notify Error");
-                Console.WriteLine(e);
+                Logger.LogMessage("Joined Guild Notify Error", LogSeverity.Error);
+                Logger.LogMessage(e.ToString(), LogSeverity.Error);
             }
         }
 
@@ -498,23 +511,11 @@ namespace Lithium.Handlers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.LogMessage(e.ToString(), LogSeverity.Error);
             }
 
 
             return false;
-        }
-
-        public GuildModel.Guild.Moderation.warn QuickWarn(string reason, IUser user, IUser mod)
-        {
-            return new GuildModel.Guild.Moderation.warn
-            {
-                modname = mod.Username,
-                modID = mod.Id,
-                reason = reason,
-                username = user.Username,
-                userID = user.Id
-            };
         }
 
         public async Task DoCommand(SocketMessage parameterMessage)
@@ -549,16 +550,16 @@ namespace Lithium.Handlers
                                       $"Error: {result.ErrorReason}"
                     };
                     await context.Channel.SendMessageAsync("", false, embed.Build());
-                    Logger.LogError($"{message.Content} || {message.Author}");
+                    Logger.LogMessage($"{message.Content} || {message.Author}", LogSeverity.Error);
                 }
                 else
                 {
-                    Logger.LogInfo($"{message.Content} || {message.Author}");
+                    Logger.LogMessage($"{message.Content} || {message.Author}");
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.LogMessage(e.ToString(), LogSeverity.Error);
             }
         }
 

@@ -7,6 +7,7 @@ using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Contexts.Paginator;
 using Lithium.Models;
+using Lithium.Services;
 
 namespace Lithium.Modules
 {
@@ -189,7 +190,7 @@ namespace Lithium.Modules
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.LogMessage(e.ToString(), LogSeverity.Error);
             }
         }
     }

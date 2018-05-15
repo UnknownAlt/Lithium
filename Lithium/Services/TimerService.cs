@@ -59,7 +59,7 @@ namespace Lithium.Services
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
+                        Logger.LogMessage(e.ToString(), LogSeverity.Error);
                     }
 
                     LastFireTime = DateTime.UtcNow;
@@ -123,7 +123,7 @@ namespace Lithium.Services
             }
             catch (Exception e)
             {
-                Logger.LogError(e.ToString());
+                Logger.LogMessage(e.ToString(), LogSeverity.Error);
             }
         }
 
@@ -170,7 +170,7 @@ namespace Lithium.Services
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e.ToString());
+                    Logger.LogMessage(e.ToString(), LogSeverity.Error);
                 }
             }
 

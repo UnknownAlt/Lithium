@@ -34,6 +34,7 @@ namespace Lithium
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "setup/backups")))
                 Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "setup/backups"));
             Config.CheckExistence();
+
             Client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Info,
@@ -65,15 +66,7 @@ namespace Lithium
 
         private static Task Client_Log(LogMessage arg)
         {
-            if (arg.Severity == LogSeverity.Info)
-            {
-                Logger.LogInfo(arg.Message);
-            }
-            else
-            {
-                Logger.LogError(arg.Message);
-            }
-
+            Logger.LogMessage(arg.Message, arg.Severity);
             return Task.CompletedTask;
         }
 
@@ -86,7 +79,7 @@ namespace Lithium
                     Database = DatabaseHandler.DBName,
                     Urls = new[] {DatabaseHandler.ServerURL}
                 }.Initialize())
-                .AddSingleton(new DatabaseHandler())
+                .AddSingleton(new DatabaseHandler(new DocumentStore {Urls = new [] {Config.Load().ServerURL}}.Initialize()))
                 .AddSingleton(new TimerService(Client))
                 .AddSingleton(new InteractiveService(Client))
                 .AddSingleton(new CommandService(
