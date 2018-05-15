@@ -22,15 +22,12 @@ namespace Lithium.Models
 
             public void Save()
             {
-                using (var ds = new DocumentStore {Urls = new[] {DatabaseHandler.ServerURL}}.Initialize())
+                using (var Session = DatabaseHandler.Store.OpenSession(DatabaseHandler.DBName))
                 {
-                    using (var Session = ds.OpenSession(DatabaseHandler.DBName))
-                    {
-                        Session.Store(this, GuildID.ToString());
-                        Session.SaveChanges();
-                    }
+                    Session.Store(this, GuildID.ToString());
+                    Session.SaveChanges();
                 }
-            }
+            }   
 
             public async Task ModLog(EmbedBuilder embed, IGuild guild)
             {
