@@ -65,7 +65,15 @@ namespace Lithium
 
         private static Task Client_Log(LogMessage arg)
         {
-            Logger.LogInfo(arg.Message);
+            if (arg.Severity == LogSeverity.Info)
+            {
+                Logger.LogInfo(arg.Message);
+            }
+            else
+            {
+                Logger.LogError(arg.Message);
+            }
+
             return Task.CompletedTask;
         }
 

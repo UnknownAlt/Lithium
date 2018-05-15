@@ -97,8 +97,6 @@ namespace Lithium.Handlers
                 Console.WriteLine("Joined Guild Notify Error");
                 Console.WriteLine(e);
             }
-
-
         }
 
         public bool CheckHidden(LithiumContext context)
