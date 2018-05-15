@@ -143,7 +143,7 @@ namespace Lithium.Modules.ServerOwner
                             if (sint < 1 || sint > 6)
                             {
                                 await ReplyAsync($"Invalid Input {s}\n" +
-                                                 $"only 1-6 are accepted.");
+                                                 "only 1-6 are accepted.");
                                 return;
                             }
 
@@ -206,17 +206,17 @@ namespace Lithium.Modules.ServerOwner
             await ReplyAsync("", false, new EmbedBuilder
             {
                 Description =
-                    $"You can select roles to ignore from all spam type checks in this module using the ignore command.\n" +
-                    $"__Key__\n" +
-                    $"`1` - Antispam\n" +
-                    $"`2` - Blacklist\n" +
-                    $"`3` - Mention\n" +
-                    $"`4` - Invite\n" +
-                    $"`5` - IP Addresses\n" +
-                    $"`6` - Toxicity\n\n" +
-                    $"__usage__\n" +
+                    "You can select roles to ignore from all spam type checks in this module using the ignore command.\n" +
+                    "__Key__\n" +
+                    "`1` - Antispam\n" +
+                    "`2` - Blacklist\n" +
+                    "`3` - Mention\n" +
+                    "`4` - Invite\n" +
+                    "`5` - IP Addresses\n" +
+                    "`6` - Toxicity\n\n" +
+                    "__usage__\n" +
                     $"`{Config.Load().DefaultPrefix} 1 @role` - this allows the role to spam without being limited/removed\n" +
-                    $"You can use commas to use multiple settings on the same role.\n" +
+                    "You can use commas to use multiple settings on the same role.\n" +
                     $"`{Config.Load().DefaultPrefix} 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
                     $"`{Config.Load().DefaultPrefix} 0 @role` - resets the ignore config and will add all limits back to the role"
             }.Build());
@@ -250,7 +250,7 @@ namespace Lithium.Modules.ServerOwner
                             if (sint < 1 || sint > 6)
                             {
                                 await ReplyAsync($"Invalid Input {s}\n" +
-                                                 $"only 1-6 are accepted.");
+                                                 "only 1-6 are accepted.");
                                 return;
                             }
 
@@ -286,7 +286,7 @@ namespace Lithium.Modules.ServerOwner
 
                 var embed = new EmbedBuilder
                 {
-                    Description = $"__AutoMod Antispam Detections__\n" +
+                    Description = "__AutoMod Antispam Detections__\n" +
                                   $"Warn on Antispam: {Context.Server.Antispam.Antispam.WarnOnDetection}\n" +
                                   $"Warn on Blacklist: {Context.Server.Antispam.Blacklist.WarnOnDetection}\n" +
                                   $"Warn on Mention Everyone and 5+ Role Mentions: {Context.Server.Antispam.Mention.WarnOnDetection}\n" +
@@ -312,17 +312,17 @@ namespace Lithium.Modules.ServerOwner
             await ReplyAsync("", false, new EmbedBuilder
             {
                 Description =
-                    $"You can select roles to warn from all spam type checks in this module using the WarnSpammers command.\n" +
-                    $"__Key__\n" +
-                    $"`1` - Antispam\n" +
-                    $"`2` - Blacklist\n" +
-                    $"`3` - Mention\n" +
-                    $"`4` - Invite\n" +
-                    $"`5` - IP Addresses\n" +
-                    $"`6` - Toxicity\n\n" +
-                    $"__usage__\n" +
+                    "You can select roles to warn from all spam type checks in this module using the WarnSpammers command.\n" +
+                    "__Key__\n" +
+                    "`1` - Antispam\n" +
+                    "`2` - Blacklist\n" +
+                    "`3` - Mention\n" +
+                    "`4` - Invite\n" +
+                    "`5` - IP Addresses\n" +
+                    "`6` - Toxicity\n\n" +
+                    "__usage__\n" +
                     $"`{Config.Load().DefaultPrefix} 1 @role` - this allows the role to spam without being limited/removed\n" +
-                    $"You can use commas to use multiple settings on the same role\n." +
+                    "You can use commas to use multiple settings on the same role\n." +
                     $"`{Config.Load().DefaultPrefix} 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
                     $"`{Config.Load().DefaultPrefix} 0 @role` - resets the ignore config and will add all limits back to the role"
             }.Build());

@@ -23,7 +23,7 @@ namespace Lithium.Discord.Contexts
         public async Task<IUserMessage> ReplyAsync(string Message, Embed Embed = null)
         {
             await Context.Channel.TriggerTypingAsync();
-            return await base.ReplyAsync(Message, false, Embed, null);
+            return await base.ReplyAsync(Message, false, Embed);
         }
 
         //Reply in the server and then delete after the provided delay.

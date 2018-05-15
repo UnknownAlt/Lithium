@@ -35,7 +35,7 @@ namespace Lithium.Modules
                 catch (Exception e)
                 {
                     await ReplyAsync($"{e.Message}\n" +
-                                     $"Unable to set the game");
+                                     "Unable to set the game");
                 }
             }
         }

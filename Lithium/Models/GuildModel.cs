@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Lithium.Handlers;
-using Raven.Client.Documents;
 
 namespace Lithium.Models
 {
@@ -86,14 +85,14 @@ namespace Lithium.Models
                             username = User.Username,
                             Expires = false
                         });
-                        await User.Guild.AddBanAsync(User, 1, $"AutoBan, Warnlimit Exceeded by user!");
+                        await User.Guild.AddBanAsync(User, 1, "AutoBan, Warnlimit Exceeded by user!");
                         embedmsg.Title = $"{User.Username} has been Auto banned";
                         embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
                                                $"UserID: {User.Id}\n" +
                                                $"Mod: {mod.Username}#{mod.Discriminator}\n" +
                                                $"Mod ID: {mod.Id}\n" +
                                                "Reason:\n" +
-                                               $"AutoBan, Warnlimit Exceeded by user!";
+                                               "AutoBan, Warnlimit Exceeded by user!";
                         embedmsg.Color = Color.DarkRed;
                     }
                     else
@@ -106,14 +105,14 @@ namespace Lithium.Models
                             userID = User.Id,
                             username = User.Username
                         });
-                        await User.KickAsync($"AutoKick, WarnLimit Exceeded by user!");
+                        await User.KickAsync("AutoKick, WarnLimit Exceeded by user!");
                         embedmsg.Title = $"{User.Username} has been Auto Kicked";
                         embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
                                                $"UserID: {User.Id}\n" +
                                                $"Mod: {mod.Username}#{mod.Discriminator}\n" +
                                                $"Mod ID: {mod.Id}\n" +
                                                "Reason:\n" +
-                                               $"Auto Kick, Warnlimit Exceeded by user!";
+                                               "Auto Kick, Warnlimit Exceeded by user!";
                         embedmsg.Color = Color.DarkMagenta;
                     }
 

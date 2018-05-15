@@ -44,7 +44,7 @@ namespace Lithium.Handlers
             try
             {
                 DatabaseHandler.DatabaseInitialise(_client);
-                Log.Information($"Database Initialised");
+                Log.Information("Database Initialised");
                 var application = await _client.GetApplicationInfoAsync();
                 Log.Information($"Invite: https://discordapp.com/oauth2/authorize?client_id={application.Id}&scope=bot&permissions=2146958591");
                 var dblist = DatabaseHandler.GetFullConfig();

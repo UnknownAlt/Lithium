@@ -46,9 +46,9 @@ namespace Lithium.Handlers
 
             if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).Any(x => x == DBName)) return;
             await Store.Maintenance.Server.SendAsync(new CreateDatabaseOperation(new DatabaseRecord(DBName)));
-            Logger.LogMessage($"Created Database {DBName}.", LogSeverity.Info);
+            Logger.LogMessage($"Created Database {DBName}.");
 
-            Logger.LogMessage("Setting up backup operation...", LogSeverity.Info);
+            Logger.LogMessage("Setting up backup operation...");
             await Store.Maintenance.SendAsync(new UpdatePeriodicBackupOperation(new PeriodicBackupConfiguration
             {
                 Name = "Backup",

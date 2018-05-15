@@ -54,7 +54,7 @@ namespace Lithium.Modules.Administration
             }
 
 
-            await ReplyAsync($"Channels Modified for Mute Role:\n" +
+            await ReplyAsync("Channels Modified for Mute Role:\n" +
                              $"{perms}\n" +
                              $"{channels}");
         }
@@ -84,12 +84,12 @@ namespace Lithium.Modules.Administration
         [Remarks("Overload With Info")]
         public async Task WarnAction()
         {
-            await ReplyAsync($"Types:\n" +
+            await ReplyAsync("Types:\n" +
                              $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.NoAction}`\n" +
                              $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.Kick}`\n" +
                              $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.Ban}`\n\n" +
-                             $"Command Use:\n" +
-                             $"`SetWarnLimitAction <Type>`");
+                             "Command Use:\n" +
+                             "`SetWarnLimitAction <Type>`");
         }
 
         [Command("SetModLogChannel")]
@@ -198,7 +198,7 @@ namespace Lithium.Modules.Administration
                     Title = "The Following Bans have been cleared!",
                     Description = $"**User: {User.Username} [{User.Id}]**\n" +
                                   $"{warnstring}\n\n" +
-                                  $"NOTE: This does not unban the user."
+                                  "NOTE: This does not unban the user."
                 });
 
                 Context.Server.ModerationSetup.Bans = Context.Server.ModerationSetup.Bans.Where(x => x.userID != User.Id).ToList();
@@ -225,7 +225,7 @@ namespace Lithium.Modules.Administration
             }
             else
             {
-                await ReplyAsync($"No module found with this name.");
+                await ReplyAsync("No module found with this name.");
             }
         }
 
@@ -242,7 +242,7 @@ namespace Lithium.Modules.Administration
             }
             else
             {
-                await ReplyAsync($"No command found with this name.");
+                await ReplyAsync("No command found with this name.");
             }
         }
 
@@ -259,7 +259,7 @@ namespace Lithium.Modules.Administration
             }
             else
             {
-                await ReplyAsync($"No module found with this name.");
+                await ReplyAsync("No module found with this name.");
             }
         }
 
@@ -276,7 +276,7 @@ namespace Lithium.Modules.Administration
             }
             else
             {
-                await ReplyAsync($"No command found with this name.");
+                await ReplyAsync("No command found with this name.");
             }
         }
 

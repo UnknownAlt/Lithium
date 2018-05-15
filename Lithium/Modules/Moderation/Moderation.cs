@@ -55,7 +55,7 @@ namespace Lithium.Modules.Moderation
             {
                 await user.RemoveRoleAsync(mutedrole);
                 Context.Server.ModerationSetup.Mutes.MutedUsers.Remove(Context.Server.ModerationSetup.Mutes.MutedUsers.FirstOrDefault(x => x.userid == user.Id));
-                await ReplyAsync($"User Unmuted");
+                await ReplyAsync("User Unmuted");
             }
 
             Context.Server.Save();
@@ -227,7 +227,7 @@ namespace Lithium.Modules.Moderation
                 var first = warngroup.FirstOrDefault();
                 var user = await Context.Client.GetUserAsync(first.userID);
 
-                var dstr = $"**{user?.Username ?? first.username} `[{first?.userID}]`**\n";
+                var dstr = $"**{user?.Username ?? first.username} `[{first.userID}]`**\n";
                 foreach (var warn in warngroup)
                 {
                     dstr += $"Warned By: {(await Context.Client.GetUserAsync(first.modID))?.Username ?? warn.modname} `[{warn.modID}]`\n" +
@@ -276,7 +276,7 @@ namespace Lithium.Modules.Moderation
                 var first = kickgroup.FirstOrDefault();
                 var user = await Context.Client.GetUserAsync(first.userID);
 
-                var dstr = $"**{user?.Username ?? first.username} `[{first?.userID}]`**\n";
+                var dstr = $"**{user?.Username ?? first.username} `[{first.userID}]`**\n";
                 foreach (var kick in kickgroup)
                 {
                     dstr += $"Kicked By: {(await Context.Client.GetUserAsync(first.modID))?.Username ?? kick.modname} `[{kick.modID}]`\n" +
