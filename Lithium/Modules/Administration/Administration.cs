@@ -22,6 +22,26 @@ namespace Lithium.Modules.Administration
             _service = service;
         }
 
+        [Command("SetEventChannel")]
+        [Summary("Admin SetEventChannel")]
+        [Remarks("set the current channel for event logging")]
+        public async Task EventChannel()
+        {
+            Context.Server.EventLogger.EventChannel = Context.Channel.Id;
+            Context.Server.EventLogger.LogEvents = true;
+            Context.Server.Save();
+            await ReplyAsync($"Success! Events will now be logged in {Context.Channel.Name}");
+        }
+        [Command("LogEvents")]
+        [Summary("Admin LogEvents")]
+        [Remarks("toggle event logging")]
+        public async Task LogEventToggle()
+        {
+            Context.Server.EventLogger.LogEvents = !Context.Server.EventLogger.LogEvents;
+            Context.Server.Save();
+            await ReplyAsync($"EventLogging: {Context.Server.EventLogger.LogEvents}");
+        }
+
         [Command("SetMutedRole")]
         [Summary("Admin SetMutedRole <@Role>")]
         [Remarks("set role users are given upon being muted")]
@@ -389,14 +409,13 @@ namespace Lithium.Modules.Administration
                     description = $"Kicks: {(Guild.ModerationSetup.Kicks.Any() ? Guild.ModerationSetup.Kicks.Count.ToString() : "N/A")}\n" +
                                   $"Warns: {(Guild.ModerationSetup.Warns.Any() ? Guild.ModerationSetup.Warns.Count.ToString() : "N/A")}\n" +
                                   $"Bans: {(Guild.ModerationSetup.Bans.Any() ? Guild.ModerationSetup.Bans.Count.ToString() : "N/A")}\n"
-                },/*
+                },
                 new PaginatedMessage.Page
                 {
                     dynamictitle = "Event & Error Logging",
-                    description = $"Event Logging: {Guild.EventLogging}\n" +
-                                  $"Event Channel: {Context.Guild.GetChannel(Guild.EventChannel)?.Name ?? "N/A"}\n" +
-                                  $"Error Logging (dep): {Guild.ErrorLog}\n"
-                },
+                    description = $"Event Logging: {Guild.EventLogger.LogEvents}\n" +
+                                  $"Event Channel: {Context.Socket.Guild.GetChannel(Guild.EventLogger.EventChannel)?.Name ?? "N/A"}"
+                },/*
                 new PaginatedMessage.Page
                 {
                     dynamictitle = "Tagging",
