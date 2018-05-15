@@ -11,9 +11,13 @@
 
 ### `Features`
 Moderation - Ban, Kick, Warn, Mute, Softban, Mute with Expiry time, autokick after too many warns
+
 Antispam - AntiSpam, AutoRemove @everyone and @here, messages with 5+ role or user mentions, blacklist, remove discord invites, remove IP addresses, Google Perspective Toxicity API
+
 Mod Logging
+
 AutoWarn
+
 & More!!!
 ### `Contributing`
 Feel free to make a pull request, I would love to see everyone's input!
