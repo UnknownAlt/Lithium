@@ -45,6 +45,29 @@ namespace Lithium.Modules.ServerOwner
             await ReplyAsync("Moderator Role added.");
         }
 
+        [Command("delmod")]
+        [Summary("delmod <@role>")]
+        [Remarks("Delete a moderator role")]
+        public async Task DelModRole(IRole ModRole = null)
+        {
+            if (ModRole == null)
+            {
+                await ReplyAsync("Please provide a role to add");
+                return;
+            }
+
+            if (Context.Server.ModerationSetup.ModeratorRoles.Contains(ModRole.Id))
+            {
+                Context.Server.ModerationSetup.ModeratorRoles.Remove(ModRole.Id);
+                Context.Server.Save();
+                await ReplyAsync("Moderator Role Removed.");
+            }
+            else
+            {
+                await ReplyAsync("That is not a moderator role.");
+            }
+        }
+
         [Command("addadmin")]
         [Summary("addadmin <@role>")]
         [Remarks("Add a new administrator role")]
@@ -63,6 +86,28 @@ namespace Lithium.Modules.ServerOwner
             }
 
             await ReplyAsync("Admin Role added.");
+        }
+
+        [Command("deladmin")]
+        [Summary("deladmin <@role>")]
+        [Remarks("Delete an admin role")]
+        public async Task DelAdmin(IRole AdminRole = null)
+        {
+            if (AdminRole == null)
+            {
+                await ReplyAsync("Please provide a role to add");
+                return;
+            }
+            if (Context.Server.ModerationSetup.AdminRoles.Contains(AdminRole.Id))
+            {
+                Context.Server.ModerationSetup.AdminRoles.Remove(AdminRole.Id);
+                Context.Server.Save();
+                await ReplyAsync("Admin Role Removed.");
+            }
+            else
+            {
+                await ReplyAsync("That is not a admin role.");
+            }
         }
 
         [Command("reset")]
