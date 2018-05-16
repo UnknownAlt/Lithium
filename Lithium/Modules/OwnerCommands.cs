@@ -40,32 +40,6 @@ namespace Lithium.Modules
             }
         }
 
-
-        [Command("Pages")]
-        [Summary("Pages")]
-        [Remarks("Paginator")]
-        public async Task Pages()
-        {
-            var pages = new List<PaginatedMessage.Page>
-            {
-                new PaginatedMessage.Page
-                {
-                    description = "1"
-                },
-                new PaginatedMessage.Page
-                {
-                    description = "2"
-                }
-            };
-            var gager = new PaginatedMessage
-            {
-                Title = "Pages",
-                Pages = pages
-            };
-            await PagedReplyAsync(gager);
-        }
-
-
         [Command("Stats")]
         [Summary("Stats")]
         [Remarks("Display Bot Statistics")]

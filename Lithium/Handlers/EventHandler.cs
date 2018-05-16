@@ -557,9 +557,7 @@ namespace Lithium.Handlers
                             await context.Message.DeleteAsync();
                             var emb = new EmbedBuilder
                             {
-                                Description =
-                                    guild.Antispam.Advertising.NoInviteMessage ??
-                                    $"{context.User.Mention} - no sending invite links... the admins might get angry"
+                                Description = guild.Antispam.Advertising.NoInviteMessage ?? $"{context.User.Mention} - no sending invite links... the admins might get angry"
                             };
                             await context.Channel.SendMessageAsync("", false, emb.Build());
                             //if
@@ -569,7 +567,6 @@ namespace Lithium.Handlers
                             if (guild.Antispam.Advertising.WarnOnDetection)
                             {
                                 await guild.AddWarn("AutoMod - Anti Advertising", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
-                                guild.Save();
                                 guild.Save();
                             }
 
