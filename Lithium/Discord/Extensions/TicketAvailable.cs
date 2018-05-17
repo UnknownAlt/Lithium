@@ -16,7 +16,7 @@ namespace Lithium.Discord.Extensions
         /// <param name="Settings"></param>
         /// <param name="User"></param>
         /// <returns></returns>
-        public bool CanCreate(GuildModel.Guild.ticketing.tsettings Settings, IGuildUser User)
+        public static bool CanCreate(GuildModel.Guild.ticketing.tsettings Settings, IGuildUser User)
         {
             if (Settings.allowAnyUserToCreate)
             {

@@ -6,12 +6,16 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
+using Lithium.Discord.Preconditions;
 
 namespace Lithium.Modules.Tickets
 {
+    
+    [RequireContext(ContextType.Guild)]
     [Group("TicketManage")]
     public class Management : Base
     {
+        [RequireRole.RequireAdmin]
         [Command("Toggle")]
         [Summary("TicketManage Toggle")]
         [Remarks("Toggle the ticketing system")]
@@ -22,6 +26,7 @@ namespace Lithium.Modules.Tickets
             await ReplyAsync($"Use Ticketing System: {Context.Server.Tickets.settings.useticketing}");
         }
 
+        [RequireRole.RequireAdmin]
         [Command("SetChannel")]
         [Summary("TicketManage SetChannel")]
         [Remarks("Set the ticketing channel")]
@@ -32,6 +37,7 @@ namespace Lithium.Modules.Tickets
             await ReplyAsync($"Ticket updates will now be logged in {Context.Channel.Name}");
         }
 
+        [RequireRole.RequireAdmin]
         [Command("ToggleAllowAll")]
         [Summary("TicketManage ToggleAllowAll")]
         [Remarks("Toggle the ability to let any user create a ticket.")]
@@ -42,6 +48,7 @@ namespace Lithium.Modules.Tickets
             await ReplyAsync($"Allow any user in the server to create tickets: {Context.Server.Tickets.settings.allowAnyUserToCreate}");
         }
 
+        [RequireRole.RequireAdmin]
         [Command("AllowRole Add")]
         [Summary("TicketManage AllowRole Add <@role>")]
         [Remarks("add role to the ticketing creation allowed list")]
@@ -58,6 +65,7 @@ namespace Lithium.Modules.Tickets
                              $"{string.Join("\n", Context.Server.Tickets.settings.AllowedCreationRoles.Select(x => Context.Guild.GetRole(x)).Where(x => x != null).Select(x => x.Name))}");
         }
 
+        [RequireRole.RequireAdmin]
         [Command("AllowRole Remove")]
         [Summary("TicketManage AllowRole Remove <@role>")]
         [Remarks("Remove role from the ticketing creation allowed list")]
@@ -74,7 +82,7 @@ namespace Lithium.Modules.Tickets
                              $"{string.Join("\n", Context.Server.Tickets.settings.AllowedCreationRoles.Select(x => Context.Guild.GetRole(x)).Where(x => x != null).Select(x => x.Name))}");
         }
 
-
+        [RequireRole.RequireModerator]
         [Command("ToggleSolved")]
         [Summary("TicketManage ToggleSolved <ID> [Optional]<reason>")]
         [Remarks("Toggle the solved status of a ticket")]

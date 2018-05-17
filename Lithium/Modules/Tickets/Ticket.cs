@@ -11,6 +11,7 @@ using Lithium.Models;
 
 namespace Lithium.Modules.Tickets
 {
+    [RequireContext(ContextType.Guild)]
     [Group("Ticket")]
     public class Ticket : Base
     {
