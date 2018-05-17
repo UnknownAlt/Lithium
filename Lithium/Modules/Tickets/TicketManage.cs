@@ -10,7 +10,6 @@ using Lithium.Discord.Preconditions;
 
 namespace Lithium.Modules.Tickets
 {
-    
     [RequireContext(ContextType.Guild)]
     [Group("TicketManage")]
     public class TicketManage : Base

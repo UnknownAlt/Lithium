@@ -7,12 +7,14 @@ using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Contexts.Paginator;
+using Lithium.Discord.Preconditions;
 using Lithium.Models;
 
 namespace Lithium.Modules.Tickets
 {
     [RequireContext(ContextType.Guild)]
     [Group("Ticket")]
+    [Ticketing.TicketEnabled]
     public class Ticket : Base
     {
         [Command]
