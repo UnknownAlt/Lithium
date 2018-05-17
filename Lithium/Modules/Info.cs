@@ -76,10 +76,11 @@ namespace Lithium.Modules
             {
                 user = Context.User as IGuildUser;
             }
+
             var embed = new EmbedBuilder();
             embed.AddField($"Identifiers", $"Username: {user.Username}#{user.Discriminator}\n" +
-                                                 $"Nickname: {user.Nickname ?? "N/A"}\n" +
-                                                 $"ID: {user.Id}");
+                                           $"Nickname: {user.Nickname ?? "N/A"}\n" +
+                                           $"ID: {user.Id}");
             embed.AddField("Joined Guild", $"{(user.JoinedAt.HasValue ? user.JoinedAt.Value.Date.ToShortDateString() : "Unknown")}");
             embed.AddField("Joined Discord", $"{user.CreatedAt.Date.ToShortDateString()}");
             embed.AddField($"Avatar", $"{user.GetAvatarUrl() ?? "N/A"}");

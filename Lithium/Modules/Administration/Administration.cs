@@ -326,7 +326,7 @@ namespace Lithium.Modules.Administration
                     dynamictitle = $"Guild Info",
                     description = $"ID: {Guild.GuildID}\n" +
                                   $"Prefix: {Guild.Settings.Prefix ?? Config.Load().DefaultPrefix}\n"
-                },/*
+                }, /*
                 new PaginatedMessage.Page
                 {
                     dynamictitle = "Welcome and Goodbye",
@@ -396,7 +396,7 @@ namespace Lithium.Modules.Administration
                     dynamictitle = "Event & Error Logging",
                     description = $"Event Logging: {Guild.EventLogger.LogEvents}\n" +
                                   $"Event Channel: {Context.Socket.Guild.GetChannel(Guild.EventLogger.EventChannel)?.Name ?? "N/A"}"
-                },/*
+                }, /*
                 new PaginatedMessage.Page
                 {
                     dynamictitle = "Tagging",

@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Contexts.Paginator;
+using Lithium.Discord.Extensions;
 using Lithium.Discord.Preconditions;
 using Lithium.Models;
 
@@ -27,18 +26,20 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync("There are no tickets in this server");
                 return;
             }
+
             var pages = new List<PaginatedMessage.Page>();
             foreach (var ticket in Context.Server.Tickets.tickets.OrderBy(x => x.id))
             {
                 pages.Add(new PaginatedMessage.Page
                 {
                     description = $"Ticket By: {Context.Socket.Guild.GetUser(ticket.InitUser)?.Username ?? $"Missing User [{ticket.InitUser}]"}\n" +
-                    $"Message: {ticket.message}\n\n" +
-                    $"^ [{ticket.Up.Count}] v [{ticket.Down.Count}]\n" +
-                    $"ID: {ticket.id}\n" +
-                    $"Solved: {ticket.solved}"
+                                  $"Message: {ticket.message}\n\n" +
+                                  $"^ [{ticket.Up.Count}] v [{ticket.Down.Count}]\n" +
+                                  $"ID: {ticket.id}\n" +
+                                  $"Solved: {ticket.solved}"
                 });
             }
+
             var pager = new PaginatedMessage
             {
                 Title = "Server Tickets",
@@ -46,6 +47,7 @@ namespace Lithium.Modules.Tickets
             };
             await PagedReplyAsync(pager);
         }
+
         [Command("Solved")]
         [Summary("Ticket Solved")]
         [Remarks("List all Solved Tickets")]
@@ -56,6 +58,7 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync("There are no tickets in this server");
                 return;
             }
+
             var pages = new List<PaginatedMessage.Page>();
             foreach (var ticket in Context.Server.Tickets.tickets.OrderBy(x => x.id).Where(x => x.solved))
             {
@@ -69,6 +72,7 @@ namespace Lithium.Modules.Tickets
                                   $"{ticket.solvedmessage ?? "N/A"}"
                 });
             }
+
             var pager = new PaginatedMessage
             {
                 Title = "Server Tickets",
@@ -76,6 +80,7 @@ namespace Lithium.Modules.Tickets
             };
             await PagedReplyAsync(pager);
         }
+
         [Command("UnSolved")]
         [Summary("Ticket UnSolved")]
         [Remarks("List all UnSolved Tickets")]
@@ -86,6 +91,7 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync("There are no tickets in this server");
                 return;
             }
+
             var pages = new List<PaginatedMessage.Page>();
             foreach (var ticket in Context.Server.Tickets.tickets.OrderBy(x => x.id).Where(x => !x.solved))
             {
@@ -98,6 +104,7 @@ namespace Lithium.Modules.Tickets
                                   $"Comment Count: {ticket.comments.Count}"
                 });
             }
+
             var pager = new PaginatedMessage
             {
                 Title = "Server Tickets",
@@ -109,7 +116,7 @@ namespace Lithium.Modules.Tickets
         [Command("Create")]
         [Summary("Ticket Create <ticket message>")]
         [Remarks("Create a ticket")]
-        public async Task Create([Remainder]string message = null)
+        public async Task Create([Remainder] string message = null)
         {
             if (message == null)
             {
@@ -117,7 +124,7 @@ namespace Lithium.Modules.Tickets
                 return;
             }
 
-            if (Discord.Extensions.TicketAvailable.CanCreate(Context.Server.Tickets.settings, Context.User as IGuildUser))
+            if (TicketAvailable.CanCreate(Context.Server.Tickets.settings, Context.User as IGuildUser))
             {
                 await ReplyAsync("You are not permitted to create a ticket here.");
                 return;
@@ -157,6 +164,7 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync("Please select a ticket to upvote. You can see a list of public tickets using the `TicketList` Command");
                 return;
             }
+
             var targetticket = Context.Server.Tickets.tickets.FirstOrDefault(x => x.id == id);
             if (targetticket == null)
             {
@@ -174,6 +182,7 @@ namespace Lithium.Modules.Tickets
             {
                 targetticket.Down.Remove(Context.User.Id);
             }
+
             var ticketemb = new EmbedBuilder
             {
                 Color = Color.Orange,
@@ -213,6 +222,7 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync("Please select a ticket to Downvote. You can see a list of public tickets using the `TicketList` Command");
                 return;
             }
+
             var targetticket = Context.Server.Tickets.tickets.FirstOrDefault(x => x.id == id);
             if (targetticket == null)
             {
@@ -230,6 +240,7 @@ namespace Lithium.Modules.Tickets
             {
                 targetticket.Up.Remove(Context.User.Id);
             }
+
             var ticketemb = new EmbedBuilder
             {
                 Color = Color.Blue,
@@ -262,7 +273,7 @@ namespace Lithium.Modules.Tickets
         [Command("Comment")]
         [Summary("Ticket Comment <ID> <Comment>")]
         [Remarks("Comment on a ticket")]
-        public async Task Comment(int id, [Remainder]string comment = null)
+        public async Task Comment(int id, [Remainder] string comment = null)
         {
             var targetticket = Context.Server.Tickets.tickets.FirstOrDefault(x => x.id == id);
             if (targetticket == null)
@@ -288,13 +299,12 @@ namespace Lithium.Modules.Tickets
             var pages = new List<PaginatedMessage.Page>
             {
                 new PaginatedMessage.Page
-                    {
-                        description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
-                                    $"Message: {targetticket.message}\n\n" +
-                                    $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
-                                      $"ID: {targetticket.id}"
-
-                    }
+                {
+                    description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                                  $"Message: {targetticket.message}\n\n" +
+                                  $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
+                                  $"ID: {targetticket.id}"
+                }
             };
 
             var desc = "";
@@ -314,6 +324,7 @@ namespace Lithium.Modules.Tickets
                     desc = "";
                 }
             }
+
             pages.Add(new PaginatedMessage.Page
             {
                 description = desc
@@ -334,7 +345,6 @@ namespace Lithium.Modules.Tickets
                               $"ID: {targetticket.id}",
                 Title = $"{Context.User.Username} Just Commented on a ticket"
             }, Context.Guild);
-
         }
 
         [Command("Vote Comment Up")]
@@ -355,6 +365,7 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync($"No Comment with the ID of {CommentID} in Ticket {ticketID}");
                 return;
             }
+
             if (comment.Down.Contains(Context.User.Id))
             {
                 comment.Down.Remove(Context.User.Id);
@@ -371,24 +382,24 @@ namespace Lithium.Modules.Tickets
                 comment.Up.Add(Context.User.Id);
                 upvoteaction = "Added";
             }
+
             Context.Server.Save();
             var pages = new List<PaginatedMessage.Page>
             {
                 new PaginatedMessage.Page
-                    {
-                        description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
-                                    $"Message: {targetticket.message}\n\n" +
-                                    $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
-                                      $"ID: {targetticket.id}"
-
-                    },
-                    new PaginatedMessage.Page
-                    {
-                        description = $"Comment By: { Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
-                                    $"Message: {comment.Comment}\n\n" +
-                                    $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
-                                    $"ID: {comment.id}"
-                    }
+                {
+                    description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                                  $"Message: {targetticket.message}\n\n" +
+                                  $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
+                                  $"ID: {targetticket.id}"
+                },
+                new PaginatedMessage.Page
+                {
+                    description = $"Comment By: {Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
+                                  $"Message: {comment.Comment}\n\n" +
+                                  $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
+                                  $"ID: {comment.id}"
+                }
             };
 
             var paginator = new PaginatedMessage
@@ -404,10 +415,10 @@ namespace Lithium.Modules.Tickets
                               $"Message: {targetticket.message}\n\n" +
                               $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
                               $"TID: {targetticket.id}\n\n" +
-                                $"Comment By: { Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
-                                $"Message: {comment.Comment}\n\n" +
-                                $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
-                                $"CID: {comment.id}",
+                              $"Comment By: {Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
+                              $"Message: {comment.Comment}\n\n" +
+                              $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
+                              $"CID: {comment.id}",
                 Title = $"{Context.User.Username} Just Voted a Comment: {upvoteaction}"
             }, Context.Guild);
         }
@@ -430,6 +441,7 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync($"No Comment with the ID of {CommentID} in Ticket {ticketID}");
                 return;
             }
+
             if (comment.Up.Contains(Context.User.Id))
             {
                 comment.Up.Remove(Context.User.Id);
@@ -446,24 +458,24 @@ namespace Lithium.Modules.Tickets
                 comment.Down.Add(Context.User.Id);
                 downaction = "Added";
             }
+
             Context.Server.Save();
             var pages = new List<PaginatedMessage.Page>
             {
                 new PaginatedMessage.Page
-                    {
-                        description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
-                                    $"Message: {targetticket.message}\n\n" +
-                                    $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
-                                      $"ID: {targetticket.id}"
-
-                    },
-                    new PaginatedMessage.Page
-                    {
-                        description = $"Comment By: { Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
-                                    $"Message: {comment.Comment}\n\n" +
-                                    $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
-                                    $"ID: {comment.id}"
-                    }
+                {
+                    description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                                  $"Message: {targetticket.message}\n\n" +
+                                  $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
+                                  $"ID: {targetticket.id}"
+                },
+                new PaginatedMessage.Page
+                {
+                    description = $"Comment By: {Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
+                                  $"Message: {comment.Comment}\n\n" +
+                                  $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
+                                  $"ID: {comment.id}"
+                }
             };
 
             var paginator = new PaginatedMessage
@@ -479,7 +491,7 @@ namespace Lithium.Modules.Tickets
                               $"Message: {targetticket.message}\n\n" +
                               $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
                               $"TID: {targetticket.id}\n\n" +
-                              $"Comment By: { Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
+                              $"Comment By: {Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
                               $"Message: {comment.Comment}\n\n" +
                               $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
                               $"CID: {comment.id}",
@@ -502,13 +514,12 @@ namespace Lithium.Modules.Tickets
             var pages = new List<PaginatedMessage.Page>
             {
                 new PaginatedMessage.Page
-                    {
-                        description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
-                                    $"Message: {targetticket.message}\n\n" +
-                                    $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
-                                      $"ID: {targetticket.id}"
-
-                    }
+                {
+                    description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                                  $"Message: {targetticket.message}\n\n" +
+                                  $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
+                                  $"ID: {targetticket.id}"
+                }
             };
 
             var desc = "";
@@ -528,6 +539,7 @@ namespace Lithium.Modules.Tickets
                     desc = "";
                 }
             }
+
             pages.Add(new PaginatedMessage.Page
             {
                 description = desc

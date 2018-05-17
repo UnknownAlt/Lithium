@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
@@ -23,6 +20,7 @@ namespace Lithium.Modules.Administration
             Context.Server.Save();
             await ReplyAsync($"Success! Events will now be logged in {Context.Channel.Name}");
         }
+
         [Command("ToggleLog")]
         [Summary("Event ToggleLog")]
         [Remarks("toggle event logging")]
@@ -102,6 +100,7 @@ namespace Lithium.Modules.Administration
             Context.Server.Save();
             await ReplyAsync($"Message Deleted: {Context.Server.EventLogger.Settings.messagedeleted}");
         }
+
         [Command("MessageUpdated")]
         [Summary("Event MessageUpdated")]
         [Remarks("toggle MessageUpdated event logging")]
@@ -133,6 +132,5 @@ namespace Lithium.Modules.Administration
             };
             await SendEmbedAsync(embed);
         }
-
     }
 }

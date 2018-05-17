@@ -397,7 +397,7 @@ namespace Lithium.Modules.Moderation
                         $"{count} messages cleared")
                     .AddField("Moderator",
                         $"Mod: {Context.User.Username}\n" +
-                        $"Mod Nick: {((IGuildUser)Context.User)?.Nickname ?? "N/A"}\n" +
+                        $"Mod Nick: {((IGuildUser) Context.User)?.Nickname ?? "N/A"}\n" +
                         $"Channel: {Context.Channel.Name}")
                     .WithCurrentTimestamp(), Context.Guild);
             }
@@ -429,7 +429,7 @@ namespace Lithium.Modules.Moderation
                     $"{newlist.Count} messages cleared")
                 .AddField("Moderator",
                     $"Mod: {Context.User.Username}\n" +
-                    $"Mod Nick: {((IGuildUser)Context.User)?.Nickname ?? "N/A"}\n" +
+                    $"Mod Nick: {((IGuildUser) Context.User)?.Nickname ?? "N/A"}\n" +
                     $"Channel: {Context.Channel.Name}")
                 .WithCurrentTimestamp(), Context.Guild);
         }
@@ -461,7 +461,7 @@ namespace Lithium.Modules.Moderation
                     $"{newlist.Count} messages cleared")
                 .AddField("Moderator",
                     $"Mod: {Context.User.Username}\n" +
-                    $"Mod Nick: {((IGuildUser)Context.User)?.Nickname ?? "N/A"}\n" +
+                    $"Mod Nick: {((IGuildUser) Context.User)?.Nickname ?? "N/A"}\n" +
                     $"Channel: {Context.Channel.Name}")
                 .WithCurrentTimestamp(), Context.Guild);
         }
@@ -476,7 +476,7 @@ namespace Lithium.Modules.Moderation
             var messages = enumerable as IMessage[] ?? enumerable.ToArray();
             var newerlist = messages.ToList().Where(x =>
                 Context.Socket.Guild.GetUser(x.Author.Id) != null &&
-                ((IGuildUser)Context.Socket.Guild.GetUser(x.Author.Id)).RoleIds.Contains(role.Id)).ToList();
+                ((IGuildUser) Context.Socket.Guild.GetUser(x.Author.Id)).RoleIds.Contains(role.Id)).ToList();
 
             try
             {
@@ -495,7 +495,7 @@ namespace Lithium.Modules.Moderation
                     $"{newerlist.Count} messages cleared")
                 .AddField("Moderator",
                     $"Mod: {Context.User.Username}\n" +
-                    $"Mod Nick: {((IGuildUser)Context.User)?.Nickname ?? "N/A"}\n" +
+                    $"Mod Nick: {((IGuildUser) Context.User)?.Nickname ?? "N/A"}\n" +
                     $"Channel: {Context.Channel.Name}")
                 .WithCurrentTimestamp(), Context.Guild);
         }

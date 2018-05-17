@@ -17,22 +17,27 @@ namespace Lithium.Handlers
 {
     public class DatabaseHandler
     {
+        public DatabaseHandler(IDocumentStore store)
+        {
+            Store = store;
+        }
+
         ///This is our configuration for the database handler, DBName is the database you created in RavenDB when setting it up
         ///ServerURL is the URL to the local server. NOTE: This bot has not been configured to use public addresses
         public static string DBName { get; set; } = Config.Load().DBName;
+
         public static string ServerURL { get; set; } = Config.Load().ServerURL;
 
         /// <summary>
-        /// This is the document store, an interface that represents our database
+        ///     This is the document store, an interface that represents our database
         /// </summary>
         public static IDocumentStore Store { get; set; }
-        public DatabaseHandler(IDocumentStore store) => Store = store;
 
         /// <summary>
-        /// Check whether RavenDB is running
-        /// Check whether or not a database already exists with the DBName
-        /// Set up auto-backup of the database
-        /// Ensure that all guilds shared with the bot have been added to the database
+        ///     Check whether RavenDB is running
+        ///     Check whether or not a database already exists with the DBName
+        ///     Set up auto-backup of the database
+        ///     Ensure that all guilds shared with the bot have been added to the database
         /// </summary>
         /// <param name="client"></param>
         public static async void DatabaseInitialise(DiscordSocketClient client)
@@ -104,7 +109,7 @@ namespace Lithium.Handlers
         }
 
         /// <summary>
-        /// Remove a guild's config completely from the database
+        ///     Remove a guild's config completely from the database
         /// </summary>
         /// <param name="Id"></param>
         /// <param name="Name"></param>
@@ -119,20 +124,20 @@ namespace Lithium.Handlers
         }
 
         /// <summary>
-        /// Add a newly initialised config to the database
+        ///     Add a newly initialised config to the database
         /// </summary>
         /// <param name="Id"></param>
         /// <returns></returns>
         public static GuildModel.Guild GetGuild(ulong Id)
         {
-                using (var Session = Store.OpenSession(DBName))
-                {
-                    return Session.Load<GuildModel.Guild>(Id.ToString());
-                }
+            using (var Session = Store.OpenSession(DBName))
+            {
+                return Session.Load<GuildModel.Guild>(Id.ToString());
+            }
         }
 
         /// <summary>
-        /// Load all documents matching GuildModel.Guild from the database
+        ///     Load all documents matching GuildModel.Guild from the database
         /// </summary>
         /// <returns></returns>
         public static List<GuildModel.Guild> GetFullConfig()

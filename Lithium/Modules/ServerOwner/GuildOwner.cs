@@ -13,7 +13,7 @@ namespace Lithium.Modules.ServerOwner
         [Command("setprefix")]
         [Summary("setprefix <prefix>")]
         [Remarks("set a custom prefix for the bot")]
-        public async Task Prefix([Remainder]string newprefix = null)
+        public async Task Prefix([Remainder] string newprefix = null)
         {
             if (newprefix.StartsWith("(") && newprefix.EndsWith(")"))
             {
@@ -98,6 +98,7 @@ namespace Lithium.Modules.ServerOwner
                 await ReplyAsync("Please provide a role to add");
                 return;
             }
+
             if (Context.Server.ModerationSetup.AdminRoles.Contains(AdminRole.Id))
             {
                 Context.Server.ModerationSetup.AdminRoles.Remove(AdminRole.Id);

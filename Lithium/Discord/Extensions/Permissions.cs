@@ -28,7 +28,7 @@ namespace Lithium.Discord.Extensions
         }
 
         /// <summary>
-        /// Returns true if targetuser is a moderator in the server
+        ///     Returns true if targetuser is a moderator in the server
         /// </summary>
         /// <param name="targetuser">The user to check</param>
         /// <param name="AllowAdminRole">Optionally allow users with roles set by the SetAdmin Command</param>
@@ -61,10 +61,13 @@ namespace Lithium.Discord.Extensions
         }
 
         /// <summary>
-        /// Returns true if targetuser is an admin in the server (via the SetAdmin command)
+        ///     Returns true if targetuser is an admin in the server (via the SetAdmin command)
         /// </summary>
         /// <param name="targetuser">The user to check</param>
-        /// <param name="AllowAdminPermission">Optionally return true for users with a role containing the Server Administrator permission</param>
+        /// <param name="AllowAdminPermission">
+        ///     Optionally return true for users with a role containing the Server Administrator
+        ///     permission
+        /// </param>
         /// <returns></returns>
         public static bool IsAdmin(IGuildUser targetuser, bool AllowAdminPermission = true)
         {

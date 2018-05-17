@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -58,6 +55,7 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync("Please provide a role.");
                 return;
             }
+
             Context.Server.Tickets.settings.AllowedCreationRoles.Add(AllowRole.Id);
             Context.Server.Save();
             await ReplyAsync($"Allowed Roles:\n" +
@@ -75,6 +73,7 @@ namespace Lithium.Modules.Tickets
                 await ReplyAsync("Please provide a role.");
                 return;
             }
+
             Context.Server.Tickets.settings.AllowedCreationRoles.Remove(AllowRole.Id);
             Context.Server.Save();
             await ReplyAsync($"Allowed Roles:\n" +
@@ -102,9 +101,9 @@ namespace Lithium.Modules.Tickets
             {
                 Title = $"Solved: {targetticket.solved}",
                 Description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
-                $"Message: {targetticket.message}\n\n" +
-                $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
-                $"ID: {targetticket.id}",
+                              $"Message: {targetticket.message}\n\n" +
+                              $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
+                              $"ID: {targetticket.id}",
                 Footer = new EmbedFooterBuilder
                 {
                     Text = $"Ran by {Context.User.Username}"

@@ -79,7 +79,7 @@ namespace Lithium
                     Database = DatabaseHandler.DBName,
                     Urls = new[] {DatabaseHandler.ServerURL}
                 }.Initialize())
-                .AddSingleton(new DatabaseHandler(new DocumentStore {Urls = new [] {Config.Load().ServerURL}}.Initialize()))
+                .AddSingleton(new DatabaseHandler(new DocumentStore {Urls = new[] {Config.Load().ServerURL}}.Initialize()))
                 .AddSingleton(new TimerService(Client))
                 .AddSingleton(new InteractiveService(Client))
                 .AddSingleton(new CommandService(

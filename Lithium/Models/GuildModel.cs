@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord;
 using Lithium.Handlers;
@@ -172,6 +170,7 @@ namespace Lithium.Models
                 public bool LogEvents { get; set; } = false;
                 public ulong EventChannel { get; set; } = 0;
                 public ELSettings Settings { get; set; } = new ELSettings();
+
                 public class ELSettings
                 {
                     public bool guildmemberupdated { get; set; } = false;
@@ -185,7 +184,6 @@ namespace Lithium.Models
                     public bool channeldeleted { get; set; } = true;
                     public bool channelupdated { get; set; } = false;
                 }
-
             }
 
             public class Moderation
@@ -302,6 +300,9 @@ namespace Lithium.Models
             public class ticketing
             {
                 public tsettings settings { get; set; } = new tsettings();
+
+                public List<ticket> tickets { get; set; } = new List<ticket>();
+
                 public class tsettings
                 {
                     public ulong ticketchannelid { get; set; } = 0;
@@ -310,7 +311,6 @@ namespace Lithium.Models
                     public List<ulong> AllowedCreationRoles { get; set; } = new List<ulong>();
                 }
 
-                public List<ticket> tickets { get; set; } = new List<ticket>();
                 public class ticket
                 {
                     public int id { get; set; }
@@ -324,6 +324,7 @@ namespace Lithium.Models
 
 
                     public List<comment> comments { get; set; } = new List<comment>();
+
                     public class comment
                     {
                         public int id { get; set; }
@@ -335,7 +336,6 @@ namespace Lithium.Models
                         public List<ulong> Down { get; set; } = new List<ulong>();
                     }
                 }
-
             }
 
             public class tags
