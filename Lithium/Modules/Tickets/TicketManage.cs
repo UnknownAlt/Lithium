@@ -13,7 +13,7 @@ namespace Lithium.Modules.Tickets
     
     [RequireContext(ContextType.Guild)]
     [Group("TicketManage")]
-    public class Management : Base
+    public class TicketManage : Base
     {
         [RequireRole.RequireAdmin]
         [Command("Toggle")]
@@ -106,9 +106,14 @@ namespace Lithium.Modules.Tickets
                 $"Message: {targetticket.message}\n\n" +
                 $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
                 $"ID: {targetticket.id}",
+                Footer = new EmbedFooterBuilder
+                {
+                    Text = $"Ran by {Context.User.Username}"
+                },
                 Color = targetticket.solved ? Color.Green : Color.Red
             };
             await SendEmbedAsync(emb);
+            await Context.Server.TicketLog(emb, Context.Guild);
         }
     }
 }

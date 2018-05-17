@@ -142,6 +142,7 @@ namespace Lithium.Modules.Tickets
             };
 
             await SendEmbedAsync(ticketemb);
+            await Context.Server.TicketLog(ticketemb, Context.Guild);
         }
 
         [Command("Vote Up")]
@@ -197,6 +198,7 @@ namespace Lithium.Modules.Tickets
 
             await SendEmbedAsync(ticketemb);
             Context.Server.Save();
+            await Context.Server.TicketLog(ticketemb, Context.Guild);
         }
 
         [Command("Vote Down")]
@@ -252,6 +254,7 @@ namespace Lithium.Modules.Tickets
 
             await SendEmbedAsync(ticketemb);
             Context.Server.Save();
+            await Context.Server.TicketLog(ticketemb, Context.Guild);
         }
 
         [Command("Comment")]
@@ -321,6 +324,15 @@ namespace Lithium.Modules.Tickets
                 Color = Color.DarkOrange
             };
             await PagedReplyAsync(paginator);
+            await Context.Server.TicketLog(new EmbedBuilder
+            {
+                Description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                              $"Message: {targetticket.message}\n\n" +
+                              $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
+                              $"ID: {targetticket.id}",
+                Title = $"{Context.User.Username} Just Commented on a ticket"
+            }, Context.Guild);
+
         }
 
         [Command("Vote Comment Up")]
@@ -384,6 +396,18 @@ namespace Lithium.Modules.Tickets
                 Color = Color.DarkOrange
             };
             await PagedReplyAsync(paginator);
+            await Context.Server.TicketLog(new EmbedBuilder
+            {
+                Description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                              $"Message: {targetticket.message}\n\n" +
+                              $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
+                              $"TID: {targetticket.id}\n\n" +
+                                $"Comment By: { Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
+                                $"Message: {comment.Comment}\n\n" +
+                                $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
+                                $"CID: {comment.id}",
+                Title = $"{Context.User.Username} Just Voted a Comment: {upvoteaction}"
+            }, Context.Guild);
         }
 
         [Command("Vote Comment Down")]
@@ -447,6 +471,18 @@ namespace Lithium.Modules.Tickets
                 Color = Color.DarkOrange
             };
             await PagedReplyAsync(paginator);
+            await Context.Server.TicketLog(new EmbedBuilder
+            {
+                Description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                              $"Message: {targetticket.message}\n\n" +
+                              $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
+                              $"TID: {targetticket.id}\n\n" +
+                              $"Comment By: { Context.Socket.Guild.GetUser(comment.UserID)?.Username ?? $"Missing User [{comment.UserID}]"}\n" +
+                              $"Message: {comment.Comment}\n\n" +
+                              $"^ [{comment.Up.Count}] v [{comment.Down.Count}]\n" +
+                              $"CID: {comment.id}",
+                Title = $"{Context.User.Username} Just Voted a Comment: {downaction}"
+            }, Context.Guild);
         }
 
         [Command("Comments")]

@@ -29,7 +29,26 @@ namespace Lithium.Models
                     Session.Store(this, GuildID.ToString());
                     Session.SaveChanges();
                 }
-            }   
+            }
+
+            public async Task TicketLog(EmbedBuilder embed, IGuild guild)
+            {
+                if (!Tickets.settings.useticketing) return;
+                if (Tickets.settings.ticketchannelid != 0)
+                {
+                    if (await guild.GetChannelAsync(Tickets.settings.ticketchannelid) is IMessageChannel channel)
+                    {
+                        try
+                        {
+                            await channel.SendMessageAsync("", false, embed.Build());
+                        }
+                        catch
+                        {
+                            //
+                        }
+                    }
+                }
+            }
 
             public async Task ModLog(EmbedBuilder embed, IGuild guild)
             {
