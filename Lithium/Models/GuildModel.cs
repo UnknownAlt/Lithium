@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord;
 using Lithium.Handlers;
@@ -18,6 +19,7 @@ namespace Lithium.Models
             public autochannels AutoMessage { get; set; } = new autochannels();
             public antispams Antispam { get; set; } = new antispams();
             public Eventlogger EventLogger { get; set; } = new Eventlogger();
+            public ticketing Tickets { get; set; } = new ticketing();
 
             public tags Tags { get; set; } = new tags();
 
@@ -89,7 +91,7 @@ namespace Lithium.Models
                     Color = Color.DarkPurple
                 };
 
-                await channel.SendMessageAsync("", false, embed.Build());
+                var replymsg = await channel.SendMessageAsync("", false, embed.Build());
                 await ModLog(embed, User.Guild);
                 if (ModerationSetup.Warns.Count(x => x.userID == User.Id) > ModerationSetup.Settings.warnlimit && ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
                 {
@@ -139,6 +141,12 @@ namespace Lithium.Models
                     await channel.SendMessageAsync("", false, embedmsg.Build());
                     await ModLog(embedmsg, User.Guild);
                 }
+
+                if (ModerationSetup.Settings.hidewarnafterdelay)
+                {
+                    await Task.Delay(5000);
+                    await replymsg.DeleteAsync();
+                }
             }
 
             public class Eventlogger
@@ -180,6 +188,9 @@ namespace Lithium.Models
                         Kick,
                         Ban
                     }
+
+                    //Hide Warnings after 5 seconds (outside of mod log)
+                    public bool hidewarnafterdelay { get; set; } = true;
 
                     //Warnings before doing a specific action.
                     public int warnlimit { get; set; } = int.MaxValue;
@@ -268,6 +279,45 @@ namespace Lithium.Models
                         public int sendlimit { get; set; } = 50;
                     }
                 }
+            }
+
+            public class ticketing
+            {
+                public tsettings settings { get; set; } = new tsettings();
+                public class tsettings
+                {
+                    public ulong ticketchannelid { get; set; } = 0;
+                    public bool useticketing { get; set; } = false;
+                    public bool allowAnyUserToCreate { get; set; } = true;
+                    public List<ulong> AllowedCreationRoles { get; set; } = new List<ulong>();
+                }
+
+                public List<ticket> tickets { get; set; } = new List<ticket>();
+                public class ticket
+                {
+                    public int id { get; set; }
+                    public bool solved { get; set; } = false;
+                    public string message { get; set; }
+                    public ulong InitUser { get; set; }
+
+
+                    public int Up { get; set; }
+                    public int Down { get; set; }
+
+
+                    public List<comment> comments { get; set; } = new List<comment>();
+                    public class comment
+                    {
+                        public int id { get; set; }
+                        public ulong UserID { get; set; }
+                        public string Comment { get; set; }
+
+
+                        public int Up { get; set; }
+                        public int Down { get; set; }
+                    }
+                }
+
             }
 
             public class tags

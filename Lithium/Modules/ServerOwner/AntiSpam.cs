@@ -11,7 +11,7 @@ using Lithium.Models;
 namespace Lithium.Modules.ServerOwner
 {
     [RequireRole.RequireAdmin]
-    public class AntiSpam : Base
+    public class AutoMod : Base
     {
         [Command("NoSpam")]
         [Summary("NoSpam")]
@@ -103,6 +103,15 @@ namespace Lithium.Modules.ServerOwner
                              $"Threshhold: {threshhold}");
         }
 
+        [Command("HideAutoWarnDelay")]
+        [Summary("HideAutoWarnDelay")]
+        [Remarks("Toggle the deletion of warn messages in channel after 5 sec.")]
+        public async Task HideAWarnDel()
+        {
+            Context.Server.ModerationSetup.Settings.hidewarnafterdelay = !Context.Server.ModerationSetup.Settings.hidewarnafterdelay;
+            Context.Server.Save();
+            await ReplyAsync($"Auto Delete Warning Message responses after 5 seconds: {Context.Server.ModerationSetup.Settings.hidewarnafterdelay}");
+        }
 
         [Command("ignore")]
         [Summary("ignore <selection> <@role>")]
@@ -286,7 +295,7 @@ namespace Lithium.Modules.ServerOwner
 
                 var embed = new EmbedBuilder
                 {
-                    Description = "__AutoMod Antispam Detections__\n" +
+                    Description = "__AutoMod Detections__\n" +
                                   $"Warn on Antispam: {Context.Server.Antispam.Antispam.WarnOnDetection}\n" +
                                   $"Warn on Blacklist: {Context.Server.Antispam.Blacklist.WarnOnDetection}\n" +
                                   $"Warn on Mention Everyone and 5+ Role Mentions: {Context.Server.Antispam.Mention.WarnOnDetection}\n" +

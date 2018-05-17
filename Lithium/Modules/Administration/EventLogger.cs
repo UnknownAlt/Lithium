@@ -120,7 +120,7 @@ namespace Lithium.Modules.Administration
             var g = Context.Server.EventLogger.Settings;
             var embed = new EmbedBuilder
             {
-                Description = $"GuildmemberUpdated: {g.guildmemberupdated}\n" +
+                Description = $"User Updated: {g.guildmemberupdated}\n" +
                               $"User Joined: {g.guilduserjoined}\n" +
                               $"User Left: {g.guilduserleft}\n" +
                               $"User Banned: {g.guilduserbanned}\n" +
