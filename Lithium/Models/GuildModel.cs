@@ -20,7 +20,6 @@ namespace Lithium.Models
             public antispams Antispam { get; set; } = new antispams();
             public Eventlogger EventLogger { get; set; } = new Eventlogger();
             public ticketing Tickets { get; set; } = new ticketing();
-
             public tags Tags { get; set; } = new tags();
 
             public void Save()
@@ -299,10 +298,10 @@ namespace Lithium.Models
                     public bool solved { get; set; } = false;
                     public string message { get; set; }
                     public ulong InitUser { get; set; }
+                    public string solvedmessage { get; set; } = null;
 
-
-                    public int Up { get; set; }
-                    public int Down { get; set; }
+                    public List<ulong> Up { get; set; } = new List<ulong>();
+                    public List<ulong> Down { get; set; } = new List<ulong>();
 
 
                     public List<comment> comments { get; set; } = new List<comment>();
@@ -313,8 +312,8 @@ namespace Lithium.Models
                         public string Comment { get; set; }
 
 
-                        public int Up { get; set; }
-                        public int Down { get; set; }
+                        public List<ulong> Up { get; set; } = new List<ulong>();
+                        public List<ulong> Down { get; set; } = new List<ulong>();
                     }
                 }
 
