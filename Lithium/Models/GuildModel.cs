@@ -145,6 +145,21 @@ namespace Lithium.Models
             {
                 public bool LogEvents { get; set; } = false;
                 public ulong EventChannel { get; set; } = 0;
+                public ELSettings Settings { get; set; } = new ELSettings();
+                public class ELSettings
+                {
+                    public bool guildmemberupdated { get; set; } = false;
+                    public bool guilduserjoined { get; set; } = true;
+                    public bool guilduserleft { get; set; } = true;
+                    public bool guilduserbanned { get; set; } = true;
+                    public bool guilduserunbanned { get; set; } = true;
+                    public bool messageupdated { get; set; } = false;
+                    public bool messagedeleted { get; set; } = false;
+                    public bool channelcreated { get; set; } = true;
+                    public bool channeldeleted { get; set; } = true;
+                    public bool channelupdated { get; set; } = false;
+                }
+
             }
 
             public class Moderation

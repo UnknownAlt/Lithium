@@ -84,6 +84,7 @@ namespace Lithium.Handlers
 
             if (logmsg == "") return;
             var GuildConfig = DatabaseHandler.GetGuild(UserAfter.Guild.Id);
+            if (!GuildConfig.EventLogger.Settings.guildmemberupdated) return;
             if (GuildConfig.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder
@@ -116,6 +117,7 @@ namespace Lithium.Handlers
             var guild = ((SocketGuildChannel)cchannel).Guild;
 
             var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (!guildobj.EventLogger.Settings.messageupdated) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder
@@ -145,6 +147,7 @@ namespace Lithium.Handlers
             var ChannelBefore = s1 as SocketGuildChannel;
             var ChannelAfter = s2 as SocketGuildChannel;
             var guildobj = DatabaseHandler.GetGuild(ChannelAfter.Guild.Id);
+            if (!guildobj.EventLogger.Settings.channelupdated) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 if (ChannelBefore.Position != ChannelAfter.Position)
@@ -167,6 +170,7 @@ namespace Lithium.Handlers
         {
             var guild = ((SocketGuildChannel)sChannel).Guild;
             var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (!guildobj.EventLogger.Settings.channeldeleted) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder
@@ -187,6 +191,7 @@ namespace Lithium.Handlers
         {
             var guild = ((SocketGuildChannel)sChannel).Guild;
             var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (!guildobj.EventLogger.Settings.channelcreated) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder
@@ -207,6 +212,7 @@ namespace Lithium.Handlers
         {
             var guild = ((SocketGuildChannel)channel).Guild;
             var guildobj = DatabaseHandler.GetGuild(guild.Id);
+            if (!guildobj.EventLogger.Settings.messagedeleted) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder();
@@ -232,6 +238,7 @@ namespace Lithium.Handlers
         private async Task _client_UserUnbanned(SocketUser User, SocketGuild Guild)
         {
             var guildobj = DatabaseHandler.GetGuild(Guild.Id);
+            if (!guildobj.EventLogger.Settings.guilduserunbanned) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder
@@ -252,6 +259,7 @@ namespace Lithium.Handlers
         private async Task _client_UserBanned(SocketUser User, SocketGuild Guild)
         {
             var guildobj = DatabaseHandler.GetGuild(Guild.Id);
+            if (!guildobj.EventLogger.Settings.guilduserbanned) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder
@@ -272,7 +280,7 @@ namespace Lithium.Handlers
         private async Task _client_UserLeft(SocketGuildUser user)
         {
             var guildobj = DatabaseHandler.GetGuild(user.Guild.Id);
-
+            if (!guildobj.EventLogger.Settings.guilduserleft) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder
@@ -292,7 +300,7 @@ namespace Lithium.Handlers
         private async Task _client_UserJoined(SocketGuildUser user)
         {
             var guildobj = DatabaseHandler.GetGuild(user.Guild.Id);
-
+            if (!guildobj.EventLogger.Settings.guilduserjoined) return;
             if (guildobj.EventLogger.LogEvents)
             {
                 var embed = new EmbedBuilder

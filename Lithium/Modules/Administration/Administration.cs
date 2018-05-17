@@ -22,25 +22,6 @@ namespace Lithium.Modules.Administration
             _service = service;
         }
 
-        [Command("SetEventChannel")]
-        [Summary("Admin SetEventChannel")]
-        [Remarks("set the current channel for event logging")]
-        public async Task EventChannel()
-        {
-            Context.Server.EventLogger.EventChannel = Context.Channel.Id;
-            Context.Server.EventLogger.LogEvents = true;
-            Context.Server.Save();
-            await ReplyAsync($"Success! Events will now be logged in {Context.Channel.Name}");
-        }
-        [Command("LogEvents")]
-        [Summary("Admin LogEvents")]
-        [Remarks("toggle event logging")]
-        public async Task LogEventToggle()
-        {
-            Context.Server.EventLogger.LogEvents = !Context.Server.EventLogger.LogEvents;
-            Context.Server.Save();
-            await ReplyAsync($"EventLogging: {Context.Server.EventLogger.LogEvents}");
-        }
 
         [Command("SetMutedRole")]
         [Summary("Admin SetMutedRole <@Role>")]
