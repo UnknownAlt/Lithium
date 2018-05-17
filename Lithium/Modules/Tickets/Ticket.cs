@@ -114,6 +114,12 @@ namespace Lithium.Modules.Tickets
                 return;
             }
 
+            if (Discord.Extensions.TicketAvailable.CanCreate(Context.Server.Tickets.settings, Context.User as IGuildUser))
+            {
+                await ReplyAsync("You are not permitted to create a ticket here.");
+                return;
+            }
+
             var ticket = new GuildModel.Guild.ticketing.ticket
             {
                 message = message,
