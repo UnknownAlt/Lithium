@@ -31,10 +31,10 @@ namespace Lithium.Models
 
             public async Task TicketLog(EmbedBuilder embed, IGuild guild)
             {
-                if (!Tickets.settings.useticketing) return;
-                if (Tickets.settings.ticketchannelid != 0)
+                if (!Tickets.Settings.useticketing) return;
+                if (Tickets.Settings.ticketchannelid != 0)
                 {
-                    if (await guild.GetChannelAsync(Tickets.settings.ticketchannelid) is IMessageChannel channel)
+                    if (await guild.GetChannelAsync(Tickets.Settings.ticketchannelid) is IMessageChannel channel)
                     {
                         try
                         {
@@ -299,7 +299,7 @@ namespace Lithium.Models
 
             public class ticketing
             {
-                public tsettings settings { get; set; } = new tsettings();
+                public tsettings Settings { get; set; } = new tsettings();
 
                 public List<ticket> tickets { get; set; } = new List<ticket>();
 

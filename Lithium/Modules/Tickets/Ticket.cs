@@ -124,7 +124,7 @@ namespace Lithium.Modules.Tickets
                 return;
             }
 
-            if (TicketAvailable.CanCreate(Context.Server.Tickets.settings, Context.User as IGuildUser))
+            if (TicketAvailable.CanCreate(Context.Server.Tickets.Settings, Context.User as IGuildUser))
             {
                 await ReplyAsync("You are not permitted to create a ticket here.");
                 return;

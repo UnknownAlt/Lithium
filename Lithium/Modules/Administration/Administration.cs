@@ -425,7 +425,7 @@ namespace Lithium.Modules.Administration
                 {
                     dynamictitle = "Gambling",
                     description = $"Guild Wealth: {Guild.Gambling.Users.Sum(x => x.coins)}\n" +
-                                  $"Currency Name: {Guild.Gambling.settings.CurrencyName}\n" +
+                                  $"Currency Name: {Guild.Gambling.Settings.CurrencyName}\n" +
                                   $"Store Items: {Guild.Gambling.Store.ShowItems.Count}\n" +
                                   $"Enabled: {Guild.Gambling.enabled}"
                 },*/

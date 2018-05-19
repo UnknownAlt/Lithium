@@ -19,7 +19,7 @@ namespace Lithium.Discord.Preconditions
 
                 //We check if the server object has ticketing enabled
                 var guildobj = DatabaseHandler.GetGuild(context.Guild.Id);
-                if (guildobj.Tickets.settings.useticketing)
+                if (guildobj.Tickets.Settings.useticketing)
                 {
                     return Task.FromResult(PreconditionResult.FromSuccess());
                 }

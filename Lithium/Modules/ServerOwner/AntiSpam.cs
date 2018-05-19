@@ -225,7 +225,7 @@ namespace Lithium.Modules.ServerOwner
                     "`6` - Toxicity\n\n" +
                     "__usage__\n" +
                     $"`{Config.Load().DefaultPrefix} 1 @role` - this allows the role to spam without being limited/removed\n" +
-                    "You can use commas to use multiple settings on the same role.\n" +
+                    "You can use commas to use multiple Settings on the same role.\n" +
                     $"`{Config.Load().DefaultPrefix} 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
                     $"`{Config.Load().DefaultPrefix} 0 @role` - resets the ignore config and will add all limits back to the role"
             }.Build());
@@ -331,7 +331,7 @@ namespace Lithium.Modules.ServerOwner
                     "`6` - Toxicity\n\n" +
                     "__usage__\n" +
                     $"`{Config.Load().DefaultPrefix} 1 @role` - this allows the role to spam without being limited/removed\n" +
-                    "You can use commas to use multiple settings on the same role\n." +
+                    "You can use commas to use multiple Settings on the same role\n." +
                     $"`{Config.Load().DefaultPrefix} 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
                     $"`{Config.Load().DefaultPrefix} 0 @role` - resets the ignore config and will add all limits back to the role"
             }.Build());

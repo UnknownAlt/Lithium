@@ -17,9 +17,9 @@ namespace Lithium.Modules.Tickets
         [Remarks("Toggle the ticketing system")]
         public async Task ToggleTicketing()
         {
-            Context.Server.Tickets.settings.useticketing = !Context.Server.Tickets.settings.useticketing;
+            Context.Server.Tickets.Settings.useticketing = !Context.Server.Tickets.Settings.useticketing;
             Context.Server.Save();
-            await ReplyAsync($"Use Ticketing System: {Context.Server.Tickets.settings.useticketing}");
+            await ReplyAsync($"Use Ticketing System: {Context.Server.Tickets.Settings.useticketing}");
         }
 
         [RequireRole.RequireAdmin]
@@ -28,7 +28,7 @@ namespace Lithium.Modules.Tickets
         [Remarks("Set the ticketing channel")]
         public async Task SetChannel()
         {
-            Context.Server.Tickets.settings.ticketchannelid = Context.Channel.Id;
+            Context.Server.Tickets.Settings.ticketchannelid = Context.Channel.Id;
             Context.Server.Save();
             await ReplyAsync($"Ticket updates will now be logged in {Context.Channel.Name}");
         }
@@ -39,9 +39,9 @@ namespace Lithium.Modules.Tickets
         [Remarks("Toggle the ability to let any user create a ticket.")]
         public async Task ToggleAllow()
         {
-            Context.Server.Tickets.settings.allowAnyUserToCreate = !Context.Server.Tickets.settings.allowAnyUserToCreate;
+            Context.Server.Tickets.Settings.allowAnyUserToCreate = !Context.Server.Tickets.Settings.allowAnyUserToCreate;
             Context.Server.Save();
-            await ReplyAsync($"Allow any user in the server to create tickets: {Context.Server.Tickets.settings.allowAnyUserToCreate}");
+            await ReplyAsync($"Allow any user in the server to create tickets: {Context.Server.Tickets.Settings.allowAnyUserToCreate}");
         }
 
         [RequireRole.RequireAdmin]
@@ -56,10 +56,10 @@ namespace Lithium.Modules.Tickets
                 return;
             }
 
-            Context.Server.Tickets.settings.AllowedCreationRoles.Add(AllowRole.Id);
+            Context.Server.Tickets.Settings.AllowedCreationRoles.Add(AllowRole.Id);
             Context.Server.Save();
             await ReplyAsync($"Allowed Roles:\n" +
-                             $"{string.Join("\n", Context.Server.Tickets.settings.AllowedCreationRoles.Select(x => Context.Guild.GetRole(x)).Where(x => x != null).Select(x => x.Name))}");
+                             $"{string.Join("\n", Context.Server.Tickets.Settings.AllowedCreationRoles.Select(x => Context.Guild.GetRole(x)).Where(x => x != null).Select(x => x.Name))}");
         }
 
         [RequireRole.RequireAdmin]
@@ -74,10 +74,10 @@ namespace Lithium.Modules.Tickets
                 return;
             }
 
-            Context.Server.Tickets.settings.AllowedCreationRoles.Remove(AllowRole.Id);
+            Context.Server.Tickets.Settings.AllowedCreationRoles.Remove(AllowRole.Id);
             Context.Server.Save();
             await ReplyAsync($"Allowed Roles:\n" +
-                             $"{string.Join("\n", Context.Server.Tickets.settings.AllowedCreationRoles.Select(x => Context.Guild.GetRole(x)).Where(x => x != null).Select(x => x.Name))}");
+                             $"{string.Join("\n", Context.Server.Tickets.Settings.AllowedCreationRoles.Select(x => Context.Guild.GetRole(x)).Where(x => x != null).Select(x => x.Name))}");
         }
 
         [RequireRole.RequireModerator]

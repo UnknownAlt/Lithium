@@ -1,5 +1,5 @@
 <p align="center">
-   <img src="https://cdn.discordapp.com/avatars/445176711030767616/8beccd63bef72119dfd0c4da74959472.png?size=128" width="200" />
+   <img src="https://images.discordapp.net/avatars/445176711030767616/8beccd63bef72119dfd0c4da74959472.png?size=512" width="200" />
 <h2 align="center">Lithium</h2>
 <p align="center">
    <a href="https://discord.me/passive"><img src="https://img.shields.io/badge/Invite-PassiveModding-7289DA.svg?longCache=true&style=flat-square&logo=discord"/></a>
