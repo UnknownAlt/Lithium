@@ -5,14 +5,31 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using DiscordBotsList.Api;
 using Lithium.Discord.Contexts;
 using Lithium.Models;
 
-namespace Lithium.Modules
+namespace Lithium.Modules.BotOwner
 {
     [RequireOwner]
     public class OwnerCommands : Base
     {
+        [Command("UpdateServers")]
+        [Summary("UpdateServers")]
+        [Remarks("Update the Bot's Server Count on DiscordBots.org")]
+        public async Task UpdateCount()
+        {
+            var token = Config.Load().DBLToken;
+            if (token == null)
+            {
+                return;
+            }
+
+            var DblApi = new AuthDiscordBotListApi(Context.Client.CurrentUser.Id, Config.Load().DBLToken);
+            var me = await DblApi.GetMeAsync();
+            await me.UpdateStatsAsync(Context.Socket.Client.Guilds.Count);
+        }
+
         [Command("SetGame")]
         [Summary("SetGame <game>")]
         [Remarks("Set the bot's Current Game.")]
@@ -75,6 +92,18 @@ namespace Lithium.Modules
 
                 await ReplyAsync("Success Token Set (or reset if nothing was supplied)\n" +
                                  "NOTE, This requires a bot restart");
+            }
+
+            [Command("DBL")]
+            [Summary("DBL <token>")]
+            [Remarks("Set the DiscordBotsList token")]
+            public async Task SetDBL([Remainder] string token = null)
+            {
+                var cfg = Config.Load();
+                cfg.DBLToken = token;
+                cfg.Save();
+
+                await ReplyAsync("Success Token Set (or reset if nothing was supplied)");
             }
         }
     }

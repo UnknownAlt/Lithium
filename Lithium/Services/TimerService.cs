@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using Discord;
 using Discord.WebSocket;
+using DiscordBotsList.Api;
 using Lithium.Handlers;
 using Lithium.Models;
 
@@ -60,6 +61,22 @@ namespace Lithium.Services
                     catch (Exception e)
                     {
                         Logger.LogMessage(e.ToString(), LogSeverity.Error);
+                    }
+
+                    try
+                    {
+                        var token = Config.Load().DBLToken;
+                        if (token != null)
+                        {
+                             var DblApi = new AuthDiscordBotListApi(client.CurrentUser.Id, Config.Load().DBLToken);
+                            var me = await DblApi.GetMeAsync();
+                            await me.UpdateStatsAsync(client.Guilds.Count);                          
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
                     }
 
                     LastFireTime = DateTime.UtcNow;

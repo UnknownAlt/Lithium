@@ -19,6 +19,8 @@ namespace Lithium.Models
         public string SupportServer { get; set; } = "http://discord.me/passive";
         public string DBName { get; set; } = "Lithium";
         public string ToxicityToken { get; set; } = null;
+        public string DBLToken { get; set; } = null;
+        public string DBLUrl { get; set; } = null;
 
         public void Save(string dir = "setup/config.json")
         {
