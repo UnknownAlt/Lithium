@@ -7,7 +7,7 @@ namespace Lithium.Discord.Extensions
     public class TicketAvailable
     {
         /// <summary>
-        ///     This checks whether or not a user is allowed to use the bot's ticketing system.
+        ///     Returns true if the given user is allowed to create tickets
         /// </summary>
         /// <param name="Settings"></param>
         /// <param name="User"></param>
