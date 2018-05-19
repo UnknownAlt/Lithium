@@ -73,10 +73,9 @@ namespace Lithium.Services
                             await me.UpdateStatsAsync(client.Guilds.Count);                          
                         }
                     }
-                    catch (Exception e)
+                    catch
                     {
-                        Console.WriteLine(e);
-                        throw;
+                        //
                     }
 
                     LastFireTime = DateTime.UtcNow;
