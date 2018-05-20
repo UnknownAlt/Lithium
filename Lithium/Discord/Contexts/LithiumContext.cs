@@ -19,14 +19,18 @@ namespace Lithium.Discord.Contexts
     {
         public InteractiveService Interactive { get; set; }
 
-        //Reply in the server. This is a shortcut for context.channel.sendmessageasync
+        /// <summary>
+        ///     Reply in the server. This is a shortcut for context.channel.sendmessageasync
+        /// </summary>
         public async Task<IUserMessage> ReplyAsync(string Message, Embed Embed = null)
         {
             await Context.Channel.TriggerTypingAsync();
             return await base.ReplyAsync(Message, false, Embed);
         }
 
-        //Reply in the server and then delete after the provided delay.
+        /// <summary>
+        ///     Reply in the server and then delete after the provided delay.
+        /// </summary>
         public async Task<IUserMessage> ReplyAndDeleteAsync(string Message, TimeSpan? Timeout = null)
         {
             Timeout = Timeout ?? TimeSpan.FromSeconds(5);
@@ -35,27 +39,49 @@ namespace Lithium.Discord.Contexts
             return Msg;
         }
 
-        //Shorthand for  replying with just an embed
+        /// <summary>
+        ///     Shorthand for  replying with just an embed
+        /// </summary>
         public async Task<IUserMessage> SendEmbedAsync(EmbedBuilder embed)
         {
             return await base.ReplyAsync("", false, embed.Build());
         }
+        public async Task<IUserMessage> SendEmbedAsync(Embed embed)
+        {
+            return await base.ReplyAsync("", false, embed);
+        }
 
+        /// <summary>
+        /// Will wait for the next message to be sent
+        /// </summary>
+        /// <param name="criterion"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
         public Task<SocketMessage> NextMessageAsync(ICriterion<SocketMessage> criterion, TimeSpan? timeout = null)
         {
             return Interactive.NextMessageAsync(LithiumSocketContext(), criterion, timeout);
         }
-
-        private SocketCommandContext LithiumSocketContext()
-        {
-            return new SocketCommandContext(Context.Client as DiscordSocketClient, Context.Message as SocketUserMessage);
-        }
-
         public Task<SocketMessage> NextMessageAsync(bool fromSourceUser = true, bool inSourceChannel = true, TimeSpan? timeout = null)
         {
             return Interactive.NextMessageAsync(LithiumSocketContext(), fromSourceUser, inSourceChannel, timeout);
         }
 
+        /// <summary>
+        /// Converts LithiumContext into SocketCommandContext, though most of this is accessible through Context.Socket
+        /// </summary>
+        /// <returns></returns>
+        private SocketCommandContext LithiumSocketContext()
+        {
+            return new SocketCommandContext(Context.Client as DiscordSocketClient, Context.Message as SocketUserMessage);
+        }
+        /// <summary>
+        /// creates a new paginated message
+        /// </summary>
+        /// <param name="pager"></param>
+        /// <param name="fromSourceUser"></param>
+        /// <param name="showall"></param>
+        /// <param name="showindex"></param>
+        /// <returns></returns>
         public Task<IUserMessage> PagedReplyAsync(PaginatedMessage pager, bool fromSourceUser = true, bool showall = false, bool showindex = false)
         {
             var criterion = new Criteria<SocketReaction>();
@@ -66,7 +92,6 @@ namespace Lithium.Discord.Contexts
 
             return PagedReplyAsync(pager, criterion, showall, showindex);
         }
-
         public Task<IUserMessage> PagedReplyAsync(PaginatedMessage pager, ICriterion<SocketReaction> criterion, bool showall = false, bool showindex = false)
         {
             return Interactive.SendPaginatedMessageAsync(LithiumSocketContext(), pager, criterion, showall, showindex);
@@ -83,7 +108,7 @@ namespace Lithium.Discord.Contexts
             Channel = MessageParam.Channel;
             Guild = MessageParam.Channel is IDMChannel ? null : (MessageParam.Channel as IGuildChannel).Guild;
 
-            //
+            //This is a shorthand conversion for our context, giving access to socket context stuff without the need to cast within out commands
             Socket = new SocketContext
             {
                 Guild = Guild as SocketGuild,

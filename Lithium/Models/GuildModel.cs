@@ -98,14 +98,18 @@ namespace Lithium.Models
                 var embed = new EmbedBuilder
                 {
                     Title = $"{User.Username} has been Warned",
-                    Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                    /*Description = $"User: {User.Username}#{User.Discriminator}\n" +
                                   $"UserID: {User.Id}\n" +
                                   $"Mod: {mod.Username}#{mod.Discriminator}\n" +
                                   $"Mod ID: {mod.Id}\n" +
                                   "Reason:\n" +
-                                  $"{reason}",
+                                  $"{reason}",*/
                     Color = Color.DarkPurple
-                };
+                }
+                .AddField("User", $"{User.Username}#{User.Discriminator} ({User.Mention})\n" +
+                                  $"`[{User.Id}]`", true)
+                .AddField("Moderator", $"{mod.Username}#{mod.Discriminator}", true)
+                .AddField("Reason", $"{reason ?? "N/A"}");
 
                 var replymsg = await channel.SendMessageAsync("", false, embed.Build());
                 await ModLog(embed, User.Guild);

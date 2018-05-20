@@ -56,7 +56,6 @@ namespace Lithium.Handlers
             _client.ChannelUpdated += _client_ChannelUpdated;
         }
 
-
         private async Task _client_Ready()
         {
             try

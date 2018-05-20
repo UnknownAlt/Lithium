@@ -126,9 +126,11 @@ namespace Lithium.Modules.Administration
                               $"User UnBanned: {g.guilduserunbanned}\n" +
                               $"Channel Created: {g.channelcreated}\n" +
                               $"Channel Deleted: {g.channeldeleted}\n" +
-                              $"Channel Updated: {g.channelupdated}",
+                              $"Channel Updated: {g.channelupdated}\n" +
+                              $"Message Updated: {g.messageupdated}\n" +
+                              $"Message Deleted: {g.messagedeleted}",
                 Color = Color.Blue,
-                Title = ""
+                Title = "Event Config"
             };
             await SendEmbedAsync(embed);
         }

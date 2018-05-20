@@ -49,19 +49,38 @@ namespace Lithium.Handlers
                 Environment.Exit(Environment.ExitCode);
             }
 
-            if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).Any(x => x == DBName)) return;
-            await Store.Maintenance.Server.SendAsync(new CreateDatabaseOperation(new DatabaseRecord(DBName)));
-            Logger.LogMessage($"Created Database {DBName}.");
+            bool dbinitialised = false;
+            if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).All(x => x != DBName))
+            {
+                await Store.Maintenance.Server.SendAsync(new CreateDatabaseOperation(new DatabaseRecord(DBName)));
+                Logger.LogMessage($"Created Database {DBName}.");
+                dbinitialised = true;
+            }
+
 
             Logger.LogMessage("Setting up backup operation...");
-            await Store.Maintenance.SendAsync(new UpdatePeriodicBackupOperation(new PeriodicBackupConfiguration
+            var newbackup = new PeriodicBackupConfiguration
             {
                 Name = "Backup",
                 BackupType = BackupType.Backup,
                 FullBackupFrequency = "*/10 * * * *",
                 IncrementalBackupFrequency = "0 2 * * *",
-                LocalSettings = new LocalSettings {FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/")}
-            })).ConfigureAwait(false);
+                LocalSettings = new LocalSettings { FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/") }
+            };
+            var Record = Store.Maintenance.ForDatabase(DBName).Server.Send(new GetDatabaseRecordOperation(DBName));
+            var backupop = Record.PeriodicBackups.FirstOrDefault(x => x.Name == "Backup");
+            if (backupop == null)
+            {
+                await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(newbackup)).ConfigureAwait(false);
+            }
+            else
+            {
+                //In the case that we already have a backup operation setup, ensure that we update the backup location accordingly
+                backupop.LocalSettings = new LocalSettings { FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/") };
+                await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(backupop));
+            }
+
+            if (dbinitialised) return;
 
             using (var session = Store.OpenSession(DBName))
             {
