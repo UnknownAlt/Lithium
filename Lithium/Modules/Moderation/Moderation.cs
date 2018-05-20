@@ -362,6 +362,12 @@ namespace Lithium.Modules.Moderation
             await PagedReplyAsync(pager);
         }
 
+        public List<IMessage> Getmessages(int count = 100)
+        {
+            var msgs = Context.Socket.Channel.GetMessagesAsync(count).Flatten();
+            return msgs.Result.Where(x => x.Timestamp.UtcDateTime + TimeSpan.FromDays(14) > DateTime.UtcNow).ToList();
+        }
+
         [Command("prune")]
         [Summary("Mod prune <no. of messages>")]
         [Remarks("removes specified amount of messages")]
@@ -379,7 +385,8 @@ namespace Lithium.Modules.Moderation
             {
                 await Context.Message.DeleteAsync().ConfigureAwait(false);
                 var limit = count < 100 ? count : 100;
-                var enumerable = await Context.Channel.GetMessagesAsync(limit).Flatten().ConfigureAwait(false);
+                //var enumerable = await Context.Channel.GetMessagesAsync(limit).Flatten().ConfigureAwait(false);
+                var enumerable = Getmessages(limit);
                 try
                 {
                     await Context.Channel.DeleteMessagesAsync(enumerable).ConfigureAwait(false);
@@ -389,7 +396,7 @@ namespace Lithium.Modules.Moderation
                     //
                 }
 
-                await ReplyAsync($"Cleared **{count}** Messages");
+                await ReplyAsync($"Cleared **{enumerable.Count}** Messages");
 
                 await Context.Server.ModLog(new EmbedBuilder()
                     .WithColor(Color.DarkTeal)
@@ -409,9 +416,9 @@ namespace Lithium.Modules.Moderation
         public async Task Prune(IUser user)
         {
             await Context.Message.DeleteAsync().ConfigureAwait(false);
-            var enumerable = await Context.Channel.GetMessagesAsync().Flatten().ConfigureAwait(false);
-            var messages = enumerable as IMessage[] ?? enumerable.ToArray();
-            var newlist = messages.Where(x => x.Author == user).ToList();
+            //var enumerable = await Context.Channel.GetMessagesAsync().Flatten().ConfigureAwait(false);
+            var enumerable = Getmessages();
+            var newlist = enumerable.Where(x => x.Author == user).ToList();
             try
             {
                 await Context.Channel.DeleteMessagesAsync(newlist).ConfigureAwait(false);
@@ -441,9 +448,8 @@ namespace Lithium.Modules.Moderation
         public async Task Prune(ulong userID)
         {
             await Context.Message.DeleteAsync().ConfigureAwait(false);
-            var enumerable = await Context.Channel.GetMessagesAsync().Flatten().ConfigureAwait(false);
-            var messages = enumerable as IMessage[] ?? enumerable.ToArray();
-            var newlist = messages.Where(x => x.Author.Id == userID).ToList();
+            var enumerable = Getmessages();
+            var newlist = enumerable.Where(x => x.Author.Id == userID).ToList();
             try
             {
                 await Context.Channel.DeleteMessagesAsync(newlist).ConfigureAwait(false);
@@ -472,9 +478,8 @@ namespace Lithium.Modules.Moderation
         public async Task Prune(IRole role)
         {
             await Context.Message.DeleteAsync().ConfigureAwait(false);
-            var enumerable = await Context.Channel.GetMessagesAsync().Flatten().ConfigureAwait(false);
-            var messages = enumerable as IMessage[] ?? enumerable.ToArray();
-            var newerlist = messages.ToList().Where(x =>
+            var enumerable = Getmessages();
+            var newerlist = enumerable.ToList().Where(x =>
                 Context.Socket.Guild.GetUser(x.Author.Id) != null &&
                 ((IGuildUser) Context.Socket.Guild.GetUser(x.Author.Id)).RoleIds.Contains(role.Id)).ToList();
 
