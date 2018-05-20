@@ -84,7 +84,7 @@ namespace Lithium.Modules.Tickets
         [Command("ToggleSolved")]
         [Summary("TicketManage ToggleSolved <ID> [Optional]<reason>")]
         [Remarks("Toggle the solved status of a ticket")]
-        public async Task ToggleSolved(int id, string reason = null)
+        public async Task ToggleSolved(int id,[Remainder] string reason = null)
         {
             var targetticket = Context.Server.Tickets.tickets.FirstOrDefault(x => x.id == id);
             if (targetticket == null)
