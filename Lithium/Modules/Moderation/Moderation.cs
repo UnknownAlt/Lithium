@@ -363,7 +363,7 @@ namespace Lithium.Modules.Moderation
         }
 
         [Command("prune")]
-        [Summary("prune <no. of messages>")]
+        [Summary("Mod prune <no. of messages>")]
         [Remarks("removes specified amount of messages")]
         public async Task Prune(int count = 100)
         {
@@ -404,7 +404,7 @@ namespace Lithium.Modules.Moderation
         }
 
         [Command("pruneUser")]
-        [Summary("pruneUser <user>")]
+        [Summary("Mod pruneUser <user>")]
         [Remarks("removes messages from a user in the last 100 messages")]
         public async Task Prune(IUser user)
         {
@@ -436,7 +436,7 @@ namespace Lithium.Modules.Moderation
 
 
         [Command("pruneID")]
-        [Summary("pruneID <userID>")]
+        [Summary("Mod pruneID <userID>")]
         [Remarks("removes messages from a user ID in the last 100 messages")]
         public async Task Prune(ulong userID)
         {
@@ -467,7 +467,7 @@ namespace Lithium.Modules.Moderation
         }
 
         [Command("pruneRole")]
-        [Summary("pruneRole <@role>")]
+        [Summary("Mod pruneRole <@role>")]
         [Remarks("removes messages from a role in the last 100 messages")]
         public async Task Prune(IRole role)
         {
