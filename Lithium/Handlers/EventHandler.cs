@@ -299,10 +299,10 @@ namespace Lithium.Handlers
                     {
                         if (Regex.Match(context.Message.Content, @"(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?(d+i+s+c+o+r+d+|a+p+p)+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$").Success)
                         {
-                            await context.Message.DeleteAsync();
+                            await context.Message?.DeleteAsync();
                             var emb = new EmbedBuilder
                             {
-                                Description = guild.Antispam.Advertising.NoInviteMessage ?? $"{context.User.Mention} - no sending invite links... the admins might get angry"
+                                Description = guild.Antispam.Advertising.NoInviteMessage ?? $"{context.User?.Mention} - no sending invite links... the admins might get angry"
                             };
                             await context.Channel.SendMessageAsync("", false, emb.Build());
                             //if
@@ -525,7 +525,8 @@ namespace Lithium.Handlers
             }
             catch (Exception e)
             {
-                Logger.LogMessage(e.ToString(), LogSeverity.Error);
+                Logger.LogMessage($"AntiSpam Error G:[{context.Guild.Id}] GN:{context.Guild.Name} C:{context.Channel.Name} U:{context.User.Username}\n" +
+                                  $"{e}", LogSeverity.Error);
             }
 
 
