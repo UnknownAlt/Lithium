@@ -17,7 +17,8 @@ namespace Lithium
 {
     public class Program
     {
-        private EventHandler _handler;
+        private EventHandler _ehandler;
+        private CommandHandler _chandler;
         public DiscordSocketClient Client;
 
         public static void Main(string[] args)
@@ -58,8 +59,9 @@ namespace Lithium
 
 
             var serviceProvider = ConfigureServices();
-            _handler = new EventHandler(serviceProvider);
-            await _handler.ConfigureAsync();
+            _chandler = new CommandHandler(serviceProvider);
+            _ehandler = new EventHandler(serviceProvider);
+            await _chandler.ConfigureAsync();
             Client.Log += Client_Log;
             await Task.Delay(-1);
         }
