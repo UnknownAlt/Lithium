@@ -382,14 +382,7 @@ namespace Lithium.Handlers
 
                             if (!string.IsNullOrEmpty(blacklistmessage))
                             {
-                                var result = Regex.Replace(blacklistmessage, "{user}", context.User.Username,
-                                    RegexOptions.IgnoreCase);
-                                result = Regex.Replace(result, "{user.mention}", context.User.Mention,
-                                    RegexOptions.IgnoreCase);
-                                result = Regex.Replace(result, "{guild}", context.Guild.Name, RegexOptions.IgnoreCase);
-                                result = Regex.Replace(result, "{channel}", context.Channel.Name, RegexOptions.IgnoreCase);
-                                result = Regex.Replace(result, "{channel.mention}",
-                                    ((SocketTextChannel) context.Channel).Mention, RegexOptions.IgnoreCase);
+                                var result = Discord.Extensions.Formatting.DoReplacements(blacklistmessage, context);
                                 await context.Channel.SendMessageAsync(result);
                             }
 
