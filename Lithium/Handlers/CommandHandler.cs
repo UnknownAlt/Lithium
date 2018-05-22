@@ -8,6 +8,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Lithium.Discord.Contexts;
+using Lithium.Discord.Extensions;
 using Lithium.Models;
 using Lithium.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -206,7 +207,7 @@ namespace Lithium.Handlers
                                     delay._delay = DateTime.UtcNow.AddSeconds(5);
                                     var emb = new EmbedBuilder
                                     {
-                                        Title = $"{context.User} - No Spamming!!"
+                                        Description = $"{context.User} - No Spamming!!"
                                     };
                                     await context.Channel.SendMessageAsync("", false, emb.Build());
                                     if (guild.Antispam.Antispam.WarnOnDetection)
@@ -223,8 +224,6 @@ namespace Lithium.Handlers
                                         GuildID = guild.GuildID
                                     });
                                 }
-
-
                                 return true;
                             }
                         }
@@ -244,15 +243,17 @@ namespace Lithium.Handlers
                 if (Regex.Match(context.Message.Content, @"(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?(d+i+s+c+o+r+d+|a+p+p)+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$").Success)
                 {
                     await context.Message?.DeleteAsync();
-                    var emb = new EmbedBuilder
+                    var emb = new EmbedBuilder();
+                    if (guild.Antispam.Advertising.NoInviteMessage != null)
                     {
-                        Description = guild.Antispam.Advertising.NoInviteMessage ?? $"{context.User?.Mention} - no sending invite links... the admins might get angry"
-                    };
+                        emb.Description = Formatting.DoReplacements(guild.Antispam.Advertising.NoInviteMessage, context);
+                    }
+                    else
+                    {
+                        emb.Description = $"{context.User} - This server does not allow you to send invite links in chat";
+                    }
+                    //    Description = guild.Antispam.Advertising.NoInviteMessage ?? $"{context.User?.Mention} - no sending invite links... the admins might get angry"
                     await context.Channel.SendMessageAsync("", false, emb.Build());
-                    //if
-                    // 1. The server Has Invite Deletions turned on
-                    // 2. The user is not an admin
-                    // 3. The user does not have one of the invite excempt roles
                     if (guild.Antispam.Advertising.WarnOnDetection)
                     {
                         await guild.AddWarn("AutoMod - Anti Advertising", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
@@ -280,8 +281,7 @@ namespace Lithium.Handlers
                         await context.Message?.DeleteAsync();
                         var emb = new EmbedBuilder
                         {
-                            Title =
-                                $"{context.User} - This server does not allow you to mention 5+ roles or uses at once"
+                            Description = $"{context.User} - This server does not allow you to mention 5+ roles or uses at once"
                         };
                         await context.Channel.SendMessageAsync("", false, emb.Build());
                         if (guild.Antispam.Mention.WarnOnDetection)

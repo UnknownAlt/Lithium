@@ -396,39 +396,7 @@ namespace Lithium.Modules.Administration
                     dynamictitle = "Event & Error Logging",
                     description = $"Event Logging: {Guild.EventLogger.LogEvents}\n" +
                                   $"Event Channel: {Context.Socket.Guild.GetChannel(Guild.EventLogger.EventChannel)?.Name ?? "N/A"}"
-                }, /*
-                new PaginatedMessage.Page
-                {
-                    dynamictitle = "Tagging",
-                    description = $"Using Tags: {Guild.Dict.Any()}\n" +
-                                  $"Tag Names: \n{(Guild.Dict.Any() ? string.Join("\n", Guild.Dict.Select(x => x.Tagname)) : "N/A")}\n"
                 },
-                new PaginatedMessage.Page
-                {
-                    dynamictitle = "AutoMessage",
-                    description = $"Using Automessage: {Guild.AutoMessage.Any()}\n" +
-                                  $"Auto Message Channels:\n" +
-                                  $"{(Guild.AutoMessage.Any() ? string.Join("\n", Guild.AutoMessage.Select(x => Context.Guild.GetChannel(x.channelID)?.Name).Where(x => x != null)) : "N/A")}"
-                },
-                new PaginatedMessage.Page
-                {
-                    dynamictitle = "Levelling",
-                    description = $"Enabled: {Guild.Levels.LevellingEnabled}\n" +
-                                  $"Level Messages: {Guild.Levels.UseLevelMessages}\n" +
-                                  $"Use Level Log Channel: {Guild.Levels.UseLevelChannel}\n" +
-                                  $"Level Log Channel: {Context.Guild.GetChannel(Guild.Levels.LevellingChannel)?.Name ?? "N/A"}\n" +
-                                  $"Increment Rewards: {Guild.Levels.IncrementLevelRewards}\n" +
-                                  $"Levels: \n" +
-                                  $"{(Guild.Levels.LevelRoles.Any() ? string.Join("\n", Guild.Levels.LevelRoles.Select(x => $"{Context.Guild.GetRole(x.RoleID)?.Mention ?? "Removed Role"} Level Requirement: {x.LevelToEnter}")) : "N/A")}"
-                },
-                new PaginatedMessage.Page
-                {
-                    dynamictitle = "Gambling",
-                    description = $"Guild Wealth: {Guild.Gambling.Users.Sum(x => x.coins)}\n" +
-                                  $"Currency Name: {Guild.Gambling.Settings.CurrencyName}\n" +
-                                  $"Store Items: {Guild.Gambling.Store.ShowItems.Count}\n" +
-                                  $"Enabled: {Guild.Gambling.enabled}"
-                },*/
                 new PaginatedMessage.Page
                 {
                     dynamictitle = "Moderators",

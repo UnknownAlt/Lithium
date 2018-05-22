@@ -19,9 +19,7 @@ namespace Lithium.Discord.Extensions
                 result = Regex.Replace(result, "{guild}", context.Guild.Name, RegexOptions.IgnoreCase);
                 result = Regex.Replace(result, "{channel}", context.Channel.Name, RegexOptions.IgnoreCase);
                 result = Regex.Replace(result, "{channel.mention}", ((SocketTextChannel)context.Channel).Mention, RegexOptions.IgnoreCase);
-                return result;
             }
-
             return result;
         }
     }
