@@ -63,7 +63,7 @@ namespace Lithium.Handlers
             {
                 Name = "Backup",
                 BackupType = BackupType.Backup,
-                FullBackupFrequency = "*/10 * * * *",
+                FullBackupFrequency = "0 */6 * * *",
                 IncrementalBackupFrequency = "0 2 * * *",
                 LocalSettings = new LocalSettings { FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/") }
             };
