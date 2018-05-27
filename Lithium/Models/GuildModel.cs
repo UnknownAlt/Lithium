@@ -98,12 +98,6 @@ namespace Lithium.Models
                 var embed = new EmbedBuilder
                 {
                     Title = $"{User.Username} has been Warned",
-                    /*Description = $"User: {User.Username}#{User.Discriminator}\n" +
-                                  $"UserID: {User.Id}\n" +
-                                  $"Mod: {mod.Username}#{mod.Discriminator}\n" +
-                                  $"Mod ID: {mod.Id}\n" +
-                                  "Reason:\n" +
-                                  $"{reason}",*/
                     Color = Color.DarkPurple
                 }
                 .AddField("User", $"{User.Username}#{User.Discriminator} ({User.Mention})\n" +
@@ -164,8 +158,9 @@ namespace Lithium.Models
 
                 if (ModerationSetup.Settings.hidewarnafterdelay)
                 {
-                    await Task.Delay(5000);
-                    await replymsg.DeleteAsync();
+                    _ = Task.Delay(TimeSpan.FromSeconds(5))
+                        .ContinueWith(_ => replymsg.DeleteAsync().ConfigureAwait(false))
+                        .ConfigureAwait(false);
                 }
             }
 

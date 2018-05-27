@@ -235,6 +235,21 @@ namespace Lithium.Modules.Moderation
                 }
 
                 dstr += $"-Count: {warngroup.Count()}\n";
+
+                if (desc.Length + dstr.Length > 1024)
+                {
+                    pages.Add(new PaginatedMessage.Page
+                    {
+                        description = desc
+                    });
+                    desc = dstr;
+                }
+                else
+                {
+                    desc += dstr;
+                }
+
+                /*
                 desc += dstr;
                 if (desc.Length > 800)
                 {
@@ -248,7 +263,7 @@ namespace Lithium.Modules.Moderation
                         description = desc
                     });
                     desc = "";
-                }
+                }*/
             }
 
             pages.Add(new PaginatedMessage.Page
@@ -284,7 +299,20 @@ namespace Lithium.Modules.Moderation
                 }
 
                 dstr += $"-Count: {kickgroup.Count()}\n";
-                desc += dstr;
+                if (desc.Length + dstr.Length > 1024)
+                {
+                    pages.Add(new PaginatedMessage.Page
+                    {
+                        description = desc
+                    });
+                    desc = dstr;
+                }
+                else
+                {
+                    desc += dstr;
+                }
+
+                /*
                 if (desc.Length > 800)
                 {
                     if (desc.Length > 1024)
@@ -298,6 +326,8 @@ namespace Lithium.Modules.Moderation
                     });
                     desc = "";
                 }
+                desc += dstr;
+                */
             }
 
             pages.Add(new PaginatedMessage.Page
@@ -329,10 +359,22 @@ namespace Lithium.Modules.Moderation
                 foreach (var ban in bangroup)
                 {
                     dstr += $"Banned By: {(await Context.Client.GetUserAsync(first.modID))?.Username ?? ban.modname} `[{ban.modID}]`\n" +
-                            $"SoftBan: {(ban.Expires ? $"{(ban.ExpiryDate - DateTime.UtcNow).TotalMinutes} Minutes Remaining" : "Permanent Ban")}" +
+                            $"Ban Type: {(ban.Expires ? $"Soft Ban, {(ban.ExpiryDate - DateTime.UtcNow).TotalMinutes} Minutes Remaining" : "Permanent")}\n" +
                             $"Reason: {ban.reason}\n";
                 }
-
+                if (desc.Length + dstr.Length > 1024)
+                {
+                    pages.Add(new PaginatedMessage.Page
+                    {
+                        description = desc
+                    });
+                    desc = dstr;
+                }
+                else
+                {
+                    desc += dstr;
+                }
+                /*
                 desc += dstr;
                 if (desc.Length > 800)
                 {
@@ -346,7 +388,7 @@ namespace Lithium.Modules.Moderation
                         description = desc
                     });
                     desc = "";
-                }
+                }*/
             }
 
             pages.Add(new PaginatedMessage.Page
