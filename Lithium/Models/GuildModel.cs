@@ -84,7 +84,8 @@ namespace Lithium.Models
                 }
             }
 
-            public async Task AddWarn(string reason, IGuildUser User, IUser mod, IMessageChannel channel)
+
+            public async Task AddWarn(string reason, IGuildUser User, IUser mod, IMessageChannel channel, string message = null)
             {
                 ModerationSetup.Warns.Add(new Moderation.warn
                 {
@@ -106,6 +107,14 @@ namespace Lithium.Models
                 .AddField("Reason", $"{reason ?? "N/A"}");
 
                 var replymsg = await channel.SendMessageAsync("", false, embed.Build());
+                if (message != null)
+                {
+                    if (message.Length > 1024)
+                    {
+                        message = message.Substring(0, 1020) + "...";
+                    }
+                    embed.AddField("Message", $"{message}");
+                }
                 await ModLog(embed, User.Guild);
                 if (ModerationSetup.Warns.Count(x => x.userID == User.Id) > ModerationSetup.Settings.warnlimit && ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
                 {
@@ -153,6 +162,14 @@ namespace Lithium.Models
                     }
 
                     await channel.SendMessageAsync("", false, embedmsg.Build());
+                    if (message != null)
+                    {
+                        if (message.Length > 1024)
+                        {
+                            message = message.Substring(0, 1020) + "...";
+                        }
+                        embedmsg.AddField("Message", $"{message}");
+                    }
                     await ModLog(embedmsg, User.Guild);
                 }
 

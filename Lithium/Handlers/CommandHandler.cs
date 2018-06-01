@@ -212,7 +212,7 @@ namespace Lithium.Handlers
                                     await context.Channel.SendMessageAsync("", false, emb.Build());
                                     if (guild.Antispam.Antispam.WarnOnDetection)
                                     {
-                                        await guild.AddWarn("AutoMod - AntiSpam", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                                        await guild.AddWarn("AutoMod - AntiSpam", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
                                         guild.Save();
                                     }
                                 }
@@ -252,11 +252,13 @@ namespace Lithium.Handlers
                     {
                         emb.Description = $"{context.User} - This server does not allow you to send invite links in chat";
                     }
+
+                   
                     //    Description = guild.Antispam.Advertising.NoInviteMessage ?? $"{context.User?.Mention} - no sending invite links... the admins might get angry"
                     await context.Channel.SendMessageAsync("", false, emb.Build());
                     if (guild.Antispam.Advertising.WarnOnDetection)
                     {
-                        await guild.AddWarn("AutoMod - Anti Advertising", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                        await guild.AddWarn("AutoMod - Anti Advertising", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
                         guild.Save();
                     }
 
@@ -286,7 +288,7 @@ namespace Lithium.Handlers
                         await context.Channel.SendMessageAsync("", false, emb.Build());
                         if (guild.Antispam.Mention.WarnOnDetection)
                         {
-                            await guild.AddWarn("AutoMod - Mass Mention", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                            await guild.AddWarn("AutoMod - Mass Mention", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
                             guild.Save();
                         }
 
@@ -312,7 +314,7 @@ namespace Lithium.Handlers
                         await context.Channel.SendMessageAsync("", false, emb.Build());
                         if (guild.Antispam.Mention.WarnOnDetection)
                         {
-                            await guild.AddWarn("AutoMod - Mention All", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                            await guild.AddWarn("AutoMod - Mention All", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
                             guild.Save();
                         }
 
@@ -345,7 +347,7 @@ namespace Lithium.Handlers
                     await context.Channel.SendMessageAsync("", false, emb.Build());
                     if (guild.Antispam.Privacy.WarnOnDetection)
                     {
-                        await guild.AddWarn("AutoMod - Anti IP", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                        await guild.AddWarn("AutoMod - Anti IP", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
                         guild.Save();
                     }
 
@@ -388,7 +390,7 @@ namespace Lithium.Handlers
 
                             if (guild.Antispam.Blacklist.WarnOnDetection)
                             {
-                                await guild.AddWarn("AutoMod - Blacklist", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                                await guild.AddWarn("AutoMod - Blacklist", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
                                 guild.Save();
                             }
 
@@ -428,7 +430,7 @@ namespace Lithium.Handlers
                                 await context.Channel.SendMessageAsync("", false, emb.Build());
                                 if (guild.Antispam.Blacklist.WarnOnDetection)
                                 {
-                                    await guild.AddWarn("AutoMod - Toxicity", context.User as IGuildUser, context.Client.CurrentUser, context.Channel);
+                                    await guild.AddWarn($"AutoMod - Toxicity ({res.attributeScores.TOXICITY.summaryScore.value * 100})", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
                                     guild.Save();
                                 }
 
