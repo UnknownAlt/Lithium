@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -98,13 +99,15 @@ namespace Lithium.Models
 
                 var embed = new EmbedBuilder
                 {
-                    Title = $"{User.Username} has been Warned",
+                    Title = $"{User.Username} has been Warned {(ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction ? $"[{ModerationSetup.Warns.Count(x => x.userID == User.Id)}/{ModerationSetup.Settings.warnlimit}]" : "")}",
                     Color = Color.DarkPurple
                 }
                 .AddField("User", $"{User.Username}#{User.Discriminator} ({User.Mention})\n" +
                                   $"`[{User.Id}]`", true)
                 .AddField("Moderator", $"{mod.Username}#{mod.Discriminator}", true)
-                .AddField("Reason", $"{reason ?? "N/A"}");
+                .AddField("Reason", $"{reason ?? "N/A"}", true)
+                .AddField("Context", $"Channel: {channel.Name}\n" +
+                                     $"Time: {DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}", true);
 
                 var replymsg = await channel.SendMessageAsync("", false, embed.Build());
                 if (message != null)

@@ -224,14 +224,15 @@ namespace Lithium.Modules.ServerOwner
                     "`5` - IP Addresses\n" +
                     "`6` - Toxicity\n\n" +
                     "__usage__\n" +
-                    $"`{Config.Load().DefaultPrefix} 1 @role` - this allows the role to spam without being limited/removed\n" +
+                    $"`{Config.Load().DefaultPrefix}ignore 1 @role` - this allows the role to spam without being limited/removed\n" +
                     "You can use commas to use multiple Settings on the same role.\n" +
-                    $"`{Config.Load().DefaultPrefix} 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
-                    $"`{Config.Load().DefaultPrefix} 0 @role` - resets the ignore config and will add all limits back to the role"
+                    $"`{Config.Load().DefaultPrefix}ignore 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
+                    $"`{Config.Load().DefaultPrefix}ignore 0 @role` - resets the ignore config and will add all limits back to the role"
             }.Build());
         }
 
         [Command("WarnSpammers")]
+        [Alias("AutoWarn")]
         [Summary("WarnSpammers <type>")]
         [Remarks("Toggle Auto-Warning of people detected by any of the antispam methods")]
         public async Task WarnSpammers([Remainder] string selection)
@@ -314,6 +315,7 @@ namespace Lithium.Modules.ServerOwner
 
 
         [Command("WarnSpammers")]
+        [Alias("AutoWarn")]
         [Summary("WarnSpammers")]
         [Remarks("Warn Spammers Setup Info")]
         public async Task WarnSpammers()
@@ -330,10 +332,9 @@ namespace Lithium.Modules.ServerOwner
                     "`5` - IP Addresses\n" +
                     "`6` - Toxicity\n\n" +
                     "__usage__\n" +
-                    $"`{Config.Load().DefaultPrefix} 1 @role` - this allows the role to spam without being limited/removed\n" +
-                    "You can use commas to use multiple Settings on the same role\n." +
-                    $"`{Config.Load().DefaultPrefix} 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
-                    $"`{Config.Load().DefaultPrefix} 0 @role` - resets the ignore config and will add all limits back to the role"
+                    $"`{Config.Load().DefaultPrefix}WarnSpammers 1` - this will warn users if they spam\n." +
+                    $"`{Config.Load().DefaultPrefix}WarnSpammers 1,2,3` - This will warn users on spamming, blacklist and mentioning multiple roles\n" +
+                    $"`{Config.Load().DefaultPrefix}WarnSpammers 0` - resets the ignore config and will stop all autowarn actions"
             }.Build());
         }
 
