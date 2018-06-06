@@ -69,9 +69,9 @@ namespace Lithium.Services
                         var token = Config.Load().DBLToken;
                         if (token != null)
                         {
-                             var DblApi = new AuthDiscordBotListApi(client.CurrentUser.Id, Config.Load().DBLToken);
+                            var DblApi = new AuthDiscordBotListApi(client.CurrentUser.Id, Config.Load().DBLToken);
                             var me = await DblApi.GetMeAsync();
-                            await me.UpdateStatsAsync(client.Guilds.Count);                          
+                            await me.UpdateStatsAsync(client.Guilds.Count);
                         }
                     }
                     catch

@@ -100,16 +100,16 @@ namespace Lithium.Models
                 });
 
                 var embed = new EmbedBuilder
-                {
-                    Title = $"{User.Username} has been Warned {(ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction ? $"[{ModerationSetup.Warns.Count(x => x.userID == User.Id)}/{ModerationSetup.Settings.warnlimit}]" : "")}",
-                    Color = Color.DarkPurple
-                }
-                .AddField("User", $"{User.Username}#{User.Discriminator} ({User.Mention})\n" +
-                                  $"`[{User.Id}]`", true)
-                .AddField("Moderator", $"{mod.Username}#{mod.Discriminator}", true)
-                .AddField("Reason", $"{reason ?? "N/A"}", true)
-                .AddField("Context", $"Channel: {channel.Name}\n" +
-                                     $"Time: {DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}", true);
+                    {
+                        Title = $"{User.Username} has been Warned {(ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction ? $"[{ModerationSetup.Warns.Count(x => x.userID == User.Id)}/{ModerationSetup.Settings.warnlimit}]" : "")}",
+                        Color = Color.DarkPurple
+                    }
+                    .AddField("User", $"{User.Username}#{User.Discriminator} ({User.Mention})\n" +
+                                      $"`[{User.Id}]`", true)
+                    .AddField("Moderator", $"{mod.Username}#{mod.Discriminator}", true)
+                    .AddField("Reason", $"{reason ?? "N/A"}", true)
+                    .AddField("Context", $"Channel: {channel.Name}\n" +
+                                         $"Time: {DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}", true);
 
                 var replymsg = await channel.SendMessageAsync("", false, embed.Build());
                 if (message != null)
@@ -118,8 +118,10 @@ namespace Lithium.Models
                     {
                         message = message.Substring(0, 1020) + "...";
                     }
+
                     embed.AddField("Message", $"{message}");
                 }
+
                 await ModLog(embed, User.Guild);
                 if (ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
                 {
@@ -171,7 +173,6 @@ namespace Lithium.Models
                         }
                         else if (ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Mute)
                         {
-
                             if (User.Guild.GetRole(ModerationSetup.Mutes.mutedrole) is IRole muterole)
                             {
                                 ModerationSetup.Mutes.MutedUsers.Add(new Moderation.muted.muteduser
@@ -180,14 +181,14 @@ namespace Lithium.Models
                                     expiry = DateTime.UtcNow + ModerationSetup.Settings.WarnExpiryTime,
                                     userid = User.Id
                                 });
-                            embedmsg.Title = $"{User.Username} has been Auto Muted";
-                            embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
-                                                   $"UserID: {User.Id}\n" +
-                                                   $"Mod: {mod.Username}#{mod.Discriminator}\n" +
-                                                   $"Mod ID: {mod.Id}" +
-                                                   $"Expires: {(ModerationSetup.Settings.MutebanExpiry != TimeSpan.Zero ? $"True in {ModerationSetup.Settings.MutebanExpiry.TotalMinutes} minutes" : "False")}\n" +
-                                                   "Reason:\n" +
-                                                   "Auto Mute, Warnlimit Exceeded by user!";
+                                embedmsg.Title = $"{User.Username} has been Auto Muted";
+                                embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                                       $"UserID: {User.Id}\n" +
+                                                       $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                                       $"Mod ID: {mod.Id}" +
+                                                       $"Expires: {(ModerationSetup.Settings.MutebanExpiry != TimeSpan.Zero ? $"True in {ModerationSetup.Settings.MutebanExpiry.TotalMinutes} minutes" : "False")}\n" +
+                                                       "Reason:\n" +
+                                                       "Auto Mute, Warnlimit Exceeded by user!";
                                 try
                                 {
                                     await User.AddRoleAsync(muterole);
@@ -196,9 +197,8 @@ namespace Lithium.Models
                                 {
                                     Logger.LogMessage(e.ToString(), LogSeverity.Error);
                                 }
-                                
                             }
-                            
+
                             embedmsg.Color = Color.DarkMagenta;
                         }
 
@@ -290,7 +290,7 @@ namespace Lithium.Models
                     public class muteduser
                     {
                         public ulong userid { get; set; }
-                        public bool expires { get; set; } = false;
+                        public bool expires { get; set; }
                         public DateTime expiry { get; set; } = DateTime.UtcNow + TimeSpan.FromDays(7);
                     }
                 }

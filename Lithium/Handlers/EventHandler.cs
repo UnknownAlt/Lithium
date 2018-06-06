@@ -2,30 +2,18 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
-using Lithium.Discord.Contexts;
 using Lithium.Models;
 using Lithium.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 
 namespace Lithium.Handlers
 {
     public class EventHandler
     {
         public List<EventLogDelay> EventLogDelays = new List<EventLogDelay>();
-
-        public class EventLogDelay
-        {
-            public ulong GuildID { get; set; }
-            public DateTime LastUpdate { get; set; } = DateTime.UtcNow;
-            public int Updates { get; set; } = 0;
-        }
 
         public IServiceProvider Provider;
 
@@ -73,8 +61,9 @@ namespace Lithium.Handlers
                 else
                 {
                     gdelays.LastUpdate = DateTime.UtcNow;
-                    gdelays.Updates = 0;                   
+                    gdelays.Updates = 0;
                 }
+
                 if (gdelays.Updates >= 3 && gdelays.LastUpdate + TimeSpan.FromSeconds(5) > DateTime.UtcNow)
                 {
                     Logger.LogMessage($"RateLimiting Events in {Guild.Name}", LogSeverity.Verbose);
@@ -83,6 +72,13 @@ namespace Lithium.Handlers
 
                 await GuildObj.EventLog(embed, Guild);
             }
+        }
+
+        public class EventLogDelay
+        {
+            public ulong GuildID { get; set; }
+            public DateTime LastUpdate { get; set; } = DateTime.UtcNow;
+            public int Updates { get; set; }
         }
 
         #region EventChannelLogging

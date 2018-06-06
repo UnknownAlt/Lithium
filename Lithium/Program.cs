@@ -17,8 +17,8 @@ namespace Lithium
 {
     public class Program
     {
-        private EventHandler _ehandler;
         private CommandHandler _chandler;
+        private EventHandler _ehandler;
         public DiscordSocketClient Client;
 
         public static void Main(string[] args)

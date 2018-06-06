@@ -49,7 +49,7 @@ namespace Lithium.Handlers
                 Environment.Exit(Environment.ExitCode);
             }
 
-            bool dbinitialised = false;
+            var dbinitialised = false;
             if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).All(x => x != DBName))
             {
                 await Store.Maintenance.Server.SendAsync(new CreateDatabaseOperation(new DatabaseRecord(DBName)));
@@ -65,7 +65,7 @@ namespace Lithium.Handlers
                 BackupType = BackupType.Backup,
                 FullBackupFrequency = "0 */6 * * *",
                 IncrementalBackupFrequency = "0 2 * * *",
-                LocalSettings = new LocalSettings { FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/") }
+                LocalSettings = new LocalSettings {FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/")}
             };
             var Record = Store.Maintenance.ForDatabase(DBName).Server.Send(new GetDatabaseRecordOperation(DBName));
             var backupop = Record.PeriodicBackups.FirstOrDefault(x => x.Name == "Backup");
@@ -76,7 +76,7 @@ namespace Lithium.Handlers
             else
             {
                 //In the case that we already have a backup operation setup, ensure that we update the backup location accordingly
-                backupop.LocalSettings = new LocalSettings { FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/") };
+                backupop.LocalSettings = new LocalSettings {FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/")};
                 await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(backupop));
             }
 

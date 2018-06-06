@@ -91,6 +91,7 @@ namespace Lithium.Modules.BotOwner
                 .WithCallback(new Emoji("👎"), c => c.Channel.SendMessageAsync("You've replied with 👎"))
             );
         }
+
         [Command("embedreaction")]
         public async Task Test_EmedReactionReply()
         {

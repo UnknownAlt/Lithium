@@ -348,6 +348,7 @@ namespace Lithium.Modules.ServerOwner
             Context.Server.Save();
             await ReplyAsync($"Success! After {hours} hours, auto-mutes/auto-bans will automatically expire");
         }
+
         [Command("AutoBanExpiry")]
         [Summary("Admin AutoBanExpiry <Hours>")]
         [Remarks("set the amount of hours it takes for an auto ban to expire")]

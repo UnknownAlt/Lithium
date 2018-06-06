@@ -47,13 +47,14 @@ namespace Lithium.Discord.Contexts
         {
             return await base.ReplyAsync("", false, embed.Build());
         }
+
         public async Task<IUserMessage> SendEmbedAsync(Embed embed)
         {
             return await base.ReplyAsync("", false, embed);
         }
 
         /// <summary>
-        /// Will wait for the next message to be sent
+        ///     Will wait for the next message to be sent
         /// </summary>
         /// <param name="criterion"></param>
         /// <param name="timeout"></param>
@@ -62,21 +63,23 @@ namespace Lithium.Discord.Contexts
         {
             return Interactive.NextMessageAsync(LithiumSocketContext(), criterion, timeout);
         }
+
         public Task<SocketMessage> NextMessageAsync(bool fromSourceUser = true, bool inSourceChannel = true, TimeSpan? timeout = null)
         {
             return Interactive.NextMessageAsync(LithiumSocketContext(), fromSourceUser, inSourceChannel, timeout);
         }
 
         /// <summary>
-        /// Converts LithiumContext into SocketCommandContext, though most of this is accessible through Context.Socket
+        ///     Converts LithiumContext into SocketCommandContext, though most of this is accessible through Context.Socket
         /// </summary>
         /// <returns></returns>
         private SocketCommandContext LithiumSocketContext()
         {
             return new SocketCommandContext(Context.Client as DiscordSocketClient, Context.Message as SocketUserMessage);
         }
+
         /// <summary>
-        /// creates a new paginated message
+        ///     creates a new paginated message
         /// </summary>
         /// <param name="pager"></param>
         /// <param name="fromSourceUser"></param>
@@ -93,14 +96,16 @@ namespace Lithium.Discord.Contexts
 
             return PagedReplyAsync(pager, criterion, showall, showindex);
         }
+
         public Task<IUserMessage> PagedReplyAsync(PaginatedMessage pager, ICriterion<SocketReaction> criterion, bool showall = false, bool showindex = false)
         {
             return Interactive.SendPaginatedMessageAsync(LithiumSocketContext(), pager, criterion, showall, showindex);
         }
 
         public Task<IUserMessage> InlineReactionReplyAsync(ReactionCallbackData data, bool fromSourceUser = true)
-            => Interactive.SendMessageWithReactionCallbacksAsync(LithiumSocketContext(), data, fromSourceUser);
-
+        {
+            return Interactive.SendMessageWithReactionCallbacksAsync(LithiumSocketContext(), data, fromSourceUser);
+        }
     }
 
     public class LithiumContext : ICommandContext

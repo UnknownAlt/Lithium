@@ -362,6 +362,7 @@ namespace Lithium.Modules.Moderation
                             $"Ban Type: {(ban.Expires ? $"Soft Ban, {(ban.ExpiryDate - DateTime.UtcNow).TotalMinutes} Minutes Remaining" : "Permanent")}\n" +
                             $"Reason: {ban.reason}\n";
                 }
+
                 if (desc.Length + dstr.Length > 1024)
                 {
                     pages.Add(new PaginatedMessage.Page
@@ -374,6 +375,7 @@ namespace Lithium.Modules.Moderation
                 {
                     desc += dstr;
                 }
+
                 /*
                 desc += dstr;
                 if (desc.Length > 800)

@@ -105,6 +105,7 @@ namespace Lithium.Modules.Administration
             Context.Server.Save();
             await ReplyAsync($"Warns will expire: {Context.Server.ModerationSetup.Settings.WarnExpiry}");
         }
+
         [Command("SetWarnExpiry")]
         [Summary("Admin SetWarnExpiry <Days>")]
         [Remarks("set the amount of days it takes for a warn to expire")]
@@ -114,7 +115,6 @@ namespace Lithium.Modules.Administration
             Context.Server.Save();
             await ReplyAsync($"Success! After {days} days, warnings will automatically expire");
         }
-
 
 
         [Command("SetModLogChannel")]
