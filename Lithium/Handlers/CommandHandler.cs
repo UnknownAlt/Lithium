@@ -240,7 +240,7 @@ namespace Lithium.Handlers
             var BypassInvite = exemptcheck.Any(x => x.Advertising);
             if (!BypassInvite)
             {
-                if (Regex.Match(context.Message.Content, @"(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?(d+i+s+c+o+r+d+|a+p+p)+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$").Success)
+                if (Regex.Match(context.Message.Content, @"(http|https)?(:)?(\/\/)?(discordapp|discord).(gg|io|me|com)\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?").Success)
                 {
                     await context.Message?.DeleteAsync();
                     var emb = new EmbedBuilder();
@@ -384,7 +384,7 @@ namespace Lithium.Handlers
 
                             if (!string.IsNullOrEmpty(blacklistmessage))
                             {
-                                var result = Discord.Extensions.Formatting.DoReplacements(blacklistmessage, context);
+                                var result = Formatting.DoReplacements(blacklistmessage, context);
                                 await context.Channel.SendMessageAsync(result);
                             }
 
@@ -428,7 +428,7 @@ namespace Lithium.Handlers
                                     Description = $"{context.User.Mention}"
                                 };
                                 await context.Channel.SendMessageAsync("", false, emb.Build());
-                                if (guild.Antispam.Blacklist.WarnOnDetection)
+                                if (guild.Antispam.Toxicity.WarnOnDetection)
                                 {
                                     await guild.AddWarn($"AutoMod - Toxicity ({res.attributeScores.TOXICITY.summaryScore.value * 100})", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
                                     guild.Save();
@@ -455,7 +455,7 @@ namespace Lithium.Handlers
             if (guild.Settings.DisabledParts.BlacklistedCommands.Any() || guild.Settings.DisabledParts.BlacklistedModules.Any())
             {
                 CommandInfo CMDCheck = null;
-                var argPos = 0;
+                const int argPos = 0;
                 var cmdSearch = _commands.Search(context, argPos);
                 if (cmdSearch.IsSuccess)
                 {

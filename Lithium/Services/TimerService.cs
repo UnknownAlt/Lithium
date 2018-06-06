@@ -56,6 +56,7 @@ namespace Lithium.Services
                         {
                             TimerLoops.checkbans(guild);
                             TimerLoops.checkmutes(guild);
+                            TimerLoops.checkwarns(guild);
                         }
                     }
                     catch (Exception e)
@@ -143,6 +144,45 @@ namespace Lithium.Services
             }
         }
 
+        public static async void checkwarns(IGuild guild)
+        {
+            try
+            {
+                var guildobj = DatabaseHandler.GetGuild(guild.Id);
+                if (guildobj?.ModerationSetup.Warns.Any() != true) return;
+                if (!guildobj.ModerationSetup.Settings.WarnExpiry) return;
+                if (!guildobj.ModerationSetup.Warns.Any(x => x.Expiry < DateTime.UtcNow)) return;
+                foreach (var warn in guildobj.ModerationSetup.Warns.Where(x => x.Expiry < DateTime.UtcNow).ToList())
+                {
+                    try
+                    {
+                        if ((guild as SocketGuild).GetUser(warn.userID) == null) continue;
+                        guildobj.ModerationSetup.Warns.Remove(warn);
+                        await guildobj.ModLog(new EmbedBuilder
+                        {
+                            Title = "Warning Auto Removed - Expired",
+                            Description = $"User: {warn.username}\n" +
+                                          $"UserID: {warn.userID}\n" +
+                                          $"Mod: {warn.modname} [{warn.modID}]\n" +
+                                          "Reason:\n" +
+                                          $"{warn.reason}",
+                            Color = Color.DarkGreen
+                        }, guild);
+                    }
+                    catch
+                    {
+                        //
+                    }
+                }
+
+                guildobj.Save();
+            }
+            catch (Exception e)
+            {
+                Logger.LogMessage(e.ToString(), LogSeverity.Error);
+            }
+        }
+
         public static async void checkmutes(IGuild guild)
         {
             var guildobj = DatabaseHandler.GetGuild(guild.Id);
@@ -165,7 +205,7 @@ namespace Lithium.Services
                         if (mute.expiry < DateTime.UtcNow)
                         {
                             removemute = true;
-                            if (!muteduser.RoleIds.Contains(mutedrole.Id))
+                            if (muteduser.RoleIds.Contains(mutedrole.Id))
                             {
                                 await muteduser.RemoveRoleAsync(mutedrole);
                             }

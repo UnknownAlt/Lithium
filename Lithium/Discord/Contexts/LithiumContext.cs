@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Lithium.Discord.Contexts.Callbacks;
@@ -96,6 +97,10 @@ namespace Lithium.Discord.Contexts
         {
             return Interactive.SendPaginatedMessageAsync(LithiumSocketContext(), pager, criterion, showall, showindex);
         }
+
+        public Task<IUserMessage> InlineReactionReplyAsync(ReactionCallbackData data, bool fromSourceUser = true)
+            => Interactive.SendMessageWithReactionCallbacksAsync(LithiumSocketContext(), data, fromSourceUser);
+
     }
 
     public class LithiumContext : ICommandContext
@@ -238,6 +243,16 @@ namespace Lithium.Discord.Contexts
         public void ClearReactionCallbacks()
         {
             _callbacks.Clear();
+        }
+
+        public async Task<IUserMessage> SendMessageWithReactionCallbacksAsync(SocketCommandContext context, ReactionCallbackData callbacks, bool fromSourceUser = true)
+        {
+            var criterion = new Criteria<SocketReaction>();
+            if (fromSourceUser)
+                criterion.AddCriterion(new EnsureReactionFromSourceUserCriterion());
+            var callback = new InlineReactionCallback(this, context, callbacks, criterion);
+            await callback.DisplayAsync().ConfigureAwait(false);
+            return callback.Message;
         }
 
         private async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel,

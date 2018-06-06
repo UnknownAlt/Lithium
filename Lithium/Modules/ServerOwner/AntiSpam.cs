@@ -104,13 +104,14 @@ namespace Lithium.Modules.ServerOwner
         }
 
         [Command("HideAutoWarnDelay")]
-        [Summary("HideAutoWarnDelay")]
-        [Remarks("Toggle the deletion of warn messages in channel after 5 sec.")]
-        public async Task HideAWarnDel()
+        [Summary("HideAutoWarnDelay <seconds>")]
+        [Remarks("Toggle the deletion of warn messages in channel after x sec.")]
+        public async Task HideAWarnDel(int seconds = 5)
         {
             Context.Server.ModerationSetup.Settings.hidewarnafterdelay = !Context.Server.ModerationSetup.Settings.hidewarnafterdelay;
+            Context.Server.ModerationSetup.Settings.WarnDelayTime = TimeSpan.FromSeconds(seconds);
             Context.Server.Save();
-            await ReplyAsync($"Auto Delete Warning Message responses after 5 seconds: {Context.Server.ModerationSetup.Settings.hidewarnafterdelay}");
+            await ReplyAsync($"Auto Delete Warning Message responses after {seconds} seconds: {Context.Server.ModerationSetup.Settings.hidewarnafterdelay}");
         }
 
         [Command("ignore")]
@@ -336,6 +337,25 @@ namespace Lithium.Modules.ServerOwner
                     $"`{Config.Load().DefaultPrefix}WarnSpammers 1,2,3` - This will warn users on spamming, blacklist and mentioning multiple roles\n" +
                     $"`{Config.Load().DefaultPrefix}WarnSpammers 0` - resets the ignore config and will stop all autowarn actions"
             }.Build());
+        }
+
+        [Command("AutoMuteExpiry")]
+        [Summary("Admin AutoMuteExpiry <Hours>")]
+        [Remarks("set the amount of hours it takes for an auto mute to expire")]
+        public async Task WarnExpiryTime(int hours = 0)
+        {
+            Context.Server.ModerationSetup.Settings.MutebanExpiry = TimeSpan.FromHours(hours);
+            Context.Server.Save();
+            await ReplyAsync($"Success! After {hours} hours, auto-mutes/auto-bans will automatically expire");
+        }
+        [Command("AutoBanExpiry")]
+        [Summary("Admin AutoBanExpiry <Hours>")]
+        [Remarks("set the amount of hours it takes for an auto ban to expire")]
+        public async Task BanExpirtTime(int hours = 0)
+        {
+            Context.Server.ModerationSetup.Settings.MutebanExpiry = TimeSpan.FromHours(hours);
+            Context.Server.Save();
+            await ReplyAsync($"Success! After {hours} hours, auto-mutes/auto-bans will automatically expire");
         }
 
         [Command("SkipAntiSpam")]

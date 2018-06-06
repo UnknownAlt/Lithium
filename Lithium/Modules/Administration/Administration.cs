@@ -90,10 +90,32 @@ namespace Lithium.Modules.Administration
             await ReplyAsync("Types:\n" +
                              $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.NoAction}`\n" +
                              $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.Kick}`\n" +
-                             $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.Ban}`\n\n" +
+                             $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.Ban}`\n" +
+                             $"`{GuildModel.Guild.Moderation.msettings.warnLimitAction.Mute}`\n\n" +
                              "Command Use:\n" +
                              "`SetWarnLimitAction <Type>`");
         }
+
+        [Command("ToggleWarnExpiry")]
+        [Summary("Admin ToggleWarnExpiry")]
+        [Remarks("set the amount of days it takes for a warning to expire")]
+        public async Task WarnExpiry()
+        {
+            Context.Server.ModerationSetup.Settings.WarnExpiry = !Context.Server.ModerationSetup.Settings.WarnExpiry;
+            Context.Server.Save();
+            await ReplyAsync($"Warns will expire: {Context.Server.ModerationSetup.Settings.WarnExpiry}");
+        }
+        [Command("SetWarnExpiry")]
+        [Summary("Admin SetWarnExpiry <Days>")]
+        [Remarks("set the amount of days it takes for a warn to expire")]
+        public async Task WarnExpiryTime(int days = 0)
+        {
+            Context.Server.ModerationSetup.Settings.WarnExpiryTime = TimeSpan.FromDays(days);
+            Context.Server.Save();
+            await ReplyAsync($"Success! After {days} days, warnings will automatically expire");
+        }
+
+
 
         [Command("SetModLogChannel")]
         [Summary("Admin SetModLogChannel")]
@@ -106,7 +128,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("HackBan")]
-        [Summary("HackBan <user ID>")]
+        [Summary("Admin HackBan <user ID>")]
         [Remarks("Ban a user by their user ID even if they are not in the server")]
         public async Task HackBan(ulong UserID)
         {
@@ -141,7 +163,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("ClearWarns")]
-        [Summary("ClearWarns <@user>")]
+        [Summary("Admin ClearWarns <@user>")]
         [Remarks("Clear all warnings for the specified user")]
         public async Task DelWarn(IUser User)
         {
@@ -165,7 +187,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("ClearKicks")]
-        [Summary("ClearKicks <@user>")]
+        [Summary("Admin ClearKicks <@user>")]
         [Remarks("Clear all kick logs for the specified user")]
         public async Task DelKick(IUser User)
         {
@@ -189,7 +211,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("ClearBans")]
-        [Summary("ClearBans <@user>")]
+        [Summary("Admin ClearBans <@user>")]
         [Remarks("Clear all ban logs for the specified user")]
         public async Task delBan(IUser User)
         {
@@ -314,7 +336,7 @@ namespace Lithium.Modules.Administration
         }
 
         [Command("ServerSetup")]
-        [Summary("ServerSetup")]
+        [Summary("Admin ServerSetup")]
         [Remarks("View the PassiveBOT Server Config")]
         public async Task ServerSetup()
         {

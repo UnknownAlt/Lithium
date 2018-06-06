@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Lithium.Handlers;
+using Lithium.Services;
 
 namespace Lithium.Models
 {
@@ -94,7 +95,8 @@ namespace Lithium.Models
                     modname = mod.Username,
                     reason = reason,
                     userID = User.Id,
-                    username = User.Username
+                    username = User.Username,
+                    Expiry = DateTime.UtcNow + ModerationSetup.Settings.WarnExpiryTime
                 });
 
                 var embed = new EmbedBuilder
@@ -119,66 +121,105 @@ namespace Lithium.Models
                     embed.AddField("Message", $"{message}");
                 }
                 await ModLog(embed, User.Guild);
-                if (ModerationSetup.Warns.Count(x => x.userID == User.Id) > ModerationSetup.Settings.warnlimit && ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
+                if (ModerationSetup.Settings.WarnLimitAction != Moderation.msettings.warnLimitAction.NoAction)
                 {
-                    var embedmsg = new EmbedBuilder();
-                    if (ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Ban)
+                    if (ModerationSetup.Warns.Count(x => x.userID == User.Id) > ModerationSetup.Settings.warnlimit)
                     {
-                        ModerationSetup.Bans.Add(new Moderation.ban
+                        var embedmsg = new EmbedBuilder();
+                        if (ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Ban)
                         {
-                            modID = mod.Id,
-                            modname = mod.Username,
-                            reason = reason,
-                            userID = User.Id,
-                            username = User.Username,
-                            Expires = false
-                        });
-                        await User.Guild.AddBanAsync(User, 1, "AutoBan, Warnlimit Exceeded by user!");
-                        embedmsg.Title = $"{User.Username} has been Auto banned";
-                        embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
-                                               $"UserID: {User.Id}\n" +
-                                               $"Mod: {mod.Username}#{mod.Discriminator}\n" +
-                                               $"Mod ID: {mod.Id}\n" +
-                                               "Reason:\n" +
-                                               "AutoBan, Warnlimit Exceeded by user!";
-                        embedmsg.Color = Color.DarkRed;
-                    }
-                    else
-                    {
-                        ModerationSetup.Kicks.Add(new Moderation.kick
-                        {
-                            modID = mod.Id,
-                            modname = mod.Username,
-                            reason = reason,
-                            userID = User.Id,
-                            username = User.Username
-                        });
-                        await User.KickAsync("AutoKick, WarnLimit Exceeded by user!");
-                        embedmsg.Title = $"{User.Username} has been Auto Kicked";
-                        embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
-                                               $"UserID: {User.Id}\n" +
-                                               $"Mod: {mod.Username}#{mod.Discriminator}\n" +
-                                               $"Mod ID: {mod.Id}\n" +
-                                               "Reason:\n" +
-                                               "Auto Kick, Warnlimit Exceeded by user!";
-                        embedmsg.Color = Color.DarkMagenta;
-                    }
-
-                    await channel.SendMessageAsync("", false, embedmsg.Build());
-                    if (message != null)
-                    {
-                        if (message.Length > 1024)
-                        {
-                            message = message.Substring(0, 1020) + "...";
+                            ModerationSetup.Bans.Add(new Moderation.ban
+                            {
+                                modID = mod.Id,
+                                modname = mod.Username,
+                                reason = reason,
+                                userID = User.Id,
+                                username = User.Username,
+                                Expires = ModerationSetup.Settings.MutebanExpiry != TimeSpan.Zero,
+                                ExpiryDate = DateTime.UtcNow + ModerationSetup.Settings.MutebanExpiry
+                            });
+                            await User.Guild.AddBanAsync(User, 1, "AutoBan, Warnlimit Exceeded by user!");
+                            embedmsg.Title = $"{User.Username} has been Auto banned";
+                            embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                                   $"UserID: {User.Id}\n" +
+                                                   $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                                   $"Mod ID: {mod.Id}\n" +
+                                                   $"Expires: {(ModerationSetup.Settings.MutebanExpiry != TimeSpan.Zero ? $"True in {ModerationSetup.Settings.WarnExpiryTime.TotalMinutes} minutes" : "False")}\n" +
+                                                   "Reason:\n" +
+                                                   "AutoBan, Warnlimit Exceeded by user!";
+                            embedmsg.Color = Color.DarkRed;
                         }
-                        embedmsg.AddField("Message", $"{message}");
+                        else if (ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Kick)
+                        {
+                            ModerationSetup.Kicks.Add(new Moderation.kick
+                            {
+                                modID = mod.Id,
+                                modname = mod.Username,
+                                reason = reason,
+                                userID = User.Id,
+                                username = User.Username
+                            });
+                            await User.KickAsync("AutoKick, WarnLimit Exceeded by user!");
+                            embedmsg.Title = $"{User.Username} has been Auto Kicked";
+                            embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                                   $"UserID: {User.Id}\n" +
+                                                   $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                                   $"Mod ID: {mod.Id}\n" +
+                                                   "Reason:\n" +
+                                                   "Auto Kick, Warnlimit Exceeded by user!";
+                            embedmsg.Color = Color.DarkMagenta;
+                        }
+                        else if (ModerationSetup.Settings.WarnLimitAction == Moderation.msettings.warnLimitAction.Mute)
+                        {
+
+                            if (User.Guild.GetRole(ModerationSetup.Mutes.mutedrole) is IRole muterole)
+                            {
+                                ModerationSetup.Mutes.MutedUsers.Add(new Moderation.muted.muteduser
+                                {
+                                    expires = ModerationSetup.Settings.MutebanExpiry != TimeSpan.Zero,
+                                    expiry = DateTime.UtcNow + ModerationSetup.Settings.WarnExpiryTime,
+                                    userid = User.Id
+                                });
+                            embedmsg.Title = $"{User.Username} has been Auto Muted";
+                            embedmsg.Description = $"User: {User.Username}#{User.Discriminator}\n" +
+                                                   $"UserID: {User.Id}\n" +
+                                                   $"Mod: {mod.Username}#{mod.Discriminator}\n" +
+                                                   $"Mod ID: {mod.Id}" +
+                                                   $"Expires: {(ModerationSetup.Settings.MutebanExpiry != TimeSpan.Zero ? $"True in {ModerationSetup.Settings.MutebanExpiry.TotalMinutes} minutes" : "False")}\n" +
+                                                   "Reason:\n" +
+                                                   "Auto Mute, Warnlimit Exceeded by user!";
+                                try
+                                {
+                                    await User.AddRoleAsync(muterole);
+                                }
+                                catch (Exception e)
+                                {
+                                    Logger.LogMessage(e.ToString(), LogSeverity.Error);
+                                }
+                                
+                            }
+                            
+                            embedmsg.Color = Color.DarkMagenta;
+                        }
+
+                        await channel.SendMessageAsync("", false, embedmsg.Build());
+                        if (message != null)
+                        {
+                            if (message.Length > 1024)
+                            {
+                                message = message.Substring(0, 1020) + "...";
+                            }
+
+                            embedmsg.AddField("Message", $"{message}");
+                        }
+
+                        await ModLog(embedmsg, User.Guild);
                     }
-                    await ModLog(embedmsg, User.Guild);
                 }
 
                 if (ModerationSetup.Settings.hidewarnafterdelay)
                 {
-                    _ = Task.Delay(TimeSpan.FromSeconds(5))
+                    _ = Task.Delay(ModerationSetup.Settings.WarnDelayTime)
                         .ContinueWith(_ => replymsg.DeleteAsync().ConfigureAwait(false))
                         .ConfigureAwait(false);
                 }
@@ -221,16 +262,23 @@ namespace Lithium.Models
                     {
                         NoAction,
                         Kick,
-                        Ban
+                        Ban,
+                        Mute
                     }
 
-                    //Hide Warnings after 5 seconds (outside of mod log)
+                    //Hide Warnings after x seconds (outside of mod log)
                     public bool hidewarnafterdelay { get; set; } = true;
+                    public TimeSpan WarnDelayTime { get; set; } = TimeSpan.FromSeconds(5);
+
 
                     //Warnings before doing a specific action.
                     public int warnlimit { get; set; } = int.MaxValue;
-                    public warnLimitAction WarnLimitAction { get; set; } = warnLimitAction.NoAction;
 
+                    public TimeSpan MutebanExpiry { get; set; } = TimeSpan.FromHours(24);
+
+                    public warnLimitAction WarnLimitAction { get; set; } = warnLimitAction.NoAction;
+                    public bool WarnExpiry { get; set; } = false;
+                    public TimeSpan WarnExpiryTime { get; set; } = TimeSpan.FromDays(7);
                     public ulong ModLogChannel { get; set; } = 0;
                 }
 
@@ -243,7 +291,7 @@ namespace Lithium.Models
                     {
                         public ulong userid { get; set; }
                         public bool expires { get; set; } = false;
-                        public DateTime expiry { get; set; } = DateTime.UtcNow;
+                        public DateTime expiry { get; set; } = DateTime.UtcNow + TimeSpan.FromDays(7);
                     }
                 }
 
@@ -265,6 +313,8 @@ namespace Lithium.Models
 
                     public string modname { get; set; }
                     public ulong modID { get; set; }
+
+                    public DateTime Expiry { get; set; } = DateTime.UtcNow;
                 }
 
                 public class ban
