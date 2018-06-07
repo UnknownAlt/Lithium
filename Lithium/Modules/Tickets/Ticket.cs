@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
-using Lithium.Discord.Contexts.Paginator;
 using Lithium.Discord.Extensions;
 using Lithium.Discord.Preconditions;
 using Lithium.Models;
@@ -32,7 +32,7 @@ namespace Lithium.Modules.Tickets
             {
                 pages.Add(new PaginatedMessage.Page
                 {
-                    description = $"Ticket By: {Context.Socket.Guild.GetUser(ticket.InitUser)?.Username ?? $"Missing User [{ticket.InitUser}]"}\n" +
+                    Description = $"Ticket By: {Context.Socket.Guild.GetUser(ticket.InitUser)?.Username ?? $"Missing User [{ticket.InitUser}]"}\n" +
                                   $"Message: {ticket.message}\n\n" +
                                   $"^ [{ticket.Up.Count}] v [{ticket.Down.Count}]\n" +
                                   $"ID: {ticket.id}\n" +
@@ -45,7 +45,12 @@ namespace Lithium.Modules.Tickets
                 Title = "Server Tickets",
                 Pages = pages
             };
-            await PagedReplyAsync(pager);
+            await PagedReplyAsync(pager, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
 
         [Command("Solved")]
@@ -64,7 +69,7 @@ namespace Lithium.Modules.Tickets
             {
                 pages.Add(new PaginatedMessage.Page
                 {
-                    description = $"Ticket By: {Context.Socket.Guild.GetUser(ticket.InitUser)?.Username ?? $"Missing User [{ticket.InitUser}]"}\n" +
+                    Description = $"Ticket By: {Context.Socket.Guild.GetUser(ticket.InitUser)?.Username ?? $"Missing User [{ticket.InitUser}]"}\n" +
                                   $"Message: {ticket.message}\n\n" +
                                   $"^ [{ticket.Up.Count}] v [{ticket.Down.Count}]\n" +
                                   $"ID: {ticket.id}\n" +
@@ -78,7 +83,12 @@ namespace Lithium.Modules.Tickets
                 Title = "Server Tickets",
                 Pages = pages
             };
-            await PagedReplyAsync(pager);
+            await PagedReplyAsync(pager, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
 
         [Command("UnSolved")]
@@ -97,7 +107,7 @@ namespace Lithium.Modules.Tickets
             {
                 pages.Add(new PaginatedMessage.Page
                 {
-                    description = $"Ticket By: {Context.Socket.Guild.GetUser(ticket.InitUser)?.Username ?? $"Missing User [{ticket.InitUser}]"}\n" +
+                    Description = $"Ticket By: {Context.Socket.Guild.GetUser(ticket.InitUser)?.Username ?? $"Missing User [{ticket.InitUser}]"}\n" +
                                   $"Message: {ticket.message}\n\n" +
                                   $"^ [{ticket.Up.Count}] v [{ticket.Down.Count}]\n" +
                                   $"ID: {ticket.id}\n" +
@@ -110,7 +120,12 @@ namespace Lithium.Modules.Tickets
                 Title = "Server Tickets",
                 Pages = pages
             };
-            await PagedReplyAsync(pager);
+            await PagedReplyAsync(pager, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
 
         [Command("Create")]
@@ -300,7 +315,7 @@ namespace Lithium.Modules.Tickets
             {
                 new PaginatedMessage.Page
                 {
-                    description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                    Description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
                                   $"Message: {targetticket.message}\n\n" +
                                   $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
                                   $"ID: {targetticket.id}"
@@ -319,7 +334,7 @@ namespace Lithium.Modules.Tickets
                 {
                     pages.Add(new PaginatedMessage.Page
                     {
-                        description = desc
+                        Description = desc
                     });
                     desc = "";
                 }
@@ -327,7 +342,7 @@ namespace Lithium.Modules.Tickets
 
             pages.Add(new PaginatedMessage.Page
             {
-                description = desc
+                Description = desc
             });
 
             var paginator = new PaginatedMessage
@@ -336,7 +351,12 @@ namespace Lithium.Modules.Tickets
                 Pages = pages,
                 Color = Color.DarkOrange
             };
-            await PagedReplyAsync(paginator);
+            await PagedReplyAsync(paginator, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
             await Context.Server.TicketLog(new EmbedBuilder
             {
                 Description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
@@ -347,6 +367,7 @@ namespace Lithium.Modules.Tickets
             }, Context.Guild);
         }
 
+        /*
         [Command("Vote Comment Up")]
         [Summary("Ticket Vote Comment Up <TicketID> <CommentID>")]
         [Remarks("Vote on a comment of a ticket")]
@@ -498,7 +519,7 @@ namespace Lithium.Modules.Tickets
                 Title = $"{Context.User.Username} Just Voted a Comment: {downaction}"
             }, Context.Guild);
         }
-
+        */
         [Command("Comments")]
         [Summary("Ticket Comments <ID>")]
         [Remarks("View comments of a ticket")]
@@ -515,10 +536,11 @@ namespace Lithium.Modules.Tickets
             {
                 new PaginatedMessage.Page
                 {
-                    description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                    Description = $"Ticket By: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
                                   $"Message: {targetticket.message}\n\n" +
                                   $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
-                                  $"ID: {targetticket.id}"
+                                  $"ID: {targetticket.id}",
+                    
                 }
             };
 
@@ -528,13 +550,13 @@ namespace Lithium.Modules.Tickets
                 desc += $"User: {Context.Socket.Guild.GetUser(c.UserID)?.Username ?? $"Unknown User `[{c.UserID}]`"}\n" +
                         $"Comment:\n" +
                         $"{c.Comment}\n" +
-                        $"ID: {c.id}\n" +
-                        $"^ [{c.Up.Count}] v [{c.Down.Count}]\n\n";
+                        $"ID: {c.id}\n";// +
+                        //$"^ [{c.Up.Count}] v [{c.Down.Count}]\n\n";
                 if (desc.Length > 800)
                 {
                     pages.Add(new PaginatedMessage.Page
                     {
-                        description = desc
+                        Description = desc
                     });
                     desc = "";
                 }
@@ -542,7 +564,7 @@ namespace Lithium.Modules.Tickets
 
             pages.Add(new PaginatedMessage.Page
             {
-                description = desc
+                Description = desc
             });
 
             var paginator = new PaginatedMessage
@@ -551,7 +573,12 @@ namespace Lithium.Modules.Tickets
                 Pages = pages,
                 Color = Color.DarkOrange
             };
-            await PagedReplyAsync(paginator);
+            await PagedReplyAsync(paginator, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
     }
 }

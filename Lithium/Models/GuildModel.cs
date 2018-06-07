@@ -382,12 +382,21 @@ namespace Lithium.Models
 
                 public class ticket
                 {
+                    //The message ID of the original ticket
+                    public ulong announcementID { get; set; }
+
+                    //Ticket ID
                     public int id { get; set; }
-                    public bool solved { get; set; } = false;
+                    
+                    //Info about current ticket
                     public string message { get; set; }
                     public ulong InitUser { get; set; }
+
+                    //Solved Status
+                    public bool solved { get; set; } = false;
                     public string solvedmessage { get; set; } = null;
 
+                    //List of user IDs for upvotes and downvotes
                     public List<ulong> Up { get; set; } = new List<ulong>();
                     public List<ulong> Down { get; set; } = new List<ulong>();
 

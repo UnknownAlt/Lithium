@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
-using Lithium.Discord.Contexts.Paginator;
 using Lithium.Models;
 using Lithium.Services;
 
@@ -84,21 +84,21 @@ namespace Lithium.Modules
                         {
                             pages.Add(new PaginatedMessage.Page
                             {
-                                dynamictitle = $"{module.Name} (1)",
-                                description = string.Join("\n", list.Take(list.Count / 2))
+                                Title = $"{module.Name} (1)",
+                                Description = string.Join("\n", list.Take(list.Count / 2))
                             });
                             pages.Add(new PaginatedMessage.Page
                             {
-                                dynamictitle = $"{module.Name} (2)",
-                                description = string.Join("\n", list.Skip(list.Count / 2))
+                                Title = $"{module.Name} (2)",
+                                Description = string.Join("\n", list.Skip(list.Count / 2))
                             });
                         }
                         else
                         {
                             pages.Add(new PaginatedMessage.Page
                             {
-                                dynamictitle = module.Name,
-                                description = string.Join("\n", list)
+                                Title = module.Name,
+                                Description = string.Join("\n", list)
                             });
                         }
                     }
@@ -110,18 +110,18 @@ namespace Lithium.Modules
                         "`3` - List of all commands(2)"
                     };
                     var i = 3;
-                    foreach (var module in pages.Where(x => x.dynamictitle != null))
+                    foreach (var module in pages.Where(x => x.Title != null))
                     {
                         i++;
-                        moduleselect.Add($"`{i}` - {module.dynamictitle}");
+                        moduleselect.Add($"`{i}` - {module.Title}");
                     }
 
                     var fullpages = new List<PaginatedMessage.Page>
                     {
                         new PaginatedMessage.Page
                         {
-                            dynamictitle = $"{Context.Client.CurrentUser.Username} | Modules | Prefix: {isserver}",
-                            description = $"Here is a list of all the {Context.Client.CurrentUser.Username} command modules\n" +
+                            Title = $"{Context.Client.CurrentUser.Username} | Modules | Prefix: {isserver}",
+                            Description = $"Here is a list of all the {Context.Client.CurrentUser.Username} command modules\n" +
                                           $"There are {_service.Commands.Count()} commands\n" +
                                           "Click the arrows to view each one!\n" +
                                           $"{(Context.Channel is IDMChannel ? "\n" : "Or Click :1234: and reply with the page number you would like\n\n")}" +
@@ -129,8 +129,8 @@ namespace Lithium.Modules
                         },
                         new PaginatedMessage.Page
                         {
-                            dynamictitle = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
-                            description = string.Join("\n",
+                            Title = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
+                            Description = string.Join("\n",
                                 _service.Modules.Where(x => x.Commands.Count > 0 && gobj?.Settings.DisabledParts.BlacklistedModules.Any(bm => string.Equals(bm, x.Name, StringComparison.CurrentCultureIgnoreCase)) != true)
                                     .Take(_service.Modules.Count() / 2)
                                     .Select(x =>
@@ -138,8 +138,8 @@ namespace Lithium.Modules
                         },
                         new PaginatedMessage.Page
                         {
-                            dynamictitle = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
-                            description = string.Join("\n",
+                            Title = $"{Context.Client.CurrentUser.Username} | All Commands | Prefix: {isserver}",
+                            Description = string.Join("\n",
                                 _service.Modules.Where(x => x.Commands.Count > 0 && gobj?.Settings.DisabledParts.BlacklistedModules.Any(bm => string.Equals(bm, x.Name, StringComparison.CurrentCultureIgnoreCase)) != true)
                                     .Skip(_service.Modules.Count() / 2)
                                     .Select(x =>
@@ -153,7 +153,13 @@ namespace Lithium.Modules
                         Color = Color.Green,
                         Pages = fullpages
                     };
-                    await PagedReplyAsync(msg, showindex: true);
+                    await PagedReplyAsync(msg, new ReactionList
+                    {
+                        Forward = true,
+                        Backward = true, 
+                        Jump = true,
+                        Trash = true
+                    });
                     return;
                 }
 

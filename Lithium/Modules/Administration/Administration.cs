@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
-using Lithium.Discord.Contexts.Paginator;
 using Lithium.Discord.Preconditions;
 using Lithium.Models;
 
@@ -345,13 +345,13 @@ namespace Lithium.Modules.Administration
             {
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = $"Guild Info",
-                    description = $"ID: {Guild.GuildID}\n" +
+                    Title = $"Guild Info",
+                    Description = $"ID: {Guild.GuildID}\n" +
                                   $"Prefix: {Guild.Settings.Prefix ?? Config.Load().DefaultPrefix}\n"
                 }, /*
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = "Welcome and Goodbye",
+                    Title = "Welcome and Goodbye",
                     description = $"__**Welcome**__\n" +
                                   $"Event: {Guild.WelcomeEvent}\n" +
                                   $"Message: {Guild.WelcomeMessage ?? "N/A"}\n" +
@@ -363,7 +363,7 @@ namespace Lithium.Modules.Administration
                 },
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = $"Partner Program",
+                    Title = $"Partner Program",
                     description = $"Signed Up: {Guild.PartnerSetup.IsPartner}\n" +
                                   $"Banned: {Guild.PartnerSetup.banned}\n" +
                                   $"Channel: {Context.Guild.GetChannel(Guild.PartnerSetup.PartherChannel)?.Name ?? "N/A"}\n" +
@@ -374,8 +374,8 @@ namespace Lithium.Modules.Administration
                 },*/
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = $"AntiSpam 1.Prevention",
-                    description = $"NoSpam: {Guild.Antispam.Antispam.NoSpam}\n" +
+                    Title = $"AntiSpam 1.Prevention",
+                    Description = $"NoSpam: {Guild.Antispam.Antispam.NoSpam}\n" +
                                   $"Remove IPs: {Guild.Antispam.Privacy.RemoveIPs}\n" +
                                   $"Remove Invites: {Guild.Antispam.Advertising.Invite}\n" +
                                   $"Remove Invites Message:\n" +
@@ -388,49 +388,49 @@ namespace Lithium.Modules.Administration
                 },
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = $"AntiSpam 2.Blacklist",
-                    description = $"Using Blacklist: {Guild.Antispam.Blacklist.BlacklistWordSet.Any()}\n" +
+                    Title = $"AntiSpam 2.Blacklist",
+                    Description = $"Using Blacklist: {Guild.Antispam.Blacklist.BlacklistWordSet.Any()}\n" +
                                   $"Default Blacklist Message: {Guild.Antispam.Blacklist.DefaultBlacklistMessage ?? "N/A"}\n" +
                                   $"Blacklisted Words:\n" +
                                   $"Use the `{Config.Load().DefaultPrefix}blacklist` message to show this\n"
                 },
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = $"AntiSpam 3.Toxicity",
-                    description = $"NoToxicity: {Guild.Antispam.Toxicity.UsePerspective}\n" +
+                    Title = $"AntiSpam 3.Toxicity",
+                    Description = $"NoToxicity: {Guild.Antispam.Toxicity.UsePerspective}\n" +
                                   $"Threshhold: {Guild.Antispam.Toxicity.ToxicityThreshHold}"
                 },
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = $"AntiSpam 4.Exempt",
-                    description =
+                    Title = $"AntiSpam 4.Exempt",
+                    Description = 
                         $"{(Guild.Antispam.IgnoreRoles.Any() ? string.Join("\n", Guild.Antispam.IgnoreRoles.Where(x => Context.Guild.GetRole(x.RoleID) != null).Select(x => $"__{Context.Guild.GetRole(x.RoleID).Name}__\nBypass Antispam: {x.AntiSpam}\nBypass Blacklist: {x.Blacklist}\nBypass Mention: {x.Mention}\nBypass Invite: {x.Advertising}\nBypass Filtering: {x.Privacy}\n")) : "N/A")}"
                 },
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = "Kicks Warns and Bans",
-                    description = $"Kicks: {(Guild.ModerationSetup.Kicks.Any() ? Guild.ModerationSetup.Kicks.Count.ToString() : "N/A")}\n" +
+                    Title = "Kicks Warns and Bans",
+                    Description = $"Kicks: {(Guild.ModerationSetup.Kicks.Any() ? Guild.ModerationSetup.Kicks.Count.ToString() : "N/A")}\n" +
                                   $"Warns: {(Guild.ModerationSetup.Warns.Any() ? Guild.ModerationSetup.Warns.Count.ToString() : "N/A")}\n" +
                                   $"Bans: {(Guild.ModerationSetup.Bans.Any() ? Guild.ModerationSetup.Bans.Count.ToString() : "N/A")}\n"
                 },
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = "Event & Error Logging",
-                    description = $"Event Logging: {Guild.EventLogger.LogEvents}\n" +
+                    Title = "Event & Error Logging",
+                    Description = $"Event Logging: {Guild.EventLogger.LogEvents}\n" +
                                   $"Event Channel: {Context.Socket.Guild.GetChannel(Guild.EventLogger.EventChannel)?.Name ?? "N/A"}"
                 },
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = "Moderators",
-                    description =
+                    Title = "Moderators",
+                    Description = 
                         $"Mod Roles: {(Guild.ModerationSetup.ModeratorRoles.Any() ? string.Join("\n", Guild.ModerationSetup.ModeratorRoles.Where(mr => Context.Guild.Roles.Any(x => x.Id == mr)).Select(mr => Context.Guild.GetRole(mr)?.Name)) : "N/A")}\n" +
                         $"Moderator Logging: {Guild.ModerationSetup.Settings.ModLogChannel != 0}\n" +
                         $"Moderator Log Channel: {Context.Socket.Guild.GetChannel(Guild.ModerationSetup.Settings.ModLogChannel)?.Name ?? "N/A"}"
                 },
                 new PaginatedMessage.Page
                 {
-                    dynamictitle = "Administrators",
-                    description =
+                    Title = "Administrators",
+                    Description = 
                         $"Admin Roles: {(Guild.ModerationSetup.AdminRoles.Any() ? string.Join("\n", Guild.ModerationSetup.AdminRoles.Where(ar => Context.Guild.Roles.Any(x => x.Id == ar)).Select(ar => Context.Guild.GetRole(ar)?.Name)) : "N/A")}"
                 }
             };
@@ -438,6 +438,9 @@ namespace Lithium.Modules.Administration
             await PagedReplyAsync(new PaginatedMessage
             {
                 Pages = pages
+            }, new ReactionList
+            {
+                Forward = true, Backward = true, Trash = true
             });
         }
     }

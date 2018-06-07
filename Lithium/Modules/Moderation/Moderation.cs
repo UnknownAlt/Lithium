@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
-using Lithium.Discord.Contexts.Paginator;
 using Lithium.Discord.Extensions;
 using Lithium.Discord.Preconditions;
 using Lithium.Models;
@@ -240,7 +240,7 @@ namespace Lithium.Modules.Moderation
                 {
                     pages.Add(new PaginatedMessage.Page
                     {
-                        description = desc
+                        Description = desc
                     });
                     desc = dstr;
                 }
@@ -268,7 +268,7 @@ namespace Lithium.Modules.Moderation
 
             pages.Add(new PaginatedMessage.Page
             {
-                description = desc
+                Description = desc
             });
             var pager = new PaginatedMessage
             {
@@ -276,7 +276,12 @@ namespace Lithium.Modules.Moderation
                 Title = "Warnings",
                 Color = Color.DarkPurple
             };
-            await PagedReplyAsync(pager);
+            await PagedReplyAsync(pager, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
 
         [Command("Kicks")]
@@ -303,7 +308,7 @@ namespace Lithium.Modules.Moderation
                 {
                     pages.Add(new PaginatedMessage.Page
                     {
-                        description = desc
+                        Description = desc
                     });
                     desc = dstr;
                 }
@@ -332,7 +337,7 @@ namespace Lithium.Modules.Moderation
 
             pages.Add(new PaginatedMessage.Page
             {
-                description = desc
+                Description = desc
             });
             var pager = new PaginatedMessage
             {
@@ -340,7 +345,12 @@ namespace Lithium.Modules.Moderation
                 Title = "Kicks",
                 Color = Color.DarkMagenta
             };
-            await PagedReplyAsync(pager);
+            await PagedReplyAsync(pager, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
 
         [Command("Bans")]
@@ -367,7 +377,7 @@ namespace Lithium.Modules.Moderation
                 {
                     pages.Add(new PaginatedMessage.Page
                     {
-                        description = desc
+                        Description = desc
                     });
                     desc = dstr;
                 }
@@ -395,7 +405,7 @@ namespace Lithium.Modules.Moderation
 
             pages.Add(new PaginatedMessage.Page
             {
-                description = desc
+                Description = desc
             });
             var pager = new PaginatedMessage
             {
@@ -403,7 +413,12 @@ namespace Lithium.Modules.Moderation
                 Title = "Bans",
                 Color = Color.DarkRed
             };
-            await PagedReplyAsync(pager);
+            await PagedReplyAsync(pager, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
 
         public List<IMessage> Getmessages(int count = 100)

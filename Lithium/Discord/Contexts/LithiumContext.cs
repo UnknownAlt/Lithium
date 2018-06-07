@@ -5,14 +5,12 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
-using Lithium.Discord.Contexts.Callbacks;
-using Lithium.Discord.Contexts.Criteria;
-using Lithium.Discord.Contexts.Paginator;
 using Lithium.Handlers;
 using Lithium.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
+
 
 namespace Lithium.Discord.Contexts
 {
@@ -34,10 +32,7 @@ namespace Lithium.Discord.Contexts
         /// </summary>
         public async Task<IUserMessage> ReplyAndDeleteAsync(string Message, TimeSpan? Timeout = null)
         {
-            Timeout = Timeout ?? TimeSpan.FromSeconds(5);
-            var Msg = await ReplyAsync(Message).ConfigureAwait(false);
-            _ = Task.Delay(Timeout.Value).ContinueWith(_ => Msg.DeleteAsync().ConfigureAwait(false)).ConfigureAwait(false);
-            return Msg;
+            return await Interactive.ReplyAndDeleteAsync(LithiumSocketContext(), Message, false, null, Timeout);
         }
 
         /// <summary>
@@ -82,24 +77,12 @@ namespace Lithium.Discord.Contexts
         ///     creates a new paginated message
         /// </summary>
         /// <param name="pager"></param>
-        /// <param name="fromSourceUser"></param>
-        /// <param name="showall"></param>
-        /// <param name="showindex"></param>
+        /// <param name="reactionList"></param>
+        /// <param name="criterion"></param>
         /// <returns></returns>
-        public Task<IUserMessage> PagedReplyAsync(PaginatedMessage pager, bool fromSourceUser = true, bool showall = false, bool showindex = false)
+        public Task<IUserMessage> PagedReplyAsync(PaginatedMessage pager, ReactionList reactionList, ICriterion<SocketReaction> criterion = null)
         {
-            var criterion = new Criteria<SocketReaction>();
-            if (fromSourceUser)
-            {
-                criterion.AddCriterion(new EnsureReactionFromSourceUserCriterion());
-            }
-
-            return PagedReplyAsync(pager, criterion, showall, showindex);
-        }
-
-        public Task<IUserMessage> PagedReplyAsync(PaginatedMessage pager, ICriterion<SocketReaction> criterion, bool showall = false, bool showindex = false)
-        {
-            return Interactive.SendPaginatedMessageAsync(LithiumSocketContext(), pager, criterion, showall, showindex);
+            return Interactive.SendPaginatedMessageAsync(LithiumSocketContext(), pager, reactionList, criterion);
         }
 
         public Task<IUserMessage> InlineReactionReplyAsync(ReactionCallbackData data, bool fromSourceUser = true)
@@ -149,138 +132,6 @@ namespace Lithium.Discord.Contexts
             public DiscordSocketClient Client { get; set; }
             public SocketUserMessage Message { get; set; }
             public ISocketMessageChannel Channel { get; set; }
-        }
-    }
-
-    public class InteractiveService : IDisposable
-    {
-        private readonly Dictionary<ulong, IReactionCallback> _callbacks;
-        private readonly TimeSpan _defaultTimeout;
-
-        public InteractiveService(DiscordSocketClient discord, TimeSpan? defaultTimeout = null)
-        {
-            Discord = discord;
-            Discord.ReactionAdded += HandleReactionAsync;
-
-            _callbacks = new Dictionary<ulong, IReactionCallback>();
-            _defaultTimeout = defaultTimeout ?? TimeSpan.FromSeconds(15);
-        }
-
-        public DiscordSocketClient Discord { get; }
-
-        public void Dispose()
-        {
-            Discord.ReactionAdded -= HandleReactionAsync;
-        }
-
-        public Task<SocketMessage> NextMessageAsync(SocketCommandContext context, bool fromSourceUser = true,
-            bool inSourceChannel = true, TimeSpan? timeout = null)
-        {
-            var criterion = new Criteria<SocketMessage>();
-            if (fromSourceUser)
-                criterion.AddCriterion(new EnsureSourceUserCriterion());
-            if (inSourceChannel)
-                criterion.AddCriterion(new EnsureSourceChannelCriterion());
-            return NextMessageAsync(context, criterion, timeout);
-        }
-
-        public async Task<SocketMessage> NextMessageAsync(SocketCommandContext context,
-            ICriterion<SocketMessage> criterion, TimeSpan? timeout = null)
-        {
-            timeout = timeout ?? _defaultTimeout;
-
-            var eventTrigger = new TaskCompletionSource<SocketMessage>();
-
-            async Task Handler(SocketMessage message)
-            {
-                var result = await criterion.JudgeAsync(context, message).ConfigureAwait(false);
-                if (result)
-                    eventTrigger.SetResult(message);
-            }
-
-            context.Client.MessageReceived += Handler;
-
-            var trigger = eventTrigger.Task;
-            var delay = Task.Delay(timeout.Value);
-            var task = await Task.WhenAny(trigger, delay).ConfigureAwait(false);
-
-            context.Client.MessageReceived -= Handler;
-
-            if (task == trigger)
-                return await trigger.ConfigureAwait(false);
-            return null;
-        }
-
-        public async Task<IUserMessage> ReplyAndDeleteAsync(SocketCommandContext context, string content,
-            bool isTTS = false, Embed embed = null, TimeSpan? timeout = null, RequestOptions options = null)
-        {
-            timeout = timeout ?? _defaultTimeout;
-            var message = await context.Channel.SendMessageAsync(content, isTTS, embed, options).ConfigureAwait(false);
-            _ = Task.Delay(timeout.Value)
-                .ContinueWith(_ => message.DeleteAsync().ConfigureAwait(false))
-                .ConfigureAwait(false);
-            return message;
-        }
-
-        public async Task<IUserMessage> SendPaginatedMessageAsync(SocketCommandContext context, PaginatedMessage pager,
-            ICriterion<SocketReaction> criterion = null, bool showall = false, bool showindex = false)
-        {
-            var callback = new PaginatedMessageCallback(this, context, pager, criterion);
-            await callback.DisplayAsync(showall, showindex).ConfigureAwait(false);
-            return callback.Message;
-        }
-
-        public void AddReactionCallback(IMessage message, IReactionCallback callback)
-        {
-            _callbacks[message.Id] = callback;
-        }
-
-        public void RemoveReactionCallback(IMessage message)
-        {
-            RemoveReactionCallback(message.Id);
-        }
-
-        public void RemoveReactionCallback(ulong id)
-        {
-            _callbacks.Remove(id);
-        }
-
-        public void ClearReactionCallbacks()
-        {
-            _callbacks.Clear();
-        }
-
-        public async Task<IUserMessage> SendMessageWithReactionCallbacksAsync(SocketCommandContext context, ReactionCallbackData callbacks, bool fromSourceUser = true)
-        {
-            var criterion = new Criteria<SocketReaction>();
-            if (fromSourceUser)
-                criterion.AddCriterion(new EnsureReactionFromSourceUserCriterion());
-            var callback = new InlineReactionCallback(this, context, callbacks, criterion);
-            await callback.DisplayAsync().ConfigureAwait(false);
-            return callback.Message;
-        }
-
-        private async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel,
-            SocketReaction reaction)
-        {
-            if (reaction.UserId == Discord.CurrentUser.Id) return;
-            if (!_callbacks.TryGetValue(message.Id, out var callback)) return;
-            if (!await callback.Criterion.JudgeAsync(callback.Context, reaction).ConfigureAwait(false))
-                return;
-            switch (callback.RunMode)
-            {
-                case RunMode.Async:
-                    _ = Task.Run(async () =>
-                    {
-                        if (await callback.HandleCallbackAsync(reaction).ConfigureAwait(false))
-                            RemoveReactionCallback(message.Id);
-                    });
-                    break;
-                default:
-                    if (await callback.HandleCallbackAsync(reaction).ConfigureAwait(false))
-                        RemoveReactionCallback(message.Id);
-                    break;
-            }
         }
     }
 }

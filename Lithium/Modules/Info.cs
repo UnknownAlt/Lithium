@@ -3,10 +3,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Lithium.Discord.Contexts;
-using Lithium.Discord.Contexts.Paginator;
 
 namespace Lithium.Modules
 {
@@ -224,13 +224,18 @@ namespace Lithium.Modules
                 Title = $"Roles for {Context.Guild.Name}",
                 Pages = rolepage.Select(x => new PaginatedMessage.Page
                 {
-                    description = x
+                    Description = x
                 }),
 
                 Color = new Color(114, 137, 218)
             };
 
-            await PagedReplyAsync(msg);
+            await PagedReplyAsync(msg, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
 
         [Command("RoleMembers")]
@@ -265,12 +270,18 @@ namespace Lithium.Modules
                 Title = $"Here is a list of Members with the role {role}",
                 Pages = members.Select(x => new PaginatedMessage.Page
                 {
-                    description = x
+                    Description = x
                 }),
                 Color = new Color(114, 137, 218)
             };
 
-            await PagedReplyAsync(msg);
+            await PagedReplyAsync(msg, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Jump = true,
+                Trash = true
+            });
         }
     }
 }

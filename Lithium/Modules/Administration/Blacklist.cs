@@ -3,9 +3,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Lithium.Discord.Contexts;
-using Lithium.Discord.Contexts.Paginator;
 using Lithium.Discord.Preconditions;
 using Lithium.Models;
 
@@ -27,7 +27,7 @@ namespace Lithium.Modules.Administration
                 {
                     pages.Add(new PaginatedMessage.Page
                     {
-                        description = sb.ToString()
+                        Description = sb.ToString()
                     });
                     sb.Clear();
                 }
@@ -40,7 +40,7 @@ namespace Lithium.Modules.Administration
 
             pages.Add(new PaginatedMessage.Page
             {
-                description = sb.ToString()
+                Description = sb.ToString()
             });
             var pager = new PaginatedMessage
             {
@@ -48,7 +48,12 @@ namespace Lithium.Modules.Administration
                 Pages = pages
             };
 
-            await PagedReplyAsync(pager, true, true, true);
+            await PagedReplyAsync(pager, new ReactionList
+            {
+                Forward = true,
+                Backward = true,
+                Trash = true
+            });
         }
 
         [Command("blacklist formathelp")]
