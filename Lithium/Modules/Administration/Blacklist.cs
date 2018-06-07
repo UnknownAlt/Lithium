@@ -61,7 +61,7 @@ namespace Lithium.Modules.Administration
         [Remarks("help with adding multiple phrases or words to the blacklist at once")]
         public async Task FormatHelp()
         {
-            await ReplyAsync("", false, new EmbedBuilder
+            await ReplyAsync(new EmbedBuilder
             {
                 Description = "__**Sentences and Multiple Words**__\n" +
                               "To add a sentence to the blacklist, use the add command like so:\n" +
@@ -77,7 +77,7 @@ namespace Lithium.Modules.Administration
                               "{guild} - the guild's name\n" +
                               "{channel} - the current channel name\n" +
                               "{channel.mention} - #channel mention"
-            });
+            }.Build());
         }
 
         [Command("blacklist add")]

@@ -10,7 +10,7 @@ namespace Lithium.Discord.Preconditions
         [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
         public class ServerOwner : PreconditionAttribute
         {
-            public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command,
+            public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command,
                 IServiceProvider services)
             {
                 //Ensure that the command is only run in a server and not in DMs

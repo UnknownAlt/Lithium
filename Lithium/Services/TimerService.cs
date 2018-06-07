@@ -79,6 +79,15 @@ namespace Lithium.Services
                         //
                     }
 
+                    try
+                    {
+                        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    }
+                    catch
+                    {
+                        //
+                    }
+
                     LastFireTime = DateTime.UtcNow;
                 },
                 null, TimeSpan.Zero, TimeSpan.FromMinutes(FirePreiod));

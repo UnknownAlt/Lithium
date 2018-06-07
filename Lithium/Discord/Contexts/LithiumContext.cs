@@ -26,7 +26,22 @@ namespace Lithium.Discord.Contexts
             await Context.Channel.TriggerTypingAsync();
             return await base.ReplyAsync(Message, false, Embed);
         }
-
+        /// <summary>
+        ///     Reply in the server. This is a shortcut for context.channel.sendmessageasync
+        /// </summary>
+        public async Task<IUserMessage> ReplyAsync(Embed Embed)
+        {
+            await Context.Channel.TriggerTypingAsync();
+            return await base.ReplyAsync("", false, Embed);
+        }
+        /// <summary>
+        ///     Reply in the server. This is a shortcut for context.channel.sendmessageasync
+        /// </summary>
+        public async Task<IUserMessage> ReplyAsync(EmbedBuilder Embed)
+        {
+            await Context.Channel.TriggerTypingAsync();
+            return await base.ReplyAsync("", false, Embed.Build());
+        }
         /// <summary>
         ///     Reply in the server and then delete after the provided delay.
         /// </summary>

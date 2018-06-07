@@ -158,12 +158,12 @@ namespace Lithium.Modules
                 list = "None :(";
             var embed = new EmbedBuilder()
                 .WithTitle($"RoleInfo for {role.Name}")
-                .AddInlineField("Colour", $"{role.Color}")
-                .AddInlineField("ID", $"{role.Id}")
-                .AddInlineField("Creation Date", $"{role.CreatedAt}")
-                .AddInlineField("Displayed Separately?", $"{role.IsHoisted}")
-                .AddInlineField("Mentionable?", $"{role.IsMentionable}")
-                .AddInlineField("Discord Generated?", $"{role.IsManaged}")
+                .AddField("Colour", $"{role.Color}")
+                .AddField("ID", $"{role.Id}")
+                .AddField("Creation Date", $"{role.CreatedAt}")
+                .AddField("Displayed Separately?", $"{role.IsHoisted}")
+                .AddField("Mentionable?", $"{role.IsMentionable}")
+                .AddField("Discord Generated?", $"{role.IsManaged}")
                 .AddField("Permissions", list)
                 .WithFooter(x =>
                 {
@@ -187,15 +187,15 @@ namespace Lithium.Modules
 
             var embed = new EmbedBuilder()
                 .WithTitle($"User Count for {Context.Guild.Name}")
-                .AddInlineField(":busts_in_silhouette: Total Members", mem)
-                .AddInlineField(":robot: Total Bots", botlist)
-                .AddInlineField(":man_in_tuxedo: Total Users", guildusers)
-                .AddInlineField(":newspaper2: Total Channels", Context.Socket.Guild.Channels.Count)
-                .AddInlineField(":microphone: Text/Voice Channels",
+                .AddField(":busts_in_silhouette: Total Members", mem)
+                .AddField(":robot: Total Bots", botlist)
+                .AddField(":man_in_tuxedo: Total Users", guildusers)
+                .AddField(":newspaper2: Total Channels", Context.Socket.Guild.Channels.Count)
+                .AddField(":microphone: Text/Voice Channels",
                     $"{Context.Socket.Guild.TextChannels.Count}/{Context.Socket.Guild.VoiceChannels.Count}")
-                .AddInlineField(":spy: Role Count", Context.Guild.Roles.Count);
+                .AddField(":spy: Role Count", Context.Guild.Roles.Count);
 
-            await ReplyAsync("", false, embed);
+            await ReplyAsync(embed);
         }
 
         [Command("RoleList")]

@@ -21,7 +21,7 @@ namespace Lithium.Discord.Preconditions
                 _allowAdministratorRole = allowAdministratorRole;
             }
 
-            public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command,
+            public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command,
                 IServiceProvider services)
             {
                 //Ensure that the command is only run in a server and not in DMs
@@ -66,7 +66,7 @@ namespace Lithium.Discord.Preconditions
                 _allowAdministrator = AllowAdminPermission;
             }
 
-            public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command,
+            public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command,
                 IServiceProvider services)
             {
                 //Ensure that the command is only run in a server and not in DMs

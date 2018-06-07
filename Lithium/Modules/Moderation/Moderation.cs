@@ -16,6 +16,41 @@ namespace Lithium.Modules.Moderation
     [Group("Mod")]
     public class Moderation : Base
     {
+        [Command("UnMute")]
+        [Summary("Mod UnMute <@user>")]
+        [Remarks("Unmute the specified user")]
+        public async Task UnMute(IGuildUser user)
+        {
+            var mutedrole = Context.Guild.GetRole(Context.Server.ModerationSetup.Mutes.mutedrole);
+            if (mutedrole == null)
+            {
+                throw new Exception("Muted Role has not been configured in this server");
+            }
+
+            if (Permissions.CheckHeirachy(user, Context.Client))
+            {
+                throw new Exception("This user has higher permissions than me. I cannot perform this action on them");
+            }
+
+            if (user.GuildPermissions.Administrator)
+            {
+                throw new Exception("This user has admin or user kick permissions, therefore I cannot perform this action on them");
+            }
+
+            if (user.RoleIds.Contains(mutedrole.Id))
+            {
+                await user.RemoveRoleAsync(mutedrole);
+                Context.Server.ModerationSetup.Mutes.MutedUsers.Remove(Context.Server.ModerationSetup.Mutes.MutedUsers.FirstOrDefault(x => x.userid == user.Id));
+                await ReplyAsync("User Unmuted");
+            }
+            else
+            {
+                throw new Exception("User is not muted");
+            }
+
+            Context.Server.Save();
+        }
+
         [Command("Mute")]
         [Summary("Mod Mute <@user> <hours>")]
         [Remarks("Warn the specified user")]
@@ -24,20 +59,17 @@ namespace Lithium.Modules.Moderation
             var mutedrole = Context.Guild.GetRole(Context.Server.ModerationSetup.Mutes.mutedrole);
             if (mutedrole == null)
             {
-                await ReplyAsync("Muted Role has not been configured in this server");
-                return;
+                throw new Exception("Muted Role has not been configured in this server");
             }
 
             if (Permissions.CheckHeirachy(user, Context.Client))
             {
-                await ReplyAsync("This user has higher permissions than me. I cannot perform this action on them");
-                return;
+                throw new Exception("This user has higher permissions than me. I cannot perform this action on them");
             }
 
             if (user.GuildPermissions.Administrator)
             {
-                await ReplyAsync("This user has admin or user kick permissions, therefore I cannot perform this action on them");
-                return;
+                throw new Exception("This user has admin or user kick permissions, therefore I cannot perform this action on them");
             }
 
             if (!user.RoleIds.Contains(mutedrole.Id))
@@ -77,14 +109,12 @@ namespace Lithium.Modules.Moderation
         {
             if (Permissions.CheckHeirachy(user, Context.Client))
             {
-                await ReplyAsync("This user has higher permissions than me. I cannot perform this action on them");
-                return;
+                throw new Exception("This user has higher permissions than me. I cannot perform this action on them");
             }
 
             if (user.GuildPermissions.Administrator || user.GuildPermissions.KickMembers)
             {
-                await ReplyAsync("This user has admin or user kick permissions, therefore I cannot perform this action on them");
-                return;
+                throw new Exception("This user has admin or user kick permissions, therefore I cannot perform this action on them");
             }
 
             Context.Server.ModerationSetup.Kicks.Add(new GuildModel.Guild.Moderation.kick
@@ -113,7 +143,7 @@ namespace Lithium.Modules.Moderation
             }
             catch
             {
-                await ReplyAsync("User is unable to be kicked. ");
+                throw new Exception("User is unable to be kicked. ");
             }
         }
 
@@ -124,14 +154,12 @@ namespace Lithium.Modules.Moderation
         {
             if (Permissions.CheckHeirachy(user, Context.Client))
             {
-                await ReplyAsync("This user has higher permissions than me. I cannot perform this action on them");
-                return;
+                throw new Exception("This user has higher permissions than me. I cannot perform this action on them");
             }
 
             if (user.GuildPermissions.Administrator || user.GuildPermissions.BanMembers)
             {
-                await ReplyAsync("This user has admin or user ban permissions, therefore I cannot perform this action on them");
-                return;
+                throw new Exception("This user has admin or user ban permissions, therefore I cannot perform this action on them");
             }
 
             Context.Server.ModerationSetup.Bans.Add(new GuildModel.Guild.Moderation.ban
@@ -171,14 +199,12 @@ namespace Lithium.Modules.Moderation
         {
             if (Permissions.CheckHeirachy(user, Context.Client))
             {
-                await ReplyAsync("This user has higher permissions than me. I cannot perform this action on them");
-                return;
+                throw new Exception("This user has higher permissions than me. I cannot perform this action on them");
             }
 
             if (user.GuildPermissions.Administrator || user.GuildPermissions.BanMembers)
             {
-                await ReplyAsync("This user has admin or user ban permissions, therefore I cannot perform this action on them");
-                return;
+                throw new Exception("This user has admin or user ban permissions, therefore I cannot perform this action on them");
             }
 
             Context.Server.ModerationSetup.Bans.Add(new GuildModel.Guild.Moderation.ban
@@ -210,7 +236,7 @@ namespace Lithium.Modules.Moderation
             }
             catch
             {
-                await ReplyAsync("User is unable to be Banned. ");
+                throw new Exception("User is unable to be Banned. ");
             }
         }
 
@@ -248,22 +274,6 @@ namespace Lithium.Modules.Moderation
                 {
                     desc += dstr;
                 }
-
-                /*
-                desc += dstr;
-                if (desc.Length > 800)
-                {
-                    if (desc.Length > 1024)
-                    {
-                        desc = desc.Substring(0, 1023);
-                    }
-
-                    pages.Add(new PaginatedMessage.Page
-                    {
-                        description = desc
-                    });
-                    desc = "";
-                }*/
             }
 
             pages.Add(new PaginatedMessage.Page
@@ -316,23 +326,6 @@ namespace Lithium.Modules.Moderation
                 {
                     desc += dstr;
                 }
-
-                /*
-                if (desc.Length > 800)
-                {
-                    if (desc.Length > 1024)
-                    {
-                        desc = desc.Substring(0, 1023);
-                    }
-
-                    pages.Add(new PaginatedMessage.Page
-                    {
-                        description = desc
-                    });
-                    desc = "";
-                }
-                desc += dstr;
-                */
             }
 
             pages.Add(new PaginatedMessage.Page
@@ -386,21 +379,6 @@ namespace Lithium.Modules.Moderation
                     desc += dstr;
                 }
 
-                /*
-                desc += dstr;
-                if (desc.Length > 800)
-                {
-                    if (desc.Length > 1024)
-                    {
-                        desc = desc.Substring(0, 1023);
-                    }
-
-                    pages.Add(new PaginatedMessage.Page
-                    {
-                        description = desc
-                    });
-                    desc = "";
-                }*/
             }
 
             pages.Add(new PaginatedMessage.Page
@@ -421,10 +399,10 @@ namespace Lithium.Modules.Moderation
             });
         }
 
-        public List<IMessage> Getmessages(int count = 100)
+        public List<IMessage> GetmessagesAsync(int count = 100)
         {
-            var msgs = Context.Socket.Channel.GetMessagesAsync(count).Flatten();
-            return msgs.Result.Where(x => x.Timestamp.UtcDateTime + TimeSpan.FromDays(14) > DateTime.UtcNow).ToList();
+            var msgs = Context.Channel.GetMessagesAsync(count).Flatten();
+            return msgs.Where(x => x.Timestamp.UtcDateTime + TimeSpan.FromDays(14) > DateTime.UtcNow).ToList().Result;
         }
 
         [Command("prune")]
@@ -445,10 +423,10 @@ namespace Lithium.Modules.Moderation
                 await Context.Message.DeleteAsync().ConfigureAwait(false);
                 var limit = count < 100 ? count : 100;
                 //var enumerable = await Context.Channel.GetMessagesAsync(limit).Flatten().ConfigureAwait(false);
-                var enumerable = Getmessages(limit);
+                var enumerable = GetmessagesAsync(limit);
                 try
                 {
-                    await Context.Channel.DeleteMessagesAsync(enumerable).ConfigureAwait(false);
+                    await (Context.Channel as ITextChannel).DeleteMessagesAsync(enumerable).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -476,11 +454,11 @@ namespace Lithium.Modules.Moderation
         {
             await Context.Message.DeleteAsync().ConfigureAwait(false);
             //var enumerable = await Context.Channel.GetMessagesAsync().Flatten().ConfigureAwait(false);
-            var enumerable = Getmessages();
+            var enumerable = GetmessagesAsync();
             var newlist = enumerable.Where(x => x.Author == user).ToList();
             try
             {
-                await Context.Channel.DeleteMessagesAsync(newlist).ConfigureAwait(false);
+                await (Context.Channel as ITextChannel).DeleteMessagesAsync(newlist).ConfigureAwait(false);
             }
             catch
             {
@@ -507,11 +485,11 @@ namespace Lithium.Modules.Moderation
         public async Task Prune(ulong userID)
         {
             await Context.Message.DeleteAsync().ConfigureAwait(false);
-            var enumerable = Getmessages();
+            var enumerable = GetmessagesAsync();
             var newlist = enumerable.Where(x => x.Author.Id == userID).ToList();
             try
             {
-                await Context.Channel.DeleteMessagesAsync(newlist).ConfigureAwait(false);
+                await (Context.Channel as ITextChannel).DeleteMessagesAsync(newlist).ConfigureAwait(false);
             }
             catch
             {
@@ -537,14 +515,14 @@ namespace Lithium.Modules.Moderation
         public async Task Prune(IRole role)
         {
             await Context.Message.DeleteAsync().ConfigureAwait(false);
-            var enumerable = Getmessages();
+            var enumerable = GetmessagesAsync();
             var newerlist = enumerable.ToList().Where(x =>
                 Context.Socket.Guild.GetUser(x.Author.Id) != null &&
                 ((IGuildUser) Context.Socket.Guild.GetUser(x.Author.Id)).RoleIds.Contains(role.Id)).ToList();
 
             try
             {
-                await Context.Channel.DeleteMessagesAsync(newerlist).ConfigureAwait(false);
+                await (Context.Channel as ITextChannel).DeleteMessagesAsync(newerlist).ConfigureAwait(false);
             }
             catch
             {
