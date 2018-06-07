@@ -23,6 +23,29 @@ namespace Lithium.Modules.ServerOwner
             await ReplyAsync($"NoSpam: {Context.Server.Antispam.Advertising.Invite}");
         }
 
+        [Command("NoSpamCount")]
+        [Summary("NoSpamCount")]
+        [Remarks("Set amount of messages required before nospam detects it")]
+        public async Task NoSpamCount(int messages = 3)
+        {
+            Context.Server.Antispam.Antispam.NoSpamCount = messages;
+            Context.Server.Save();
+            await ReplyAsync($"if more than {messages} messages are sent within {Context.Server.Antispam.Antispam.NoSpamTimeout.TotalSeconds} seconds, they will be detected as spam");
+        }
+        [Command("NoSpamTimeout")]
+        [Summary("NoSpamTimeout")]
+        [Remarks("Set amount of time per nospam count to detect spam")]
+        public async Task NoSpamTime(int seconds = 5)
+        {
+            if (seconds > 30 || seconds < 2)
+            {
+                throw new Exception("Seconds must be less than 30 and greater than 2");
+            }
+            Context.Server.Antispam.Antispam.NoSpamTimeout = TimeSpan.FromSeconds(seconds);
+            Context.Server.Save();
+            await ReplyAsync($"if more than {Context.Server.Antispam.Antispam.NoSpamCount} messages are sent within {seconds} seconds, they will be counted as spam");
+        }
+
         [Command("NoInvite")]
         [Summary("NoInvite")]
         [Remarks("Disable the posting of discord invite links in the server")]
@@ -144,60 +167,60 @@ namespace Lithium.Modules.ServerOwner
                 {
                     Context.Server.Antispam.IgnoreRoles.Remove(ignore);
                     await ReplyAsync("Success, Role has been removed form the ignore list");
+                    Context.Server.Save();
+                    return;
                 }
-                else
-                {
-                    foreach (var s in intselections)
-                        if (int.TryParse(s, out var sint))
-                        {
-                            if (sint < 1 || sint > 6)
-                            {
-                                await ReplyAsync($"Invalid Input {s}\n" +
-                                                 "only 1-6 are accepted.");
-                                return;
-                            }
 
-                            switch (sint)
-                            {
-                                case 1:
-                                    ignore.AntiSpam = true;
-                                    break;
-                                case 2:
-                                    ignore.Blacklist = true;
-                                    break;
-                                case 3:
-                                    ignore.Mention = true;
-                                    break;
-                                case 4:
-                                    ignore.Advertising = true;
-                                    break;
-                                case 5:
-                                    ignore.Privacy = true;
-                                    break;
-                                case 6:
-                                    ignore.Toxicity = true;
-                                    break;
-                            }
-                        }
-                        else
+                foreach (var s in intselections)
+                    if (int.TryParse(s, out var sint))
+                    {
+                        if (sint < 1 || sint > 6)
                         {
-                            await ReplyAsync($"Invalid Input {s}");
+                            await ReplyAsync($"Invalid Input {s}\n" +
+                                             "only 1-6 are accepted.");
                             return;
                         }
 
-                    var embed = new EmbedBuilder
+                        switch (sint)
+                        {
+                            case 1:
+                                ignore.AntiSpam = true;
+                                break;
+                            case 2:
+                                ignore.Blacklist = true;
+                                break;
+                            case 3:
+                                ignore.Mention = true;
+                                break;
+                            case 4:
+                                ignore.Advertising = true;
+                                break;
+                            case 5:
+                                ignore.Privacy = true;
+                                break;
+                            case 6:
+                                ignore.Toxicity = true;
+                                break;
+                        }
+                    }
+                    else
                     {
-                        Description = $"{role.Mention}\n" +
-                                      "__Ignore Antispam Detections__\n" +
-                                      $"Bypass Antispam: {ignore.AntiSpam}\n" +
-                                      $"Bypass Blacklist: {ignore.Blacklist}\n" +
-                                      $"Bypass Mention Everyone and 5+ Role Mentions: {ignore.Mention}\n" +
-                                      $"Bypass Invite Link Removal: {ignore.Advertising}\n" +
-                                      $"Bypass IP Removal: {ignore.Privacy}\n" +
-                                      $"Bypass Toxicity Check: {ignore.Toxicity}"
-                    };
-                    await ReplyAsync("", false, embed.Build());
-                }
+                        await ReplyAsync($"Invalid Input {s}");
+                        return;
+                    }
+
+                var embed = new EmbedBuilder
+                {
+                    Description = $"{role.Mention}\n" +
+                                  "__Ignore Antispam Detections__\n" +
+                                  $"Bypass Antispam: {ignore.AntiSpam}\n" +
+                                  $"Bypass Blacklist: {ignore.Blacklist}\n" +
+                                  $"Bypass Mention Everyone and 5+ Role Mentions: {ignore.Mention}\n" +
+                                  $"Bypass Invite Link Removal: {ignore.Advertising}\n" +
+                                  $"Bypass IP Removal: {ignore.Privacy}\n" +
+                                  $"Bypass Toxicity Check: {ignore.Toxicity}"
+                };
+                await ReplyAsync("", false, embed.Build());
 
                 if (addrole) Context.Server.Antispam.IgnoreRoles.Add(ignore);
                 Context.Server.Save();
@@ -230,6 +253,19 @@ namespace Lithium.Modules.ServerOwner
                     $"`{Config.Load().DefaultPrefix}ignore 1,2,3 @role` - this allows the role to spam, use blacklisted words and bypass mention filtering without being removed\n" +
                     $"`{Config.Load().DefaultPrefix}ignore 0 @role` - resets the ignore config and will add all limits back to the role"
             }.Build());
+        }
+
+        [Command("ignorelist")]
+        [Summary("ignorelist")]
+        [Remarks("list ignore-roles and their setup")]
+        public async Task IgnoreList()
+        {
+            var list = Context.Server.Antispam.IgnoreRoles.Select(x => $"{Context.Socket.Guild.GetRole(x.RoleID)?.Mention ?? "N/A"} Invites: {x.Advertising} AntiSpam: {x.AntiSpam} Blacklist: {x.Blacklist} Mention: {x.Mention} IP: {x.Privacy} Toxicity: {x.Toxicity}");
+            await ReplyAsync(new EmbedBuilder
+            {
+                Description = string.Join("\n", list)
+            });
+            
         }
 
         [Command("WarnSpammers")]

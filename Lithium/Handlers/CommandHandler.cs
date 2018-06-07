@@ -173,7 +173,7 @@ namespace Lithium.Handlers
                         var msgs = user.Messages.Where(x => x.LastMessageDate > DateTime.UtcNow - TimeSpan.FromSeconds(10)).ToList();
                         //Here we detect spam based on wether or not a user is sending the same message repeatedly
                         //Or wether they have sent a message more than 3 times in the last 5 seconds
-                        if (msgs.GroupBy(n => n.LastMessage.ToLower()).Any(c => c.Count() > 1) || msgs.Count(x => x.LastMessageDate > DateTime.UtcNow - TimeSpan.FromSeconds(5)) > 3)
+                        if (msgs.GroupBy(n => n.LastMessage.ToLower()).Any(c => c.Count() > 1) || msgs.Count(x => x.LastMessageDate > DateTime.UtcNow - context.Server.Antispam.Antispam.NoSpamTimeout) > context.Server.Antispam.Antispam.NoSpamCount)
                         {
                             detected = true;
                         }
@@ -181,10 +181,10 @@ namespace Lithium.Handlers
 
                     if (user.Messages.Count > 10)
                     {
-                        //Filter out messages so that we only keep a log of the most recent ones within the last 10 seconds.
+                        //Filter out messages so that we only keep a log of the most recent ones within the last 30 seconds.
                         var msgs = user.Messages.OrderBy(x => x.LastMessageDate).ToList();
                         msgs.RemoveRange(0, 1);
-                        msgs = msgs.Where(x => x.LastMessageDate > DateTime.UtcNow - TimeSpan.FromSeconds(10)).ToList();
+                        msgs = msgs.Where(x => x.LastMessageDate <= DateTime.UtcNow - TimeSpan.FromSeconds(30)).ToList();
                         user.Messages = msgs;
                     }
 
@@ -204,7 +204,7 @@ namespace Lithium.Handlers
                                         return true;
                                     }
 
-                                    delay._delay = DateTime.UtcNow.AddSeconds(5);
+                                    delay._delay = DateTime.UtcNow.AddSeconds(10);
                                     var emb = new EmbedBuilder
                                     {
                                         Description = $"{context.User} - No Spamming!!"
@@ -220,7 +220,7 @@ namespace Lithium.Handlers
                                 {
                                     AntiSpamMsgDelays.Add(new Delays
                                     {
-                                        _delay = DateTime.UtcNow.AddSeconds(5),
+                                        _delay = DateTime.UtcNow.AddSeconds(10),
                                         GuildID = guild.GuildID
                                     });
                                 }

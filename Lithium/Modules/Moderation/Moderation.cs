@@ -447,7 +447,7 @@ namespace Lithium.Modules.Moderation
             }
         }
 
-        [Command("pruneUser")]
+        [Command("prune")]
         [Summary("Mod pruneUser <user>")]
         [Remarks("removes messages from a user in the last 100 messages")]
         public async Task Prune(IUser user)
@@ -509,7 +509,7 @@ namespace Lithium.Modules.Moderation
                 .WithCurrentTimestamp(), Context.Guild);
         }
 
-        [Command("pruneRole")]
+        [Command("prune")]
         [Summary("Mod pruneRole <@role>")]
         [Remarks("removes messages from a role in the last 100 messages")]
         public async Task Prune(IRole role)

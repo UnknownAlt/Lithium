@@ -178,7 +178,7 @@ namespace Lithium.Models
                                 ModerationSetup.Mutes.MutedUsers.Add(new Moderation.muted.muteduser
                                 {
                                     expires = ModerationSetup.Settings.MutebanExpiry != TimeSpan.Zero,
-                                    expiry = DateTime.UtcNow + ModerationSetup.Settings.WarnExpiryTime,
+                                    expiry = DateTime.UtcNow + ModerationSetup.Settings.MutebanExpiry,
                                     userid = User.Id
                                 });
                                 embedmsg.Title = $"{User.Username} has been Auto Muted";
@@ -465,6 +465,9 @@ namespace Lithium.Models
 
                     //Toggle wether or not to use antispam on bot commands
                     public bool IgnoreCommandMessages { get; set; } = true;
+
+                    public int NoSpamCount { get; set; } = 5;
+                    public TimeSpan NoSpamTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
                     public bool antiraid { get; set; } = false;
                     public bool WarnOnDetection { get; set; } = false;
