@@ -8,6 +8,7 @@ using Discord.Commands;
 using Lithium.Discord.Contexts;
 using Lithium.Discord.Preconditions;
 using Lithium.Models;
+using Sparrow.Platform.Posix.macOS;
 
 namespace Lithium.Modules.Administration
 {
@@ -333,6 +334,48 @@ namespace Lithium.Modules.Administration
             }
 
             await ReplyAsync("", false, embed.Build());
+        }
+
+        [Command("Wipe")]
+        [Summary("Admin Wipe")]
+        [Remarks("Completely wipes all messages from a channel")]
+        public async Task Wipe([Remainder]string confirm = null)
+        {
+            if (confirm != "wjb3c2v3b")
+            {
+                throw new Exception("Please reply with the confirmation code `wjb3c2v3b` to proceed with this command\n" +
+                                    "It will wipe all messages from this channel. This is not recoverable");
+            }
+            var channel = Context.Channel as ITextChannel;
+            var permissions = channel.PermissionOverwrites;
+            var nsfw = channel.IsNsfw;
+            var topic = channel.Topic;
+            var category = channel.CategoryId;
+            var name = channel.Name;
+            var position = channel.Position;
+            await (Context.Channel as ITextChannel).DeleteAsync();
+            var newchannel = await Context.Guild.CreateTextChannelAsync(name);
+            await newchannel.ModifyAsync(x =>
+            {
+                x.CategoryId = category;
+                x.IsNsfw = nsfw;
+                x.Topic = topic;
+                x.Position = position;
+            });
+
+            foreach (var perm in permissions)
+            {
+                if (perm.TargetType == PermissionTarget.Role)
+                {
+                    await newchannel.AddPermissionOverwriteAsync(Context.Guild.GetRole(perm.TargetId), perm.Permissions);
+                }
+                else
+                {
+                    await newchannel.AddPermissionOverwriteAsync(await Context.Guild.GetUserAsync(perm.TargetId), perm.Permissions);
+                }
+            }
+
+            await newchannel.SendMessageAsync("Channel Wiped");
         }
 
         [Command("ServerSetup")]

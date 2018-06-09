@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -42,12 +43,14 @@ namespace Lithium.Handlers
         /// <param name="client"></param>
         public static async void DatabaseInitialise(DiscordSocketClient client)
         {
+            /*
             if (Process.GetProcesses().FirstOrDefault(x => x.ProcessName == "Raven.Server") == null)
             {
                 Logger.LogMessage("RavenDB: Server isn't running. Please make sure RavenDB is running.\nExiting ...", LogSeverity.Critical);
                 await Task.Delay(5000);
                 Environment.Exit(Environment.ExitCode);
             }
+            */
 
             var dbinitialised = false;
             if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).All(x => x != DBName))
@@ -58,7 +61,7 @@ namespace Lithium.Handlers
             }
 
 
-            Logger.LogMessage("Setting up backup operation...");
+            Logger.LogMessage("RavenDB: Setting up backup operation...");
             var newbackup = new PeriodicBackupConfiguration
             {
                 Name = "Backup",
@@ -69,16 +72,24 @@ namespace Lithium.Handlers
             };
             var Record = Store.Maintenance.ForDatabase(DBName).Server.Send(new GetDatabaseRecordOperation(DBName));
             var backupop = Record.PeriodicBackups.FirstOrDefault(x => x.Name == "Backup");
-            if (backupop == null)
+            try
             {
-                await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(newbackup)).ConfigureAwait(false);
+                if (backupop == null)
+                {
+                    await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(newbackup)).ConfigureAwait(false);
+                }
+                else
+                {
+                    //In the case that we already have a backup operation setup, ensure that we update the backup location accordingly
+                    backupop.LocalSettings = new LocalSettings {FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/")};
+                    await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(backupop));
+                }
             }
-            else
+            catch
             {
-                //In the case that we already have a backup operation setup, ensure that we update the backup location accordingly
-                backupop.LocalSettings = new LocalSettings {FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/")};
-                await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(backupop));
+                Logger.LogMessage("RavenDB: Error setting up backup operation, they may not be saved\n", LogSeverity.Warning);
             }
+
 
             if (dbinitialised) return;
 
