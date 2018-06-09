@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -135,14 +136,12 @@ namespace Lithium.Modules.Tickets
         {
             if (message == null)
             {
-                await ReplyAsync("To create a ticket, simply use this command and provide a message for server moderations or admins to solve");
-                return;
+                throw new Exception("To create a ticket, simply use this command and provide a message for server moderations or admins to solve");
             }
 
             if (!TicketAvailable.CanCreate(Context.Server.Tickets.Settings, Context.User as IGuildUser))
             {
-                await ReplyAsync("You are not permitted to create a ticket here.");
-                return;
+                throw new Exception("You are not permitted to create a ticket here.");
             }
 
             var ticket = new GuildModel.Guild.ticketing.ticket
@@ -153,16 +152,33 @@ namespace Lithium.Modules.Tickets
                 solved = false,
                 InitUser = Context.User.Id
             };
+
+
             Context.Server.Tickets.tickets.Add(ticket);
             Context.Server.Save();
             var ticketemb = new EmbedBuilder
             {
                 Title = $"New Ticket by {Context.User.Username}",
-                Description = $"Message:\n" +
-                              $"{ticket.message}\n\n" +
-                              $"Creator: {Context.User.Mention} `[{Context.User.Id}]`\n" +
-                              $"ID: `{ticket.id}`\n" +
-                              $"Users may Upvote this by using the `Vote Up <ID>` command or downvote using the `Vote Down <ID>` command"
+                Fields = new List<EmbedFieldBuilder>
+                {
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Message",
+                        Value = ticket.message
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Info",
+                        Value = $"Creator: {Context.User.Mention}\n" +
+                                $"Ticket ID: `{ticket.id}`\n" +
+                                $"Votes: ^ [{ticket.Up.Count}] v [{ticket.Down.Count}]"
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Ticket Help",
+                        Value = $"Users may Upvote this by using the `Vote Up <ID>` command or downvote using the `Vote Down <ID>` command"
+                    }
+                }
             };
 
             await SendEmbedAsync(ticketemb);
@@ -176,21 +192,18 @@ namespace Lithium.Modules.Tickets
         {
             if (id == -1)
             {
-                await ReplyAsync("Please select a ticket to upvote. You can see a list of public tickets using the `TicketList` Command");
-                return;
+                throw new Exception("Please select a ticket to upvote. You can see a list of public tickets using the `TicketList` Command");
             }
 
             var targetticket = Context.Server.Tickets.tickets.FirstOrDefault(x => x.id == id);
             if (targetticket == null)
             {
-                await ReplyAsync("There is no ticket with that ID.");
-                return;
+                throw new Exception("There is no ticket with that ID.");
             }
 
             if (targetticket.solved)
             {
-                await ReplyAsync("You cannot vote on completed tickets!");
-                return;
+                throw new Exception("You cannot vote on completed tickets!");
             }
 
             if (targetticket.Down.Contains(Context.User.Id))
@@ -221,6 +234,22 @@ namespace Lithium.Modules.Tickets
                                     $"Message: {targetticket.message}\n\n" +
                                     $"^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]\n" +
                                     $"ID: {targetticket.id}";
+
+            ticketemb.Fields = new List<EmbedFieldBuilder>
+            {
+                new EmbedFieldBuilder
+                {
+                    Name = "Message",
+                    Value = targetticket.message
+                },
+                new EmbedFieldBuilder
+                {
+                    Name = "Info",
+                    Value = $"Creator: {Context.Socket.Guild.GetUser(targetticket.InitUser)?.Username ?? $"Missing User [{targetticket.InitUser}]"}\n" +
+                            $"Ticket ID: `{targetticket.id}`\n" +
+                            $"Votes: ^ [{targetticket.Up.Count}] v [{targetticket.Down.Count}]"
+                }
+            };
 
             await SendEmbedAsync(ticketemb);
             Context.Server.Save();

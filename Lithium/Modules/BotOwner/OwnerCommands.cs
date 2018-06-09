@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.WebSocket;
 using DiscordBotsList.Api;
 using Lithium.Discord.Contexts;
 using Lithium.Models;
@@ -15,6 +16,43 @@ namespace Lithium.Modules.BotOwner
     [RequireOwner]
     public class OwnerCommands : Base
     {
+        [Command("GetInvite")]
+        [Summary("GetInvite <ID>")]
+        [Remarks("Generate an invite for the specified server")]
+        public async Task GetInvite(ulong ID)
+        {
+            if (Context.Socket.Client.GetGuild(ID) is SocketGuild Guild)
+            {
+                string inviteURL = null;
+                foreach (var channel in Guild.TextChannels)
+                {
+                    try
+                    {
+                        var inv = await channel.CreateInviteAsync();
+                        inviteURL = inv.Url;
+                        break;
+                    }
+                    catch
+                    {
+                        //
+                    }
+                    
+                }
+
+                if (inviteURL == null)
+                {
+                    var invites = await Guild.GetInvitesAsync();
+                    inviteURL = invites.FirstOrDefault()?.Url;
+                }
+
+                await ReplyAsync(inviteURL);
+            }
+            else
+            {
+                throw new Exception("Unknown Guild ID");
+            }
+        }
+
         [Command("UpdateServers")]
         [Summary("UpdateServers")]
         [Remarks("Update the Bot's Server Count on DiscordBots.org")]
