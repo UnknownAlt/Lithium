@@ -20,7 +20,7 @@ namespace Lithium.Modules.ServerOwner
         {
             Context.Server.Antispam.Antispam.NoSpam = !Context.Server.Antispam.Antispam.NoSpam;
             Context.Server.Save();
-            await ReplyAsync($"NoSpam: {Context.Server.Antispam.Advertising.Invite}");
+            await ReplyAsync($"NoSpam: {Context.Server.Antispam.Antispam.NoSpam}");
         }
 
         [Command("NoSpamCount")]

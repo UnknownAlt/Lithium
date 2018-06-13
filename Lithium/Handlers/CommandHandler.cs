@@ -101,7 +101,7 @@ namespace Lithium.Handlers
                 {
                     try
                     {
-                        await defaultchannel.SendMessageAsync("", false, embed.Build());
+                        await defaultchannel.SendMessageAsync(string.Empty, false, embed.Build());
                     }
                     catch (Exception e)
                     {
@@ -209,7 +209,7 @@ namespace Lithium.Handlers
                                     {
                                         Description = $"{context.User} - No Spamming!!"
                                     };
-                                    await context.Channel.SendMessageAsync("", false, emb.Build());
+                                    await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
                                     if (guild.Antispam.Antispam.WarnOnDetection)
                                     {
                                         await guild.AddWarn("AutoMod - AntiSpam", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
@@ -238,8 +238,8 @@ namespace Lithium.Handlers
         public async Task<bool> AntiInvite(LithiumContext context, List<GuildModel.Guild.antispams.IgnoreRole> exemptcheck)
         {
             var guild = context.Server;
-            var BypassInvite = exemptcheck.Any(x => x.Advertising);
-            if (!BypassInvite)
+            var bypass_invite = exemptcheck.Any(x => x.Advertising);
+            if (!bypass_invite)
             {
                 if (Regex.Match(context.Message.Content, @"(http|https)?(:)?(\/\/)?(discordapp|discord).(gg|io|me|com)\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?").Success)
                 {
@@ -254,9 +254,8 @@ namespace Lithium.Handlers
                         emb.Description = $"{context.User} - This server does not allow you to send invite links in chat";
                     }
 
-
-                    //    Description = guild.Antispam.Advertising.NoInviteMessage ?? $"{context.User?.Mention} - no sending invite links... the admins might get angry"
-                    await context.Channel.SendMessageAsync("", false, emb.Build());
+                    // Description = guild.Antispam.Advertising.NoInviteMessage ?? $"{context.User?.Mention} - no sending invite links... the admins might get angry"
+                    await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
                     if (guild.Antispam.Advertising.WarnOnDetection)
                     {
                         await guild.AddWarn("AutoMod - Anti Advertising", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
@@ -273,9 +272,9 @@ namespace Lithium.Handlers
         public async Task<bool> AntiMention(LithiumContext context, List<GuildModel.Guild.antispams.IgnoreRole> exemptcheck)
         {
             var guild = context.Server;
-            var BypassMention = exemptcheck.Any(x => x.Mention);
+            var bypass_mention = exemptcheck.Any(x => x.Mention);
 
-            if (!BypassMention)
+            if (!bypass_mention)
             {
                 if (guild.Antispam.Mention.RemoveMassMention)
                 {
@@ -286,7 +285,7 @@ namespace Lithium.Handlers
                         {
                             Description = $"{context.User} - This server does not allow you to mention 5+ roles or uses at once"
                         };
-                        await context.Channel.SendMessageAsync("", false, emb.Build());
+                        await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
                         if (guild.Antispam.Mention.WarnOnDetection)
                         {
                             await guild.AddWarn("AutoMod - Mass Mention", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
@@ -305,14 +304,14 @@ namespace Lithium.Handlers
                         var emb = new EmbedBuilder();
                         if (guild.Antispam.Mention.MentionAllMessage != null)
                         {
-                            emb.Description = guild.Antispam.Mention.MentionAllMessage;
+                            emb.Description = Formatting.DoReplacements(guild.Antispam.Mention.MentionAllMessage, context);
                         }
                         else
                         {
                             emb.Title = $"{context.User} - This server has disabled the ability for you to mention @everyone and @here";
                         }
 
-                        await context.Channel.SendMessageAsync("", false, emb.Build());
+                        await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
                         if (guild.Antispam.Mention.WarnOnDetection)
                         {
                             await guild.AddWarn("AutoMod - Mention All", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
@@ -320,10 +319,6 @@ namespace Lithium.Handlers
                         }
 
                         return true;
-                        //if
-                        // 1. The server Has Mention Deletions turned on
-                        // 2. The user is not an admin
-                        // 3. The user does not have one of the mention excempt roles
                     }
                 }
             }
@@ -345,7 +340,7 @@ namespace Lithium.Handlers
                     {
                         Title = $"{context.User} - This server does not allow you to post IP addresses"
                     };
-                    await context.Channel.SendMessageAsync("", false, emb.Build());
+                    await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
                     if (guild.Antispam.Privacy.WarnOnDetection)
                     {
                         await guild.AddWarn("AutoMod - Anti IP", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
@@ -425,10 +420,10 @@ namespace Lithium.Handlers
                                 await context.Message?.DeleteAsync();
                                 var emb = new EmbedBuilder
                                 {
-                                    Title = "Toxicity Threshhold Breached",
+                                    Title = "Toxicity Threshold Breached",
                                     Description = $"{context.User.Mention}"
                                 };
-                                await context.Channel.SendMessageAsync("", false, emb.Build());
+                                await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
                                 if (guild.Antispam.Toxicity.WarnOnDetection)
                                 {
                                     await guild.AddWarn($"AutoMod - Toxicity ({res.attributeScores.TOXICITY.summaryScore.value * 100})", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
@@ -451,7 +446,11 @@ namespace Lithium.Handlers
 
         public bool CheckHidden(LithiumContext context)
         {
-            if (context.Guild == null) return false;
+            if (context.Guild == null)
+            {
+                return false;
+            }
+
             var guild = context.Server;
             if (guild.Settings.DisabledParts.BlacklistedCommands.Any() || guild.Settings.DisabledParts.BlacklistedModules.Any())
             {
@@ -482,53 +481,84 @@ namespace Lithium.Handlers
 
         public async Task<bool> RunSpamChecks(LithiumContext context)
         {
-            if (context.Guild == null) return false;
-            if (context.Channel is IDMChannel) return false;
-            if (context.Server == null) return false;
+            if (context.Guild == null)
+            {
+                return false;
+            }
+
+            if (context.Channel is IDMChannel)
+            {
+                return false;
+            }
+
+            if (context.Server == null)
+            {
+                return false;
+            }
+
             try
             {
                 var guild = context.Server;
 
-                var exemptcheck = new List<GuildModel.Guild.antispams.IgnoreRole>();
+                var exempt_check = new List<GuildModel.Guild.antispams.IgnoreRole>();
                 if (guild.Antispam.IgnoreRoles.Any())
                 {
-                    exemptcheck = guild.Antispam.IgnoreRoles.Where(x => ((IGuildUser) context.User).RoleIds.Contains(x.RoleID)).ToList();
+                    exempt_check = guild.Antispam.IgnoreRoles.Where(x => ((IGuildUser) context.User).RoleIds.Contains(x.RoleID)).ToList();
                 }
 
                 if (guild.Antispam.Antispam.NoSpam)
                 {
-                    if (await AntiSpam(context, exemptcheck)) return true;
+                    if (await AntiSpam(context, exempt_check))
+                    {
+                        return true;
+                    }
                 }
 
                 if (guild.Antispam.Advertising.Invite)
                 {
-                    if (await AntiInvite(context, exemptcheck)) return true;
+                    if (await AntiInvite(context, exempt_check))
+                    {
+                        return true;
+                    }
                 }
 
                 if (guild.Antispam.Mention.RemoveMassMention || guild.Antispam.Mention.MentionAll)
                 {
-                    if (await AntiMention(context, exemptcheck)) return true;
+                    if (await AntiMention(context, exempt_check))
+                    {
+                        return true;
+                    }
                 }
 
 
                 if (guild.Antispam.Privacy.RemoveIPs)
                 {
-                    if (await AntiIp(context, exemptcheck)) return true;
+                    if (await AntiIp(context, exempt_check))
+                    {
+                        return true;
+                    }
                 }
 
 
                 if (guild.Antispam.Blacklist.BlacklistWordSet.Any() || guild.Antispam.Toxicity.UsePerspective)
                 {
-                    CommandInfo CMDCheck = null;
+                    CommandInfo check = null;
                     var argPos = 0;
                     var cmdSearch = _commands.Search(context, argPos);
                     if (cmdSearch.IsSuccess)
                     {
-                        CMDCheck = cmdSearch.Commands.FirstOrDefault().Command;
+                        check = cmdSearch.Commands.FirstOrDefault().Command;
                     }
 
-                    if (await CheckBlacklist(context, exemptcheck, CMDCheck)) return true;
-                    if (await CheckToxicity(context, exemptcheck, CMDCheck)) return true;
+                    if (await CheckBlacklist(context, exempt_check, check))
+                    {
+                        return true;
+                    }
+
+                    if (await CheckToxicity(context, exempt_check, check))
+                    {
+                        return true;
+                    }
                 }
             }
             catch (Exception e)
@@ -574,7 +604,7 @@ namespace Lithium.Handlers
                         Description = $"Command: {context.Message}\n" +
                                       $"Error: {result.ErrorReason}"
                     };
-                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                    await context.Channel.SendMessageAsync(string.Empty, false, embed.Build());
                     Logger.LogMessage($"{message.Content} || {message.Author}", LogSeverity.Error);
                 }
                 else

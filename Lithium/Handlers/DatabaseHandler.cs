@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using Discord;
@@ -34,13 +35,27 @@ namespace Lithium.Handlers
         /// </summary>
         public static IDocumentStore Store { get; set; }
 
+        public static bool Ping(string url)
+        {
+            try
+            {
+                WebClient webClient = new WebClient();
+                byte[] result = webClient.DownloadData(url);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         ///     Check whether RavenDB is running
         ///     Check whether or not a database already exists with the DBName
         ///     Set up auto-backup of the database
         ///     Ensure that all guilds shared with the bot have been added to the database
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="client">The discord client</param>
         public static async void DatabaseInitialise(DiscordSocketClient client)
         {
             /*
@@ -51,6 +66,15 @@ namespace Lithium.Handlers
                 Environment.Exit(Environment.ExitCode);
             }
             */
+
+
+            if (!Ping(Config.Load().ServerURL))
+            {
+                Logger.LogMessage("RavenDB: Server isn't running. Please make sure RavenDB is running.\nExiting ...", LogSeverity.Critical);
+                await Task.Delay(5000);
+                Environment.Exit(Environment.ExitCode);
+            }
+
 
             var dbinitialised = false;
             if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).All(x => x != DBName))
