@@ -8,7 +8,7 @@
     using Lithium.Discord.Context;
     using Lithium.Discord.Preconditions;
 
-    [CustomPermissions(true, true)]
+    [GuildOwner]
     public class ServerOwner : Base
     {
         [Command("AddMod")]
