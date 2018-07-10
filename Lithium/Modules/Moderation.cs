@@ -21,6 +21,7 @@
         [Remarks("UnMute the specified user")]
         public Task UnMuteAsync(SocketGuildUser user)
         {
+            // TODO Response for unmute
             var mutes = Context.Server.ModerationSetup.ModActions.Where(m => m.Action == GuildModel.Moderation.ModEvent.EventType.mute && !m.ExpiredOrRemoved);
             foreach (var mute in mutes)
             {
@@ -108,6 +109,9 @@
             return flatten.Where(x => x.Timestamp.UtcDateTime + TimeSpan.FromDays(14) > DateTime.UtcNow).ToList().Result;
         }
 
+        // TODO Kicks warns bans list commands
+
+        // TODO Logging for prune commands
         [Command("prune")]
         [Alias("purge", "clear")]
         [Remarks("removes specified amount of messages")]

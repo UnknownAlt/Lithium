@@ -11,6 +11,7 @@
     [GuildOwner]
     public class ServerOwner : Base
     {
+        // TODO Make these two commands proper
         [Command("SetModLog")]
         public async Task SetModLog()
         {
