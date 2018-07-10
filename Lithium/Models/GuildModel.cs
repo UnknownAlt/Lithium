@@ -3,6 +3,8 @@
     using System;
     using System.Collections.Generic;
 
+    using global::Discord;
+
     using Lithium.Handlers;
 
     /// <summary>
@@ -32,6 +34,42 @@
                 session.Store(this, ID.ToString());
                 session.SaveChanges();
             }
+        }
+
+        public void ModAction(IGuildUser user, IGuildUser moderator, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
+        {
+            if (modAction == Moderation.ModEvent.EventType.warn)
+            {
+                // TODO Warn in chat then auto-delete if applicable
+            }
+            else if (modAction == Moderation.ModEvent.EventType.Kick)
+            {
+                // TODO Kick from server and log the event
+            }
+            else if (modAction == Moderation.ModEvent.EventType.mute)
+            {
+                // TODO Check all server channels for mute perms, then set if applicable and give user role
+            }
+            else if (modAction == Moderation.ModEvent.EventType.ban)
+            {
+                // TODO Ban user from server, log in mod channel and give small message in chat
+            }
+
+            var modEvent = new Moderation.ModEvent
+                               {
+                                   Action = modAction,
+                                   ExpiryDate = DateTime.UtcNow + expires,
+                                   ModName = moderator.Username,
+                                   ModId = moderator.Id,
+                                   UserId = user.Id,
+                                   UserName = user.Username,
+                                   AutoModReason = autoModReason,
+                                   ProvidedReason = reason,
+                                   ReasonTrigger = trigger
+                               };
+            ModerationSetup.ModActions.Add(user.Id, modEvent);
+
+            Save();
         }
 
         public class EventConfig
@@ -145,7 +183,7 @@
 
                 public EventType Action { get; set; }
 
-                public Trigger ReasonTrigger { get; set; } = null;
+                public Trigger ReasonTrigger { get; set; }
 
                 public ulong UserId { get; set; }
 
