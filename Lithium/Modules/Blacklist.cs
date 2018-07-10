@@ -14,9 +14,10 @@
     using Lithium.Models;
 
     [CustomPermissions(true)]
+    [Group("Blacklist")]
     public class Blacklist : Base
     {
-        [Command("Blacklist")]
+        [Command]
         [Remarks("displays the blacklist")]
         public Task BAsync()
         {
@@ -57,7 +58,7 @@
                                               });
         }
 
-        [Command("blacklist FormatHelp")]
+        [Command("FormatHelp")]
         [Remarks("help with adding multiple phrases or words to the blacklist at once")]
         public Task FormatHelpAsync()
         {
@@ -80,7 +81,7 @@
                                   }.Build());
         }
 
-        [Command("blacklist add")]
+        [Command("add")]
         [Remarks("adds a word to the blacklist, leave response blank to use the default message, use the same response for different blacklisted words to be grouped. Also separate sentences like so: hi_there_person for the keyword")]
         public async Task AbAsync(string keyword, [Remainder] string response = null)
         {
@@ -102,7 +103,8 @@
                     blacklistWords = new GuildModel.AntiSpamSetup.BlacklistSettings.BlacklistWords
                     {
                         WordList = keywords,
-                        BlacklistResponse = response
+                        BlacklistResponse = response,
+                        GroupId = Context.Server.AntiSpam.Blacklist.BlacklistWordSet.Count
                     };
                     Context.Server.AntiSpam.Blacklist.BlacklistWordSet.Add(blacklistWords);
                     await Context.Message.DeleteAsync();
@@ -119,7 +121,7 @@
             Context.Server.Save();
         }
 
-        [Command("blacklist del")]
+        [Command("del")]
         [Remarks("removes a word from the blacklist")]
         public async Task DbAsync(string wordToRemove)
         {
@@ -147,7 +149,7 @@
             Context.Server.Save();
         }
 
-        [Command("blacklist clear")]
+        [Command("clear")]
         [Remarks("clears the blacklist")]
         public Task ClearAsync()
         {
@@ -158,7 +160,7 @@
             return ReplyAsync("The blacklist has been cleared.");
         }
 
-        [Command("blacklist DefaultMessage")]
+        [Command("DefaultMessage")]
         [Remarks("set the default blacklist message")]
         public Task BlMessageAsync([Remainder] string message = "")
         {
