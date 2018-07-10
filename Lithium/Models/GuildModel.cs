@@ -2,8 +2,10 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using global::Discord;
+    using global::Discord.WebSocket;
 
     using Lithium.Handlers;
 
@@ -36,40 +38,148 @@
             }
         }
 
-        public void ModAction(IGuildUser user, IGuildUser moderator, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
+        public async Task ModAction(SocketGuildUser user, SocketGuildUser moderator, SocketTextChannel channel, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
         {
+            if (expires == null && autoModReason != Moderation.ModEvent.AutoReason.none)
+            {
+                if (ModerationSetup.Settings.WarnExpiryTime != null && modAction == Moderation.ModEvent.EventType.warn)
+                {
+                    expires = ModerationSetup.Settings.WarnExpiryTime;
+                }
+                else if (modAction == Moderation.ModEvent.EventType.ban && ModerationSetup.Settings.AutoBanExpiry != null)
+                {
+                    expires = ModerationSetup.Settings.AutoBanExpiry;
+                }
+                else if (modAction == Moderation.ModEvent.EventType.mute && ModerationSetup.Settings.AutoMuteExpiry != null)
+                {
+                    expires = ModerationSetup.Settings.AutoMuteExpiry;
+                }
+            }
+
+            var modEvent = new Moderation.ModEvent
+            {
+                Action = modAction,
+                ExpiryDate = DateTime.UtcNow + expires,
+                ModName = moderator.Username,
+                ModId = moderator.Id,
+                UserId = user.Id,
+                UserName = user.Username,
+                AutoModReason = autoModReason,
+                ProvidedReason = reason,
+                ReasonTrigger = trigger
+            };
+            ModerationSetup.ModActions.Add(user.Id, modEvent);
+            Save();
+
+            var embed = new EmbedBuilder
+            {
+                Fields = new List<EmbedFieldBuilder>
+                                             {
+                                                 new EmbedFieldBuilder
+                                                     {
+                                                         Name =
+                                                             $"{user} was {modAction}ed",
+                                                         Value =
+                                                             $"Mod: {moderator.Mention}\n"
+                                                             + $"Auto Reason: {autoModReason}\n"
+                                                             + $"Reason: {reason}\n"
+                                                             + $"Expires: {(modEvent.ExpiryDate.HasValue ? $"{modEvent.ExpiryDate.Value.ToLongDateString()} {modEvent.ExpiryDate.Value.ToLongTimeString()}" : "Never")}"
+                                                     }
+                                             }
+            };
+
+            var request = new RequestOptions { AuditLogReason = $"Mod: {moderator.Mention}\n" + $"Auto Reason: {autoModReason}\n" + $"Action: {modAction}\n" + $"Trigger: {trigger?.Message}\n" + $"Reason: {reason}\n" };
+            bool success = true;
+
             if (modAction == Moderation.ModEvent.EventType.warn)
             {
                 // TODO Warn in chat then auto-delete if applicable
+                embed.Color = Color.DarkTeal;
             }
             else if (modAction == Moderation.ModEvent.EventType.Kick)
             {
                 // TODO Kick from server and log the event
+                embed.Color = Color.DarkRed;
+                try
+                {
+                    await user.KickAsync(reason, request);
+                }
+                catch (Exception e)
+                {
+                    LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
+                    await channel.SendMessageAsync(e.ToString());
+                    success = false;
+                }
             }
             else if (modAction == Moderation.ModEvent.EventType.mute)
             {
                 // TODO Check all server channels for mute perms, then set if applicable and give user role
+                embed.Color = Color.DarkPurple;
+                if (user.Guild.GetRole(ModerationSetup.Settings.MutedRoleId) is SocketRole muteRole)
+                {
+                    foreach (var guildChannel in user.Guild.Channels)
+                    {
+                        try
+                        {
+                            await guildChannel.AddPermissionOverwriteAsync(muteRole, new OverwritePermissions(sendMessages: PermValue.Deny, addReactions: PermValue.Deny, attachFiles: PermValue.Deny, connect: PermValue.Deny, speak: PermValue.Deny, mentionEveryone: PermValue.Deny));
+                        }
+                        catch (Exception e)
+                        {
+                            LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
+                        }
+                    }
+
+                    try
+                    {
+                        await user.AddRoleAsync(muteRole, request);
+                    }
+                    catch (Exception e)
+                    {
+                        LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
+                        await channel.SendMessageAsync(e.ToString());
+                        success = false;
+                    }
+                }
+
             }
             else if (modAction == Moderation.ModEvent.EventType.ban)
             {
                 // TODO Ban user from server, log in mod channel and give small message in chat
+                embed.Color = Color.DarkOrange;
+
+                try
+                {
+                    await user.Guild.AddBanAsync(user, ModerationSetup.Settings.PruneDays, reason, request);
+                }
+                catch (Exception e)
+                {
+                    LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
+                    await channel.SendMessageAsync(e.ToString());
+                    success = false;
+                }
             }
 
-            var modEvent = new Moderation.ModEvent
-                               {
-                                   Action = modAction,
-                                   ExpiryDate = DateTime.UtcNow + expires,
-                                   ModName = moderator.Username,
-                                   ModId = moderator.Id,
-                                   UserId = user.Id,
-                                   UserName = user.Username,
-                                   AutoModReason = autoModReason,
-                                   ProvidedReason = reason,
-                                   ReasonTrigger = trigger
-                               };
-            ModerationSetup.ModActions.Add(user.Id, modEvent);
+            var m = await channel.SendMessageAsync("", false, embed.Build());
+            if (ModerationSetup.Settings.AutoHideDelay.HasValue)
+            {
+                var deleteAction = Task.Delay(ModerationSetup.Settings.AutoHideDelay.Value)
+                    .ContinueWith(_ => m.DeleteAsync().ConfigureAwait(false));
+            }
 
-            Save();
+            if (user.Guild.GetTextChannel(ModerationSetup.Settings.ModLogChannel) is SocketTextChannel modChannel)
+            {
+                if (trigger != null)
+                {
+                    embed.AddField($"Trigger", $"In {user.Guild.GetTextChannel(trigger.ChannelId)?.Mention}\n**Message:**\n{trigger.Message}");
+                }
+
+                if (!success)
+                {
+                    embed.AddField("FATAL ERROR", "Unable to mod action for user");
+                }
+
+                await modChannel.SendMessageAsync("", false, embed.Build());
+            }
         }
 
         public class EventConfig
@@ -132,6 +242,8 @@
                 public TimeSpan? AutoMuteExpiry { get; set; } = TimeSpan.FromMinutes(30);
 
                 public TimeSpan? AutoBanExpiry { get; set; } = null;
+
+                public int PruneDays { get; set; } = 1;
 
                 public ulong ModLogChannel { get; set; } = 0;
 
@@ -303,7 +415,7 @@
 
                 public int ToxicityThreshold { get; set; } = 90;
             }
-            
+
             public class AntiSpamSettings
             {
                 // remove repetitive messages and messages posted in quick succession
