@@ -17,28 +17,28 @@
         {
             try
             {
-                if (guildModel.ModerationSetup.ModActions.Any(x => x.Value.Action != GuildModel.Moderation.ModEvent.EventType.Kick && x.Value.ExpiredOrRemoved == false))
+                if (guildModel.ModerationSetup.ModActions.Any(x => x.Action != GuildModel.Moderation.ModEvent.EventType.Kick && x.ExpiredOrRemoved == false))
                 {
                     foreach (var action in guildModel.ModerationSetup.ModActions)
                     {
-                        if (action.Value.ExpiryDate == null)
+                        if (action.ExpiryDate == null)
                         {
                             continue;
                         }
 
-                        if (!(action.Value.ExpiryDate > DateTime.UtcNow))
+                        if (!(action.ExpiryDate > DateTime.UtcNow))
                         {
                             continue;
                         }
 
-                        action.Value.ExpiredOrRemoved = true;
+                        action.ExpiredOrRemoved = true;
 
-                        if (!(guild.GetUser(action.Key) is SocketGuildUser user))
+                        if (!(guild.GetUser(action.UserId) is SocketGuildUser user))
                         {
                             continue;
                         }
 
-                        await BanMuteClearAsync(guildModel, guild, action.Value, user);
+                        await BanMuteClearAsync(guildModel, guild, action, user);
                     }
                 }
             }

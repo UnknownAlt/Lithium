@@ -38,7 +38,7 @@
             }
         }
 
-        public async Task ModAction(SocketGuildUser user, SocketGuildUser moderator, SocketTextChannel channel, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
+        public async Task ModAction(SocketGuildUser user, SocketGuildUser moderator, ISocketMessageChannel channel, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
         {
             if (expires == null && autoModReason != Moderation.ModEvent.AutoReason.none)
             {
@@ -68,7 +68,7 @@
                 ProvidedReason = reason,
                 ReasonTrigger = trigger
             };
-            ModerationSetup.ModActions.Add(user.Id, modEvent);
+            ModerationSetup.ModActions.Add(modEvent);
             Save();
 
             var embed = new EmbedBuilder
@@ -113,32 +113,30 @@
             }
             else if (modAction == Moderation.ModEvent.EventType.mute)
             {
-                // TODO Check all server channels for mute perms, then set if applicable and give user role
                 embed.Color = Color.DarkPurple;
-                if (user.Guild.GetRole(ModerationSetup.Settings.MutedRoleId) is SocketRole muteRole)
-                {
-                    foreach (var guildChannel in user.Guild.Channels)
-                    {
-                        try
-                        {
-                            await guildChannel.AddPermissionOverwriteAsync(muteRole, new OverwritePermissions(sendMessages: PermValue.Deny, addReactions: PermValue.Deny, attachFiles: PermValue.Deny, connect: PermValue.Deny, speak: PermValue.Deny, mentionEveryone: PermValue.Deny));
-                        }
-                        catch (Exception e)
-                        {
-                            LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
-                        }
-                    }
+                IRole muteRole = user.Guild.GetRole(ModerationSetup.Settings.MutedRoleId) ?? (IRole)await user.Guild.CreateRoleAsync("Muted", GuildPermissions.None);
 
+                foreach (var guildChannel in user.Guild.Channels)
+                {
                     try
                     {
-                        await user.AddRoleAsync(muteRole, request);
+                        await guildChannel.AddPermissionOverwriteAsync(muteRole, new OverwritePermissions(sendMessages: PermValue.Deny, addReactions: PermValue.Deny, attachFiles: PermValue.Deny, connect: PermValue.Deny, speak: PermValue.Deny, mentionEveryone: PermValue.Deny));
                     }
                     catch (Exception e)
                     {
                         LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
-                        await channel.SendMessageAsync(e.ToString());
-                        success = false;
                     }
+                }
+
+                try
+                {
+                    await user.AddRoleAsync(muteRole, request);
+                }
+                catch (Exception e)
+                {
+                    LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
+                    await channel.SendMessageAsync(e.ToString());
+                    success = false;
                 }
 
             }
@@ -170,7 +168,7 @@
             {
                 if (trigger != null)
                 {
-                    embed.AddField($"Trigger", $"In {user.Guild.GetTextChannel(trigger.ChannelId)?.Mention}\n**Message:**\n{trigger.Message}");
+                    embed.AddField("Trigger", $"In {user.Guild.GetTextChannel(trigger.ChannelId)?.Mention}\n**Message:**\n{trigger.Message}");
                 }
 
                 if (!success)
@@ -220,7 +218,7 @@
 
             public List<ulong> AdminRoles { get; set; } = new List<ulong>();
 
-            public Dictionary<ulong, ModEvent> ModActions { get; set; } = new Dictionary<ulong, ModEvent>();
+            public List<ModEvent> ModActions { get; set; } = new List<ModEvent>();
 
             public ModerationSettings Settings { get; set; } = new ModerationSettings();
 

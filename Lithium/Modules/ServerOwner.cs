@@ -11,6 +11,20 @@
     [GuildOwner]
     public class ServerOwner : Base
     {
+        [Command("SetModLog")]
+        public async Task SetModLog()
+        {
+            Context.Server.ModerationSetup.Settings.ModLogChannel = Context.Channel.Id;
+            Context.Server.Save();
+        }
+
+        [Command("SetMute")]
+        public async Task SetMute(IRole mute)
+        {
+            Context.Server.ModerationSetup.Settings.MutedRoleId = mute.Id;
+            Context.Server.Save();
+        }
+
         [Command("AddMod")]
         [Remarks("Add a new moderator role")]
         public async Task AddModRoleAsync(IRole modRole = null)
