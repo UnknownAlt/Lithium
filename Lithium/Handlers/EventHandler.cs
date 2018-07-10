@@ -1,356 +1,395 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
-using Lithium.Models;
-using Lithium.Services;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Lithium.Handlers
+﻿namespace Lithium.Handlers
 {
+    using System;
+    using System.Linq;
+    using System.Reflection;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using global::Discord;
+
+    using global::Discord.Commands;
+
+    using global::Discord.WebSocket;
+
+    using Lithium.Discord.Context;
+    using Lithium.Models;
+
+    using Microsoft.Extensions.DependencyInjection;
+
+    /// <summary>
+    /// The event handler.
+    /// </summary>
     public class EventHandler
     {
-        public List<EventLogDelay> EventLogDelays = new List<EventLogDelay>();
+        /// <summary>
+        /// true = check and update all missing servers on start.
+        /// </summary>
+        private bool guildCheck = true;
 
-        public IServiceProvider Provider;
+        /// <summary>
+        /// Displays bot invite on connection Once then gets toggled off.
+        /// </summary>
+        private bool hideInvite;
 
-        public EventHandler(IServiceProvider provider)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventHandler"/> class.
+        /// </summary>
+        /// <param name="client">
+        /// The client.
+        /// </param>
+        /// <param name="config">
+        /// The config.
+        /// </param>
+        /// <param name="service">
+        /// The service.
+        /// </param>
+        /// <param name="commandService">
+        /// The command service.
+        /// </param>
+        public EventHandler(DiscordShardedClient client, ConfigModel config, IServiceProvider service, CommandService commandService)
         {
-            Provider = provider;
-            var client = Provider.GetService<DiscordSocketClient>();
-
-
-            //Guild Event Logging
-            //User
-            client.UserJoined += _client_UserJoined;
-            client.UserLeft += _client_UserLeft;
-            client.UserBanned += _client_UserBanned;
-            client.UserUnbanned += _client_UserUnbanned;
-            client.GuildMemberUpdated += _client_GuildMemberUpdated;
-            //Message
-            client.MessageUpdated += _client_MessageUpdated;
-            client.MessageDeleted += _client_MessageDeleted;
-            //Channel
-            client.ChannelCreated += _client_ChannelCreated;
-            client.ChannelDestroyed += _client_ChannelDestroyed;
-            client.ChannelUpdated += _client_ChannelUpdated;
+            Client = client;
+            Config = config;
+            Provider = service;
+            CommandService = commandService;
+            CancellationToken = new CancellationTokenSource();
         }
 
-        public async Task LogEvent(GuildModel.Guild GuildObj, IGuild Guild, EmbedBuilder embed)
+        /// <summary>
+        /// Gets the config.
+        /// </summary>
+        private ConfigModel Config { get; }
+
+        /// <summary>
+        /// Gets or sets the db config.
+        /// </summary>
+        private DatabaseObject DBConfig { get; set; }
+
+        /// <summary>
+        /// Gets the provider.
+        /// </summary>
+        private IServiceProvider Provider { get; }
+
+        /// <summary>
+        /// Gets the client.
+        /// </summary>
+        private DiscordShardedClient Client { get; }
+
+        /// <summary>
+        /// Gets the command service.
+        /// </summary>
+        private CommandService CommandService { get; }
+
+        /// <summary>
+        /// Gets or sets the cancellation token.
+        /// </summary>
+        private CancellationTokenSource CancellationToken { get; set; }
+
+        /// <summary>
+        /// The initialize async.
+        /// </summary>
+        /// <param name="dbConfig">
+        /// The db Config.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        public async Task InitializeAsync(DatabaseObject dbConfig)
         {
-            if (EventLogDelays.All(x => x.GuildID != Guild.Id))
+            // This will add all our modules to the command service, allowing them to be accessed as necessary
+            DBConfig = dbConfig;
+            await CommandService.AddModulesAsync(Assembly.GetEntryAssembly(), Provider);
+            LogHandler.LogMessage("RavenBOT: Modules Added");
+        }
+
+        /// <summary>
+        /// Triggers when a shard is ready
+        /// </summary>
+        /// <param name="socketClient">
+        /// The socketClient.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        internal async Task ShardReadyAsync(DiscordSocketClient socketClient)
+        {
+            await socketClient.SetActivityAsync(new Game($"Shard: {socketClient.ShardId}"));
+
+            if (guildCheck)
             {
-                EventLogDelays.Add(new EventLogDelay
+                // If all shards are connected, try to remove all guilds that no longer use the bot
+                if (Client.Shards.All(x => x.ConnectionState == ConnectionState.Connected))
                 {
-                    GuildID = Guild.Id,
-                    LastUpdate = DateTime.UtcNow,
-                    Updates = 0
-                });
-            }
-            else
-            {
-                var gdelays = EventLogDelays.First(x => x.GuildID == Guild.Id);
-                //Ensure that we are only logging 1 event per second (to reduce lag from the bot and overall spam)
-                if (gdelays.LastUpdate + TimeSpan.FromSeconds(5) >= DateTime.UtcNow)
-                {
-                    gdelays.Updates++;
+                    if (DBConfig.Local.Developing)
+                    {
+                        LogHandler.LogMessage("Bot is in Developer Mode!", LogSeverity.Warning);
+                    }
+
+                    if (DBConfig.Local.Developing && DBConfig.Local.PrefixOverride != null)
+                    {
+                        LogHandler.LogMessage("Bot is in Prefix Override Mode!", LogSeverity.Warning);
+                    }
+
+                    // Push this to another thread to avoid blocking the gateway
+                    _ = Task.Run(
+                        () =>
+                            {
+                                var handler = Provider.GetRequiredService<DatabaseHandler>();
+
+                                // Returns all stored guild models
+                                var guildIds = Client.Guilds.Select(g => g.Id).ToList();
+                                var missingList = handler.Query<GuildModel>().Select(x => x.ID).Where(x => !guildIds.Contains(x)).ToList();
+
+                                foreach (var id in missingList)
+                                {
+                                    handler.Execute<GuildModel>(DatabaseHandler.Operation.DELETE, id: id.ToString());
+                                }
+                            });
+
+                    // Ensure that this is only run once as the bot initially connects.
+                    guildCheck = false;
                 }
                 else
                 {
-                    gdelays.LastUpdate = DateTime.UtcNow;
-                    gdelays.Updates = 0;
+                    // This will check to ensure that all our servers are initialized, whilst also allowing the bot to continue starting
+                    _ = Task.Run(
+                        () =>
+                            {
+                                var handler = Provider.GetRequiredService<DatabaseHandler>();
+
+                                // This will load all guild models and retrieve their IDs
+                                var Servers = handler.Query<GuildModel>().Select(x => x.ID).ToList();
+
+                                // Now if the bots server list contains a guild but 'Servers' does not, we create a new object for the guild
+                                foreach (var Guild in socketClient.Guilds.Select(x => x.Id).Where(x => !Servers.Contains(x)))
+                                {
+                                    handler.Execute<GuildModel>(DatabaseHandler.Operation.CREATE, new GuildModel { ID = Guild }, Guild);
+                                }
+                            });
                 }
 
-                if (gdelays.Updates >= 3 && gdelays.LastUpdate + TimeSpan.FromSeconds(5) > DateTime.UtcNow)
+                LogHandler.LogMessage($"Shard: {socketClient.ShardId} Ready");
+                if (!hideInvite)
                 {
-                    Logger.LogMessage($"RateLimiting Events in {Guild.Name}", LogSeverity.Verbose);
+                    LogHandler.LogMessage($"Invite: https://discordapp.com/oauth2/authorize?client_id={Client.CurrentUser.Id}&scope=bot&permissions=2146958591");
+                    hideInvite = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Triggers when a shard connects.
+        /// </summary>
+        /// <param name="socketClient">
+        /// The Client.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        internal Task ShardConnectedAsync(DiscordSocketClient socketClient)
+        {
+            Task.Run(()
+                => CancellationToken.Cancel()).ContinueWith(x
+                => CancellationToken = new CancellationTokenSource());
+            LogHandler.LogMessage($"Shard: {socketClient.ShardId} Connected with {socketClient.Guilds.Count} Guilds and {socketClient.Guilds.Sum(x => x.MemberCount)} Users");
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// This logs discord messages to our LogHandler
+        /// </summary>
+        /// <param name="message">
+        /// The message.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        internal Task LogAsync(LogMessage message)
+        {
+            return Task.Run(() => LogHandler.LogMessage(message.Message, message.Severity));
+        }
+        
+        /// <summary>
+        /// This will auto-remove the bot from servers as it gets removed. NOTE: Remove this if you want to save configs.
+        /// </summary>
+        /// <param name="guild">
+        /// The guild.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        internal Task LeftGuildAsync(SocketGuild guild)
+        {
+            return Task.Run(()
+                => Provider.GetRequiredService<DatabaseHandler>().Execute<GuildModel>(DatabaseHandler.Operation.DELETE, id: guild.Id));
+        }
+
+        /// <summary>
+        /// This will automatically initialize any new guilds for the bot.
+        /// </summary>
+        /// <param name="guild">
+        /// The guild.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        internal Task JoinedGuildAsync(SocketGuild guild)
+        {
+            return Task.Run(()=>
+            {
+                var handler = Provider.GetRequiredService<DatabaseHandler>();
+                if (handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, id: guild.Id) == null)
+                {
+                    handler.Execute<GuildModel>(DatabaseHandler.Operation.CREATE, new GuildModel { ID = guild.Id }, guild.Id);
+                }
+            });
+        }
+
+        /// <summary>
+        /// This event is triggered every time the a user sends a message in a channel, dm etc. that the bot has access to view.
+        /// </summary>
+        /// <param name="socketMessage">
+        /// The socket message.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        internal async Task MessageReceivedAsync(SocketMessage socketMessage)
+        {
+            if (!(socketMessage is SocketUserMessage Message) || Message.Channel is IDMChannel)
+            {
+                return;
+            }
+
+            var context = new Context(Client, Message, Provider);
+
+            if (Config.LogUserMessages)
+            {
+                LogHandler.LogMessage(context);
+            }
+
+            var argPos = 0;
+
+            if (DBConfig.Local.Developing && DBConfig.Local.PrefixOverride != null)
+            {
+                if (!Message.HasStringPrefix(DBConfig.Local.PrefixOverride, ref argPos))
+                {
                     return;
                 }
-
-                await GuildObj.EventLog(embed, Guild);
             }
-        }
-
-        public class EventLogDelay
-        {
-            public ulong GuildID { get; set; }
-            public DateTime LastUpdate { get; set; } = DateTime.UtcNow;
-            public int Updates { get; set; }
-        }
-
-        #region EventChannelLogging
-
-        private async Task _client_GuildMemberUpdated(SocketGuildUser UserBefore, SocketGuildUser UserAfter)
-        {
-            var logmsg = "";
-            if (UserBefore.Nickname != UserAfter.Nickname)
+            else
             {
-                logmsg += "__**NickName Updated**__\n" +
-                          $"OLD: {UserBefore.Nickname ?? UserBefore.Username}\n" +
-                          $"AFTER: {UserAfter.Nickname ?? UserAfter.Username}\n";
-            }
-
-            if (UserBefore.Roles.Count < UserAfter.Roles.Count)
-            {
-                var result = UserAfter.Roles.Where(b => UserBefore.Roles.All(a => b.Id != a.Id)).ToList();
-                logmsg += "__**Role Added**__\n" +
-                          $"{result[0].Name}\n";
-            }
-            else if (UserBefore.Roles.Count > UserAfter.Roles.Count)
-            {
-                var result = UserBefore.Roles.Where(b => UserAfter.Roles.All(a => b.Id != a.Id)).ToList();
-                logmsg += "__**Role Removed**__\n" +
-                          $"{result[0].Name}\n";
-            }
-
-            if (logmsg == "") return;
-            var GuildConfig = DatabaseHandler.GetGuild(UserAfter.Guild.Id);
-            if (!GuildConfig.EventLogger.Settings.guildmemberupdated) return;
-            if (GuildConfig.EventLogger.LogEvents)
-            {
-                var embed = new EmbedBuilder
+                // Filter out all messages that don't start with our Bot Prefix, bot mention or server specific prefix.
+                if (!(Message.HasStringPrefix(PrefixDictionary.Load(Config.Prefix).GuildPrefix(context.Guild.Id), ref argPos) || Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos)))
                 {
-                    Title = "User Updated",
-                    Description = $"**User:** {UserAfter.Mention}\n" +
-                                  $"**ID:** {UserAfter.Id}\n\n" + logmsg,
-                    ThumbnailUrl = UserAfter.GetAvatarUrl(),
-                    Footer = new EmbedFooterBuilder
-                    {
-                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC"
-                    },
-                    Color = Color.Blue
-                };
-                //await GuildConfig.EventLog(embed, UserAfter.Guild);
-                await LogEvent(GuildConfig, UserAfter.Guild, embed);
-            }
-        }
-
-        private async Task _client_MessageUpdated(Cacheable<IMessage, ulong> messageOld, SocketMessage messageNew, ISocketMessageChannel cchannel)
-        {
-            if (messageNew.Author.IsBot)
-                return;
-
-            if (string.Equals(messageOld.Value.Content, messageNew.Content, StringComparison.CurrentCultureIgnoreCase))
-                return;
-
-            if (messageOld.Value?.Embeds.Count > 0 || messageNew.Embeds.Count > 0)
-                return;
-
-            var guild = ((SocketGuildChannel) cchannel).Guild;
-
-            var guildobj = DatabaseHandler.GetGuild(guild.Id);
-            if (!guildobj.EventLogger.Settings.messageupdated) return;
-            if (guildobj.EventLogger.LogEvents)
-            {
-                var embed = new EmbedBuilder
-                {
-                    Title = "Message Updated",
-                    ThumbnailUrl = messageNew.Author.GetAvatarUrl(),
-                    Footer = new EmbedFooterBuilder
-                    {
-                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
-                    },
-                    Color = Color.Blue
-                };
-                embed.AddField("Old Message:", $"{messageOld.Value.Content}");
-                embed.AddField("New Message:", $"{messageNew.Content}");
-                embed.AddField("Info",
-                    $"**Author:** {messageNew.Author.Username}\n" +
-                    $"**Author ID:** {messageNew.Author.Id}\n" +
-                    $"**Channel:** {messageNew.Channel.Name}\n" +
-                    $"**Embeds:** {messageNew.Embeds.Any()}");
-
-                //await guildobj.EventLog(embed, guild);
-                await LogEvent(guildobj, guild, embed);
-            }
-        }
-
-        private async Task _client_ChannelUpdated(SocketChannel s1, SocketChannel s2)
-        {
-            var ChannelBefore = s1 as SocketGuildChannel;
-            var ChannelAfter = s2 as SocketGuildChannel;
-            var guildobj = DatabaseHandler.GetGuild(ChannelAfter.Guild.Id);
-            if (!guildobj.EventLogger.Settings.channelupdated) return;
-            if (guildobj.EventLogger.LogEvents)
-            {
-                if (ChannelBefore.Position != ChannelAfter.Position)
                     return;
-                var embed = new EmbedBuilder
-                {
-                    Title = "Channel Updated",
-                    Description = ChannelAfter.Name,
-                    Color = Color.Blue,
-                    Footer = new EmbedFooterBuilder
-                    {
-                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
-                    }
-                };
-                //await guildobj.EventLog(embed, ChannelAfter.Guild);
-                await LogEvent(guildobj, ChannelAfter.Guild, embed);
-            }
-        }
-
-        private async Task _client_ChannelDestroyed(SocketChannel sChannel)
-        {
-            var guild = ((SocketGuildChannel) sChannel).Guild;
-            var guildobj = DatabaseHandler.GetGuild(guild.Id);
-            if (!guildobj.EventLogger.Settings.channeldeleted) return;
-            if (guildobj.EventLogger.LogEvents)
-            {
-                var embed = new EmbedBuilder
-                {
-                    Title = "Channel Deleted",
-                    Description = ((SocketGuildChannel) sChannel)?.Name,
-                    Color = Color.DarkTeal,
-                    Footer = new EmbedFooterBuilder
-                    {
-                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
-                    }
-                };
-                //await guildobj.EventLog(embed, guild);
-                await LogEvent(guildobj, guild, embed);
-            }
-        }
-
-        private async Task _client_ChannelCreated(SocketChannel sChannel)
-        {
-            var guild = ((SocketGuildChannel) sChannel).Guild;
-            var guildobj = DatabaseHandler.GetGuild(guild.Id);
-            if (!guildobj.EventLogger.Settings.channelcreated) return;
-            if (guildobj.EventLogger.LogEvents)
-            {
-                var embed = new EmbedBuilder
-                {
-                    Title = "Channel Created",
-                    Description = ((SocketGuildChannel) sChannel)?.Name,
-                    Color = Color.Green,
-                    Footer = new EmbedFooterBuilder
-                    {
-                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
-                    }
-                };
-                //await guildobj.EventLog(embed, guild);
-                await LogEvent(guildobj, guild, embed);
-            }
-        }
-
-        private async Task _client_MessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
-        {
-            var guild = ((SocketGuildChannel) channel).Guild;
-            var guildobj = DatabaseHandler.GetGuild(guild.Id);
-            if (!guildobj.EventLogger.Settings.messagedeleted) return;
-            if (guildobj.EventLogger.LogEvents)
-            {
-                var embed = new EmbedBuilder();
-                try
-                {
-                    embed.AddField("Message Deleted", $"Message: {message.Value.Content}\n" +
-                                                      $"Author: {message.Value.Author}\n" +
-                                                      $"Channel: {channel.Name}");
                 }
-                catch
+            }
+
+            // Here we attempt to execute a command based on the user message
+            var result = await CommandService.ExecuteAsync(context, argPos, Provider, MultiMatchHandling.Best);
+
+            // Generate an error message for users if a command is unsuccessful
+            if (!result.IsSuccess)
+            {
+                var _ = Task.Run(() => CmdErrorAsync(context, result, argPos));
+            }
+            else
+            {
+                if (Config.LogCommandUsages)
                 {
-                    embed.AddField("Message Deleted", "Message was unable to be retrieved\n" +
-                                                      $"Channel: {channel.Name}");
+                    LogHandler.LogMessage(context);
                 }
-
-                embed.WithFooter(x => { x.WithText($"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"); });
-                embed.Color = Color.DarkTeal;
-
-                //await guildobj.EventLog(embed, guild);
-                await LogEvent(guildobj, guild, embed);
             }
         }
 
-        private async Task _client_UserUnbanned(SocketUser User, SocketGuild Guild)
+        /// <summary>
+        /// Generates an error message based on a command error.
+        /// </summary>
+        /// <param name="context">
+        /// The context.
+        /// </param>
+        /// <param name="result">
+        /// The result.
+        /// </param>
+        /// <param name="argPos">
+        /// The arg pos.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        internal async Task CmdErrorAsync(Context context, IResult result, int argPos)
         {
-            var guildobj = DatabaseHandler.GetGuild(Guild.Id);
-            if (!guildobj.EventLogger.Settings.guilduserunbanned) return;
-            if (guildobj.EventLogger.LogEvents)
+            string errorMessage;
+            if (result.Error == CommandError.UnknownCommand)
             {
-                var embed = new EmbedBuilder
+                errorMessage = "**Command:** N/A";
+            }
+            else
+            {
+                // Search the commandservice based on the message, then respond accordingly with information about the command.
+                var search = CommandService.Search(context, argPos);
+                var cmd = search.Commands.FirstOrDefault();
+                errorMessage = $"**Command Name:** `{cmd.Command.Name}`\n" +
+                               $"**Summary:** `{cmd.Command?.Summary ?? "N/A"}`\n" +
+                               $"**Remarks:** `{cmd.Command?.Remarks ?? "N/A"}`\n" +
+                               $"**Aliases:** {(cmd.Command.Aliases.Any() ? string.Join(" ", cmd.Command.Aliases.Select(x => $"`{x}`")) : "N/A")}\n" +
+                               $"**Parameters:** {(cmd.Command.Parameters.Any() ? string.Join(" ", cmd.Command.Parameters.Select(x => x.IsOptional ? $" `<(Optional){x.Name}>` " : $" `<{x.Name}>` ")) : "N/A")}\n" +
+                               "**Error Reason**\n" +
+                               $"{result.ErrorReason}";
+            }
+
+            try
+            {
+                await context.Channel.SendMessageAsync(string.Empty, false, new EmbedBuilder
                 {
-                    Title = "User UnBanned",
-                    ThumbnailUrl = User.GetAvatarUrl(),
-                    Description = $"**Username:** {User.Username}",
-                    Color = Color.DarkTeal,
-                    Footer = new EmbedFooterBuilder
+                    Title = "ERROR",
+                    Description = errorMessage
+                }.Build());
+            }
+            catch
+            {
+                // ignored
+            }
+
+            await LogErrorAsync(result, context);
+        }
+
+        /// <summary>
+        /// Logs specified errors based on type.
+        /// </summary>
+        /// <param name="result">
+        /// The result.
+        /// </param>
+        /// <param name="context">
+        /// The context.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        internal async Task LogErrorAsync(IResult result, Context context)
+        {
+            switch (result.Error)
+            {
+                case CommandError.MultipleMatches:
+                    if (Config.LogCommandUsages)
                     {
-                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
+                        LogHandler.LogMessage(context, result.ErrorReason, LogSeverity.Error);
                     }
-                };
-                //await guildobj.EventLog(embed, Guild);
-                await LogEvent(guildobj, Guild, embed);
-            }
-        }
 
-        private async Task _client_UserBanned(SocketUser User, SocketGuild Guild)
-        {
-            var guildobj = DatabaseHandler.GetGuild(Guild.Id);
-            if (!guildobj.EventLogger.Settings.guilduserbanned) return;
-            if (guildobj.EventLogger.LogEvents)
-            {
-                var embed = new EmbedBuilder
-                {
-                    Title = "User Banned",
-                    ThumbnailUrl = User.GetAvatarUrl(),
-                    Description = $"**Username:** {User.Username}",
-                    Color = Color.DarkRed,
-                    Footer = new EmbedFooterBuilder
+                    break;
+                case CommandError.ObjectNotFound:
+                    if (Config.LogCommandUsages)
                     {
-                        Text = $"{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)} UTC TIME"
+                        LogHandler.LogMessage(context, result.ErrorReason, LogSeverity.Error);
                     }
-                };
-                //await guildobj.EventLog(embed, Guild);
-                await LogEvent(guildobj, Guild, embed);
+
+                    break;
+                case CommandError.Unsuccessful:
+                    await context.Channel.SendMessageAsync("You may have found a bug. Please report this error in my server https://discord.me/Passive");
+                    break;
             }
         }
-
-        private async Task _client_UserLeft(SocketGuildUser user)
-        {
-            var guildobj = DatabaseHandler.GetGuild(user.Guild.Id);
-            if (!guildobj.EventLogger.Settings.guilduserleft) return;
-            if (guildobj.EventLogger.LogEvents)
-            {
-                var embed = new EmbedBuilder
-                {
-                    Title = "User Left",
-                    Description = $"{user.Mention} {user.Username}#{user.Discriminator}\n" +
-                                  $"ID: {user.Id}",
-                    ThumbnailUrl = user.GetAvatarUrl(),
-                    Color = Color.Red,
-                    Footer = new EmbedFooterBuilder
-                        {Text = $"{DateTime.UtcNow} UTC TIME"}
-                };
-                //await guildobj.EventLog(embed, user.Guild);
-                await LogEvent(guildobj, user.Guild, embed);
-            }
-        }
-
-        private async Task _client_UserJoined(SocketGuildUser user)
-        {
-            var guildobj = DatabaseHandler.GetGuild(user.Guild.Id);
-            if (!guildobj.EventLogger.Settings.guilduserjoined) return;
-            if (guildobj.EventLogger.LogEvents)
-            {
-                var embed = new EmbedBuilder
-                {
-                    Title = "User Joined",
-                    Description = $"{user.Mention} {user.Username}#{user.Discriminator}\n" +
-                                  $"ID: {user.Id}",
-                    ThumbnailUrl = user.GetAvatarUrl(),
-                    Color = Color.Green,
-                    Footer = new EmbedFooterBuilder
-                        {Text = $"{DateTime.UtcNow} UTC TIME"}
-                };
-                //await guildobj.EventLog(embed, user.Guild);
-                await LogEvent(guildobj, user.Guild, embed);
-            }
-        }
-
-        #endregion
     }
 }

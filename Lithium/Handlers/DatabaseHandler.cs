@@ -1,46 +1,81 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
-using Lithium.Models;
-using Lithium.Services;
-using Raven.Client.Documents;
-using Raven.Client.Documents.Operations.Backups;
-using Raven.Client.ServerWide;
-using Raven.Client.ServerWide.Operations;
-
-namespace Lithium.Handlers
+﻿namespace Lithium.Handlers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Text;
+
+    using global::Discord;
+
+    using Lithium.Models;
+
+    using Newtonsoft.Json;
+
+    using Raven.Client.Documents;
+    using Raven.Client.Documents.Operations.Backups;
+    using Raven.Client.ServerWide;
+    using Raven.Client.ServerWide.Operations;
+
+    using Serilog;
+
+    /// <summary>
+    /// The database handler.
+    /// </summary>
     public class DatabaseHandler
     {
-        public DatabaseHandler(IDocumentStore store)
+        /// <summary>
+        /// The operation.
+        /// </summary>
+        public enum Operation
         {
-            Store = store;
+            /// <summary>
+            /// Saves the a document
+            /// </summary>
+            SAVE,
+
+            /// <summary>
+            /// Loads a document
+            /// </summary>
+            LOAD,
+
+            /// <summary>
+            /// Deletes a document
+            /// </summary>
+            DELETE,
+
+            /// <summary>
+            /// Adds a new document
+            /// </summary>
+            CREATE
         }
 
-        ///This is our configuration for the database handler, DBName is the database you created in RavenDB when setting it up
-        ///ServerURL is the URL to the local server. NOTE: This bot has not been configured to use public addresses
-        public static string DBName { get; set; } = Config.Load().DBName;
-
-        public static string ServerURL { get; set; } = Config.Load().ServerURL;
-
         /// <summary>
-        ///     This is the document store, an interface that represents our database
+        /// Gets or sets the store.
         /// </summary>
         public static IDocumentStore Store { get; set; }
 
-        public static bool Ping(string url)
+        /// <summary>
+        /// Gets or sets the settings.
+        /// </summary>
+        public DatabaseObject Settings { get; set; }
+
+        /// <summary>
+        /// Pings a web url
+        /// </summary>
+        /// <param name="url">
+        /// The url.
+        /// </param>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        public bool Ping(string url)
         {
             try
             {
-                WebClient webClient = new WebClient();
-                byte[] result = webClient.DownloadData(url);
+                var webClient = new WebClient();
+                var unused = webClient.DownloadData(url);
                 return true;
             }
             catch
@@ -50,166 +85,217 @@ namespace Lithium.Handlers
         }
 
         /// <summary>
-        ///     Check whether RavenDB is running
-        ///     Check whether or not a database already exists with the DBName
-        ///     Set up auto-backup of the database
-        ///     Ensure that all guilds shared with the bot have been added to the database
+        /// Initializes the database for use
         /// </summary>
-        /// <param name="client">The discord client</param>
-        public static async void DatabaseInitialise(DiscordSocketClient client)
+        /// <returns>
+        /// The <see cref="DatabaseObject"/>.
+        /// </returns>
+        public DatabaseObject Initialize()
         {
-            /*
-            if (Process.GetProcesses().FirstOrDefault(x => x.ProcessName == "Raven.Server") == null)
+            // Ensure that the bots database settings are setup, if not prompt to enter details
+            if (!File.Exists("setup/DBConfig.json"))
             {
-                Logger.LogMessage("RavenDB: Server isn't running. Please make sure RavenDB is running.\nExiting ...", LogSeverity.Critical);
-                await Task.Delay(5000);
-                Environment.Exit(Environment.ExitCode);
+                LogHandler.LogMessage("Please enter details about your bot and database configuration. NOTE: You can hit enter for a default value. ");
+                LogHandler.LogMessage("Enter the database Name: (ie. MyRavenDatabase) DEFAULT: RavenBOT");
+                var databaseName = Console.ReadLine();
+                if (string.IsNullOrEmpty(databaseName))
+                {
+                    databaseName = "RavenBOT";
+                }
+
+                LogHandler.LogMessage("Enter the database URL: (typically http://127.0.0.1:8080 if hosting locally) DEFAULT: http://127.0.0.1:8080");
+                var databaseUrl = Console.ReadLine();
+                if (string.IsNullOrEmpty(databaseUrl))
+                {
+                    databaseUrl = "http://127.0.0.1:8080";
+                }
+
+                File.WriteAllText("setup/DBConfig.json", JsonConvert.SerializeObject(new DatabaseObject
+                {
+                    Name = databaseName,
+                    URL = databaseUrl
+                }, Formatting.Indented), Encoding.UTF8);
+
+                Settings = JsonConvert.DeserializeObject<DatabaseObject>(File.ReadAllText("setup/DBConfig.json"));
             }
-            */
-
-
-            if (!Ping(Config.Load().ServerURL))
+            else
             {
-                Logger.LogMessage("RavenDB: Server isn't running. Please make sure RavenDB is running.\nExiting ...", LogSeverity.Critical);
-                await Task.Delay(5000);
-                Environment.Exit(Environment.ExitCode);
+                Settings = JsonConvert.DeserializeObject<DatabaseObject>(File.ReadAllText("setup/DBConfig.json"));
             }
 
-
-            var dbinitialised = false;
-            if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).All(x => x != DBName))
+            // This initializes the document store, and ensures that RavenDB is working properly
+            Store = new Lazy<IDocumentStore>(() => new DocumentStore { Database = Settings.Name, Urls = new[] { Settings.URL } }.Initialize(), true).Value;
+            if (Store == null)
             {
-                await Store.Maintenance.Server.SendAsync(new CreateDatabaseOperation(new DatabaseRecord(DBName)));
-                Logger.LogMessage($"Created Database {DBName}.");
-                dbinitialised = true;
+                LogHandler.LogMessage("Failed to build document store.", LogSeverity.Critical);
             }
 
-
-            Logger.LogMessage("RavenDB: Setting up backup operation...");
-            var newbackup = new PeriodicBackupConfiguration
+            // This creates the database
+            if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).All(x => x != Settings.Name))
             {
-                Name = "Backup",
-                BackupType = BackupType.Backup,
-                FullBackupFrequency = "0 */6 * * *",
-                IncrementalBackupFrequency = "0 2 * * *",
-                LocalSettings = new LocalSettings {FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/")}
-            };
-            var Record = Store.Maintenance.ForDatabase(DBName).Server.Send(new GetDatabaseRecordOperation(DBName));
-            var backupop = Record.PeriodicBackups.FirstOrDefault(x => x.Name == "Backup");
+                Store.Maintenance.Server.Send(new CreateDatabaseOperation(new DatabaseRecord(Settings.Name)));
+            }
+
+            // To ensure the backup operation is functioning and backing up to our bots directory we update the backup operation on each boot of the bot
+            var record = Store.Maintenance.Server.Send(new GetDatabaseRecordOperation(Settings.Name));
+            var backup = record.PeriodicBackups.FirstOrDefault(x => x.Name == "Backup");
             try
             {
-                if (backupop == null)
+                if (backup == null)
                 {
-                    await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(newbackup)).ConfigureAwait(false);
+                    var newbackup = new PeriodicBackupConfiguration
+                    {
+                        Name = "Backup",
+                        BackupType = BackupType.Backup,
+                        FullBackupFrequency = Settings.FullBackup,
+                                            IncrementalBackupFrequency = Settings.IncrementalBackup,
+                                            LocalSettings = new LocalSettings { FolderPath = Settings.BackupFolder }
+                                        };
+                    Store.Maintenance.ForDatabase(Settings.Name).Send(new UpdatePeriodicBackupOperation(newbackup));
                 }
                 else
                 {
-                    //In the case that we already have a backup operation setup, ensure that we update the backup location accordingly
-                    backupop.LocalSettings = new LocalSettings {FolderPath = Path.Combine(AppContext.BaseDirectory, "setup/backups/")};
-                    await Store.Maintenance.ForDatabase(DBName).SendAsync(new UpdatePeriodicBackupOperation(backupop));
+                    // In the case that we already have a backup operation setup, ensure that we update the backup location accordingly
+                    backup.LocalSettings = new LocalSettings { FolderPath = Settings.BackupFolder };
+                    Store.Maintenance.ForDatabase(Settings.Name).Send(new UpdatePeriodicBackupOperation(backup));
                 }
             }
             catch
             {
-                Logger.LogMessage("RavenDB: Error setting up backup operation, they may not be saved\n", LogSeverity.Warning);
+                LogHandler.LogMessage("RavenDB: Failed to set Backup operation. Backups may not be saved", LogSeverity.Warning);
             }
 
+            var configModel = new ConfigModel();
 
-            if (dbinitialised) return;
-
-            using (var session = Store.OpenSession(DBName))
+            // Prompt the user to set up the bots configuration.
+            if (Settings.IsConfigCreated == false)
             {
+                LogHandler.LogMessage("Enter bots token: (You can get this from https://discordapp.com/developers/applications/me)");
+                var token = Console.ReadLine();
+                if (string.IsNullOrEmpty(token))
+                {
+                    throw new Exception("You must supply a token for this bot to operate.");
+                }
+
+                LogHandler.LogMessage("Enter bots prefix: (This will be used to initiate a command, ie. +say or +help) DEFAULT: +");
+                var prefix = Console.ReadLine();
+                if (string.IsNullOrEmpty(prefix))
+                {
+                    prefix = "+";
+                }
+
+                configModel.Token = token;
+                configModel.Prefix = prefix;
+
+                // This inserts the config object into the database and writes the DatabaseConfig to file.
+                Execute<ConfigModel>(Operation.CREATE, configModel, "Config");
+                Settings.IsConfigCreated = true;
+                File.WriteAllText("setup/DBConfig.json", JsonConvert.SerializeObject(Settings, Formatting.Indented));
+            }
+            else
+            {
+                configModel = Execute<ConfigModel>(Operation.LOAD, null, "Config");
+            }
+
+            LogHandler.PrintApplicationInformation(Settings, configModel);
+            LogHandler.Log = new LoggerConfiguration()
+                .WriteTo
+                .Console()
+                .WriteTo
+                .RavenDB(Store)
+                .CreateLogger();
+            return Settings;
+        }
+
+        /// <summary>
+        /// RavenDb allows the user to query all objects in the database based on their Object Type.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Object Type to query
+        /// </typeparam>
+        /// <returns>
+        /// List of the queried objects
+        /// </returns>
+        public List<T> Query<T>()
+        {
+            using (var session = Store.OpenSession())
+            {
+                List<T> queriedItems;
                 try
                 {
-                    //Check to see wether or not we can actually load the Guilds List saved in our RavenDB
-                    var _ = session.Query<GuildModel.Guild>().ToList();
+                    queriedItems = session.Query<T>().ToList();
                 }
                 catch
                 {
-                    //In the case that the check fails, ensure we initalise all servers that contain the bot.
-                    var glist = client.Guilds.Select(x => new GuildModel.Guild
-                    {
-                        GuildID = x.Id
-                    }).ToList();
-                    foreach (var gobj in glist)
-                    {
-                        session.Store(gobj, gobj.GuildID.ToString());
-                    }
+                    queriedItems = new List<T>();
+                }
 
+                return queriedItems;
+            }
+        }
+
+        /// <summary>
+        /// Gets or Posts to the database
+        /// </summary>
+        /// <typeparam name="T">
+        /// The Object's Type being queried
+        /// </typeparam>
+        /// <param name="operation">
+        /// The operation.
+        /// </param>
+        /// <param name="data">
+        /// The object to save (if applicable)
+        /// </param>
+        /// <param name="id">
+        /// The unique name of the object
+        /// </param>
+        /// <returns>
+        /// The <see cref="T"/>.
+        /// </returns>
+        public T Execute<T>(Operation operation, object data = null, object id = null) where T : class
+        {
+            using (var session = Store.OpenSession(Store.Database))
+            {
+                switch (operation)
+                {
+                    case Operation.CREATE:
+                        if (session.Advanced.Exists($"{id}"))
+                        {
+                            break;
+                        }
+
+                        session.Store((T)data, $"{id}");
+                        LogHandler.LogMessage($"RavenDB: Created => {typeof(T).Name} | ID: {id}");
+                        break;
+
+                    case Operation.DELETE:
+                        LogHandler.LogMessage($"RavenDB: Removed => {typeof(T).Name} | ID: {id}");
+                        session.Delete(session.Load<T>($"{id}"));
+                        break;
+                    case Operation.LOAD:
+                        return session.Load<T>($"{id}");
+                    case Operation.SAVE:
+                        var load = session.Load<T>($"{id}");
+                        if (session.Advanced.IsLoaded($"{id}") == false || load == data)
+                        {
+                            break;
+                        }
+
+                        session.Advanced.Evict(load);
+                        session.Store((T)data, $"{id}");
+                        session.SaveChanges();
+                        break;
+                }
+
+                if (operation == Operation.CREATE || operation == Operation.DELETE)
+                {
                     session.SaveChanges();
                 }
-            }
-        }
 
-
-        /// <summary>
-        ///     This adds a new guild to the RavenDB
-        /// </summary>
-        /// <param name="Id">The Server's ID</param>
-        /// <param name="Name">Optionally say the server name was added to the DB</param>
-        public static void AddGuild(ulong Id, string Name = null)
-        {
-            using (var Session = Store.OpenSession(DBName))
-            {
-                if (Session.Advanced.Exists($"{Id}")) return;
-                Session.Store(new GuildModel.Guild
-                {
-                    GuildID = Id
-                }, Id.ToString());
-                Session.SaveChanges();
+                session.Dispose();
             }
 
-            Logger.LogMessage(string.IsNullOrWhiteSpace(Name) ? $"Added Server With Id: {Id}" : $"Created Config For {Name}", LogSeverity.Debug);
-        }
-
-        /// <summary>
-        ///     Remove a guild's config completely from the database
-        /// </summary>
-        /// <param name="Id"></param>
-        /// <param name="Name"></param>
-        public static void RemoveGuild(ulong Id, string Name = null)
-        {
-            using (var Session = Store.OpenSession(DBName))
-            {
-                Session.Delete($"{Id}");
-            }
-
-            Logger.LogMessage(string.IsNullOrWhiteSpace(Name) ? $"Removed Server With Id: {Id}" : $"Deleted Config For {Name}", LogSeverity.Debug);
-        }
-
-        /// <summary>
-        ///     Add a newly initialised config to the database
-        /// </summary>
-        /// <param name="Id"></param>
-        /// <returns></returns>
-        public static GuildModel.Guild GetGuild(ulong Id)
-        {
-            using (var Session = Store.OpenSession(DBName))
-            {
-                return Session.Load<GuildModel.Guild>(Id.ToString());
-            }
-        }
-
-        /// <summary>
-        ///     Load all documents matching GuildModel.Guild from the database
-        /// </summary>
-        /// <returns></returns>
-        public static List<GuildModel.Guild> GetFullConfig()
-        {
-            using (var session = Store.OpenSession(DBName))
-            {
-                List<GuildModel.Guild> dbGuilds;
-                try
-                {
-                    dbGuilds = session.Query<GuildModel.Guild>().ToList();
-                }
-                catch
-                {
-                    dbGuilds = new List<GuildModel.Guild>();
-                }
-
-                return dbGuilds;
-            }
+            return null;
         }
     }
 }

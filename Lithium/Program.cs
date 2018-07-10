@@ -1,98 +1,100 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Discord;
-using Discord.Addons.Interactive;
-using Discord.Commands;
-using Discord.WebSocket;
-using Lithium.Handlers;
-using Lithium.Models;
-using Lithium.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Raven.Client.Documents;
-using Serilog;
-using EventHandler = Lithium.Handlers.EventHandler;
-
-namespace Lithium
+﻿namespace Lithium
 {
+    using System;
+    using System.IO;
+    using System.Threading.Tasks;
+
+    using global::Discord;
+
+    using global::Discord.Commands;
+
+    using global::Discord.WebSocket;
+
+    using Lithium.Handlers;
+    using Lithium.Models;
+
+    using Microsoft.Extensions.DependencyInjection;
+
+    using EventHandler = Handlers.EventHandler;
+    using InteractiveService = Discord.Context.Interactive;
+
+    /// <summary>
+    /// The program.
+    /// </summary>
     public class Program
     {
-        private CommandHandler _chandler;
-        private EventHandler _ehandler;
-        public DiscordSocketClient Client;
+        /// <summary>
+        /// Gets or sets The client.
+        /// </summary>
+        public static DiscordShardedClient Client { get; set; }
 
+        /// <summary>
+        /// Entry point of the program
+        /// </summary>
+        /// <param name="args">Discarded Args</param>
         public static void Main(string[] args)
         {
-            new Program().Start().GetAwaiter().GetResult();
+             StartAsync().GetAwaiter().GetResult();
         }
 
-        public async Task Start()
+        /// <summary>
+        /// Initialization of our service provider and bot
+        /// </summary>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        private static async Task StartAsync()
         {
-            Console.Title = "Lithium Discord Bot by Passive";
-
+            // This ensures that our bots setup directory is initialized and will be were the database config is stored.
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "setup/")))
+            {
                 Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "setup/"));
-            if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "setup/backups")))
-                Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "setup/backups"));
-            Config.CheckExistence();
-
-            Client = new DiscordSocketClient(new DiscordSocketConfig
-            {
-                LogLevel = LogSeverity.Info,
-                MessageCacheSize = 50
-            });
-
-
-            try
-            {
-                await Client.LoginAsync(TokenType.Bot, Config.Load().BotToken);
-                await Client.StartAsync();
-            }
-            catch (Exception e)
-            {
-                Log.Information("------------------------------------\n" +
-                                $"{e}\n" +
-                                "------------------------------------\n" +
-                                "Token was rejected by Discord (Invalid Token or Connection Error)\n" +
-                                "------------------------------------");
             }
 
-
-            var serviceProvider = ConfigureServices();
-            _chandler = new CommandHandler(serviceProvider);
-            _ehandler = new EventHandler(serviceProvider);
-            await _chandler.ConfigureAsync();
-            Client.Log += Client_Log;
-            await Task.Delay(-1);
-        }
-
-        private static Task Client_Log(LogMessage arg)
-        {
-            Logger.LogMessage(arg.Message, arg.Severity);
-            return Task.CompletedTask;
-        }
-
-        private IServiceProvider ConfigureServices()
-        {
             var services = new ServiceCollection()
-                .AddSingleton(Client)
-                .AddSingleton(new DocumentStore
-                {
-                    Database = DatabaseHandler.DBName,
-                    Urls = new[] {DatabaseHandler.ServerURL}
-                }.Initialize())
-                .AddSingleton(new DatabaseHandler(new DocumentStore {Urls = new[] {Config.Load().ServerURL}}.Initialize()))
-                .AddSingleton(new TimerService(Client))
-                .AddSingleton(new InteractiveService(Client))
-                .AddSingleton(new CommandService(
-                    new CommandServiceConfig
+                    .AddSingleton<DatabaseHandler>()
+                    .AddSingleton(x => x.GetRequiredService<DatabaseHandler>().Execute<ConfigModel>(DatabaseHandler.Operation.LOAD, id: "Config"))
+                    .AddSingleton(new CommandService(new CommandServiceConfig
                     {
-                        CaseSensitiveCommands = false,
                         ThrowOnError = false,
-                        DefaultRunMode = RunMode.Async
-                    }));
+                        IgnoreExtraArgs = false,
+                        DefaultRunMode = RunMode.Sync
+                    }))
+                    .AddSingleton<BotHandler>()
+                    .AddSingleton<EventHandler>()
+                    .AddSingleton<EventLogger>()
+                    .AddSingleton<InteractiveService>()
+                    .AddSingleton(new Random(Guid.NewGuid().GetHashCode()));
 
-            return services.BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
+
+            // This method ensures that the database is
+            // 1. Running
+            // 2. Set up properly 
+            // 3. contains the bot config itself
+            var dbConfig = provider.GetRequiredService<DatabaseHandler>().Initialize();
+
+            // The provider is split here so we can get our shard count from the database before actually logging into discord.
+            // This is important to do so the bot always logs in with the required amount of shards.
+            var shards = provider.GetRequiredService<DatabaseHandler>().Execute<ConfigModel>(DatabaseHandler.Operation.LOAD, id: "Config").Shards;
+            services.AddSingleton(new DiscordShardedClient(new DiscordSocketConfig
+            {
+                MessageCacheSize = 20,
+                AlwaysDownloadUsers = true,
+                LogLevel = dbConfig.Local.Developing ? LogSeverity.Debug : LogSeverity.Warning,
+
+                // Please change increase this as your server count grows beyond 2000 guilds. ie. < 2000 = 1, 2000 = 2, 4000 = 2 ...
+                TotalShards = shards
+            }));
+
+            // Build the service provider a second time so that the ShardedClient is now included.
+            provider = services.BuildServiceProvider();
+
+            await provider.GetRequiredService<BotHandler>().InitializeAsync();
+            await provider.GetRequiredService<EventHandler>().InitializeAsync(dbConfig);
+
+            // Indefinitely delay the method from finishing so that the program stays running until stopped.
+            await Task.Delay(-1);
         }
     }
 }

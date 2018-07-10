@@ -1,21 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
-using Newtonsoft.Json;
-
-namespace Lithium.Models
+﻿namespace Lithium.Models
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Net.Http;
+    using System.Text;
+
+    using Newtonsoft.Json;
+
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1404:CodeAnalysisSuppressionMustHaveJustification", Justification = "Reviewed. Suppression is OK here.")]
     public class Perspective
     {
         public class Api
         {
-            private readonly string URL;
+            private readonly string url;
 
             public Api(string apikey)
             {
                 ApiKey = apikey;
-                URL = $"https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key={ApiKey}";
+                url = $"https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key={ApiKey}";
             }
 
             private string ApiKey { get; }
@@ -26,7 +29,7 @@ namespace Lithium.Models
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8,
                         "application/json");
-                    var response = client.PostAsync(URL, content).Result;
+                    var response = client.PostAsync(url, content).Result;
                     response.EnsureSuccessStatusCode();
                     var data = response.Content.ReadAsStringAsync().Result;
                     var result = JsonConvert.DeserializeObject<AnalyzeCommentResponse>(data);
@@ -40,49 +43,58 @@ namespace Lithium.Models
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8,
                         "application/json");
-                    var response = client.PostAsync(URL, content).Result;
+                    var response = client.PostAsync(url, content).Result;
                     response.EnsureSuccessStatusCode();
                     return response.Content.ReadAsStringAsync().Result;
                 }
             }
 
-
             public AnalyzeCommentResponse QueryToxicity(string input)
             {
-                var requestedAttributeses =
-                    new Dictionary<string, RequestedAttributes> {{"TOXICITY", new RequestedAttributes()}};
-                var req = new AnalyzeCommentRequest(input, requestedAttributeses);
+                var requestedAttributes =
+                    new Dictionary<string, RequestedAttributes> { { "TOXICITY", new RequestedAttributes() } };
+                var req = new AnalyzeCommentRequest(input, requestedAttributes);
                 var res = SendRequest(req);
                 return res;
             }
         }
 
-
         public class AnalyzeCommentRequest
         {
-            public string clientToken;
-            public Comment comment;
-            public bool doNotStore;
-            public string[] languages = {"en"};
-            public Dictionary<string, RequestedAttributes> requestedAttributes;
+            public string ClientToken { get; }
+
+            public Comment Comment { get; }
+
+            public bool DoNotStore { get; }
+
+            public string[] Languages { get; } = { "en" };
+
+            public Dictionary<string, RequestedAttributes> Attributes { get; }
 
             public AnalyzeCommentRequest(string comment,
-                Dictionary<string, RequestedAttributes> requestedAttributeses = null, bool doNotStore = true,
-                string clienttoken = null)
+                Dictionary<string, RequestedAttributes> requestedAttributes = null, bool doNotStore = true,
+                string clientToken = null)
             {
-                this.comment = new Comment(comment);
-                this.doNotStore = doNotStore;
-                if (requestedAttributeses == null)
-                    requestedAttributes.Add("TOXICITY", new RequestedAttributes());
+                Comment = new Comment(comment);
+                DoNotStore = doNotStore;
+                if (requestedAttributes == null)
+                {
+                    Attributes.Add("TOXICITY", new RequestedAttributes());
+                }
                 else
-                    requestedAttributes = requestedAttributeses;
-                clientToken = clienttoken;
+                {
+                    Attributes = requestedAttributes;
+                }
+
+                ClientToken = clientToken;
             }
         }
 
+        [SuppressMessage("ReSharper", "StyleCop.SA1300")]
         public class AnalyzeCommentResponse
         {
             public AttributeScores attributeScores { get; set; }
+
             public List<string> languages { get; set; }
 
             public class AttributeScores
@@ -92,17 +104,21 @@ namespace Lithium.Models
                 public class _TOXICITY
                 {
                     public List<SpanScore> spanScores { get; set; }
+
                     public SummaryScore summaryScore { get; set; }
 
                     public class SpanScore
                     {
                         public int begin { get; set; }
+
                         public int end { get; set; }
+
                         public Score score { get; set; }
 
                         public class Score
                         {
                             public double value { get; set; }
+
                             public string type { get; set; }
                         }
                     }
@@ -110,12 +126,14 @@ namespace Lithium.Models
                     public class SummaryScore
                     {
                         public double value { get; set; }
+
                         public string type { get; set; }
                     }
                 }
             }
         }
 
+        [SuppressMessage("ReSharper", "StyleCop.SA1300")]
         public class Comment
         {
             public Comment(string text, string type = "PLAIN_TEXT")
@@ -125,6 +143,7 @@ namespace Lithium.Models
             }
 
             public string text { get; set; }
+
             public string type { get; set; }
 
             public static implicit operator string(Comment v)
@@ -133,10 +152,12 @@ namespace Lithium.Models
             }
         }
 
+        [SuppressMessage("ReSharper", "StyleCop.SA1300")]
         public class RequestedAttributes
         {
-            public float scoreThreshold;
-            public string scoreType;
+            public float scoreThreshold { get; }
+
+            public string scoreType { get; }
 
             public RequestedAttributes(string scoretype = "PROBABILITY", float scorethreshold = 0)
             {

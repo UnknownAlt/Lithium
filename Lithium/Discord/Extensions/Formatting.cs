@@ -1,12 +1,14 @@
-﻿using System.Text.RegularExpressions;
-using Discord.WebSocket;
-using Lithium.Discord.Contexts;
-
-namespace Lithium.Discord.Extensions
+﻿namespace Lithium.Discord.Extensions
 {
+    using System.Text.RegularExpressions;
+
+    using global::Discord.WebSocket;
+
+    using Lithium.Discord.Context;
+
     public class Formatting
     {
-        public static string DoReplacements(string input, LithiumContext context)
+        public static string DoReplacements(string input, Context context)
         {
             var result = input;
             if (!string.IsNullOrEmpty(input))
@@ -15,7 +17,7 @@ namespace Lithium.Discord.Extensions
                 result = Regex.Replace(result, "{user.mention}", context.User.Mention, RegexOptions.IgnoreCase);
                 result = Regex.Replace(result, "{guild}", context.Guild.Name, RegexOptions.IgnoreCase);
                 result = Regex.Replace(result, "{channel}", context.Channel.Name, RegexOptions.IgnoreCase);
-                result = Regex.Replace(result, "{channel.mention}", ((SocketTextChannel) context.Channel).Mention, RegexOptions.IgnoreCase);
+                result = Regex.Replace(result, "{channel.mention}", ((SocketTextChannel)context.Channel).Mention, RegexOptions.IgnoreCase);
             }
 
             return result;
