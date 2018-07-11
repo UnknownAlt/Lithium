@@ -89,9 +89,6 @@
             LogHandler.LogMessage("RavenBOT: Logged In");
             await Client.StartAsync();
             LogHandler.LogMessage("RavenBOT: Started");
-
-
-
         }
     }
 }

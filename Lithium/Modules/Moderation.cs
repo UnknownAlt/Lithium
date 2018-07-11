@@ -6,6 +6,7 @@
     using System.Threading.Tasks;
 
     using global::Discord;
+    using global::Discord.Addons.Interactive;
     using global::Discord.Commands;
     using global::Discord.WebSocket;
 
@@ -18,6 +19,119 @@
     [CustomPermissions(true)]
     public class Moderation : Base
     {
+        [Command("ClearAction")]
+        public Task ClearWarnsAsync(int actionID)
+        {
+            var action = Context.Server.ModerationSetup.ModActions.FirstOrDefault(x => x.ActionId == actionID);
+            if (action == null)
+            {
+                throw new Exception("No action found with that ID");
+            }
+
+            action.ExpiredOrRemoved = true;
+            Context.Server.Save();
+
+            return ReplyAsync(new EmbedBuilder { Title = "Action was cleared:", Fields = new List<EmbedFieldBuilder> { action.GetLongField() } });
+        }
+
+        [Command("ClearWarn")]
+        public Task ClearWarnsAsync(ulong userId)
+        {
+            return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.warn, userId);
+        }
+
+        [Command("ClearKick")]
+        public Task ClearKicksAsync(ulong userId)
+        {
+            return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Kick, userId);
+        }
+
+        [Command("ClearMute")]
+        public Task ClearMutesAsync(ulong userId)
+        {
+            return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.mute, userId);
+        }
+
+        [Command("ClearBan")]
+        public Task ClearBansAsync(ulong userId)
+        {
+            return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.ban, userId);
+        }
+
+        [Command("ClearAll")]
+        public Task ClearAllAsync(ulong userId)
+        {
+            return ClearResponseAsync(null, userId);
+        }
+
+        [Command("ClearWarn")]
+        public Task ClearWarnsAsync(SocketGuildUser user)
+        {
+            return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.warn, user.Id);
+        }
+
+        [Command("ClearKick")]
+        public Task ClearKicksAsync(SocketGuildUser user)
+        {
+            return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Kick, user.Id);
+        }
+
+        [Command("ClearMute")]
+        public Task ClearMutesAsync(SocketGuildUser user)
+        {
+            return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.mute, user.Id);
+        }
+
+        [Command("ClearBan")]
+        public Task ClearBansAsync(SocketGuildUser user)
+        {
+            return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.ban, user.Id);
+        }
+
+        [Command("ClearAll")]
+        public Task ClearAllAsync(SocketGuildUser user)
+        {
+            return ClearResponseAsync(null, user.Id);
+        }
+
+        public Task ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType? type, ulong userId)
+        {
+            var actions = new List<GuildModel.Moderation.ModEvent>();
+            var sort = type == null ? Context.Server.ModerationSetup.ModActions.Where(a => a.ExpiredOrRemoved == false && a.UserId == userId) : Context.Server.ModerationSetup.ModActions.Where(a => a.ExpiredOrRemoved == false && a.UserId == userId && a.Action == type);
+            
+            foreach (var action in sort)
+            {
+                action.ExpiredOrRemoved = true;
+                actions.Add(action);
+            }
+
+            Context.Server.Save();
+
+            if (actions.Any())
+            {
+                var pages = new List<PaginatedMessage.Page>();
+                foreach (var actionGroup in actions.OrderByDescending(a => a.TimeStamp).ToList().SplitList(5))
+                {
+                    pages.Add(new PaginatedMessage.Page
+                                  {
+                                      Fields = actionGroup.Select(a => a.GetLongField()).ToList()
+                                  });
+                }
+                return PagedReplyAsync(new PaginatedMessage
+                                           {
+                                               Pages = pages,
+                                               Title = "Cleared the following actions from the provided user"
+                                           }, new ReactionList
+                                                  {
+                                                      Forward = true,
+                                                      Backward = true,
+                                                      Trash = true
+                                                  });
+            }
+
+            return SimpleEmbedAsync("There were no ModActions of this type for this user to be cleared");
+        }
+
         [Command("UnMute")]
         [Remarks("UnMute the specified user")]
         public Task UnMuteAsync(SocketGuildUser user)

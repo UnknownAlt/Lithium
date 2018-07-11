@@ -13,6 +13,7 @@
     using global::Discord.WebSocket;
 
     using Lithium.Discord.Context;
+    using Lithium.Discord.Services;
     using Lithium.Models;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -275,6 +276,7 @@
             {
                 if (!Message.HasStringPrefix(DBConfig.Local.PrefixOverride, ref argPos))
                 {
+                    var _ = Task.Run(() => AutoModerator.RunChecksAsync(context));
                     return;
                 }
             }
@@ -283,6 +285,7 @@
                 // Filter out all messages that don't start with our Bot Prefix, bot mention or server specific prefix.
                 if (!(Message.HasStringPrefix(PrefixDictionary.Load(Config.Prefix).GuildPrefix(context.Guild.Id), ref argPos) || Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos)))
                 {
+                    var _ = Task.Run(() => AutoModerator.RunChecksAsync(context));
                     return;
                 }
             }

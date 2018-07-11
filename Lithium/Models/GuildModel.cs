@@ -63,13 +63,14 @@
             {
                 Action = modAction,
                 ExpiryDate = expires == null ? null : DateTime.UtcNow + expires,
-                ModName = moderator.Username,
+                ModName = moderator.ToString(),
                 ModId = moderator.Id,
                 UserId = user.Id,
-                UserName = user.Username,
+                UserName = user.ToString(),
                 AutoModReason = autoModReason,
                 ProvidedReason = reason,
-                ReasonTrigger = trigger
+                ReasonTrigger = trigger,
+                ActionId = ModerationSetup.ModActions.Count
             };
             ModerationSetup.ModActions.Add(modEvent);
             Save();
@@ -81,7 +82,7 @@
                                                  new EmbedFieldBuilder
                                                      {
                                                          Name =
-                                                             $"{user} was {modAction.GetDescription()}",
+                                                             $"{user} was {modAction.GetDescription()} [#{modEvent.ActionId}]",
                                                          Value =
                                                              $"**Mod:** {moderator.Mention}\n" +
                                                              $"**Expires:** {(modEvent.ExpiryDate.HasValue ? $"{modEvent.ExpiryDate.Value.ToLongDateString()} {modEvent.ExpiryDate.Value.ToLongTimeString()}\n" : "Never\n")}" +
@@ -346,6 +347,8 @@
                 public bool ExpiredOrRemoved { get; set; } = false;
 
                 public DateTime TimeStamp { get; set; } = DateTime.UtcNow;
+
+                public int ActionId { get; set; }
             }
         }
 

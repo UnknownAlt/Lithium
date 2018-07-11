@@ -1,4 +1,4 @@
-﻿namespace Lithium.Models
+﻿namespace Lithium.Discord.Services
 {
     using System;
     using System.Collections.Generic;
