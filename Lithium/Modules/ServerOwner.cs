@@ -11,19 +11,20 @@
     [GuildOwner]
     public class ServerOwner : Base
     {
-        // TODO Make these two commands proper
         [Command("SetModLog")]
-        public async Task SetModLog()
+        public Task SetModLogAsync()
         {
             Context.Server.ModerationSetup.Settings.ModLogChannel = Context.Channel.Id;
             Context.Server.Save();
+            return SimpleEmbedAsync($"Moderation Log messages will be sent to {Context.Channel.Name}");
         }
 
         [Command("SetMute")]
-        public async Task SetMute(IRole mute)
+        public Task SetMuteAsync(IRole mute)
         {
             Context.Server.ModerationSetup.Settings.MutedRoleId = mute.Id;
             Context.Server.Save();
+            return SimpleEmbedAsync($"Users will be given {mute.Mention} when muted.");
         }
 
         [Command("AddMod")]

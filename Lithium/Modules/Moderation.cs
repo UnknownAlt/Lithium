@@ -10,7 +10,9 @@
     using global::Discord.WebSocket;
 
     using Lithium.Discord.Context;
+    using Lithium.Discord.Extensions;
     using Lithium.Discord.Preconditions;
+    using Lithium.Handlers;
     using Lithium.Models;
 
     [CustomPermissions(true)]
@@ -21,8 +23,7 @@
         [Remarks("UnMute the specified user")]
         public Task UnMuteAsync(SocketGuildUser user)
         {
-            // TODO Response for unmute
-            var mutes = Context.Server.ModerationSetup.ModActions.Where(m => m.Action == GuildModel.Moderation.ModEvent.EventType.mute && !m.ExpiredOrRemoved);
+            var mutes = Context.Server.ModerationSetup.ModActions.Where(m => m.Action == GuildModel.Moderation.ModEvent.EventType.mute && !m.ExpiredOrRemoved && m.UserId == user.Id);
             foreach (var mute in mutes)
             {
                 mute.ExpiredOrRemoved = true;
@@ -30,7 +31,22 @@
 
             if (user.Roles.Any(x => x.Id == Context.Server.ModerationSetup.Settings.MutedRoleId))
             {
-                user.RemoveRoleAsync(Context.Guild.GetRole(Context.Server.ModerationSetup.Settings.MutedRoleId));
+                try
+                {
+                    user.RemoveRoleAsync(Context.Guild.GetRole(Context.Server.ModerationSetup.Settings.MutedRoleId));
+                    SimpleEmbedAsync("Success, user has been un-muted");
+                    Context.Server.Save();
+                }
+                catch (Exception e)
+                {
+                    LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
+                    throw new Exception("Unable to modify the target user's role");
+                }
+            }
+            else
+            {
+                Context.Server.Save();
+                SimpleEmbedAsync("Success Removing mute from Mod History, but the user did not have the muted role :shrug:");
             }
 
             return Task.CompletedTask;
@@ -46,16 +62,24 @@
                 time = null;
             }
 
-            // TODO Check Hierarchy before performing action
-            return Context.Server.ModAction(user, Context.User as SocketGuildUser, Context.Channel, null, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.mute, null, time);
+            if (Context.User.CastToSocketGuildUser().IsHigherRankedThan(user))
+            {
+                return Context.Server.ModAction(user, Context.User as SocketGuildUser, Context.Channel, null, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.mute, null, time);
+            }
+
+            throw new InvalidOperationException("Target user has higher permissions than current user");
         }
 
         [Command("Warn")]
         [Remarks("Warn the specified user")]
         public Task WarnUserAsync(SocketGuildUser user, [Remainder] string reason = null)
         {
-            // TODO Check Hierarchy before performing action
-            return Context.Server.ModAction(user, Context.User as SocketGuildUser, Context.Channel, reason, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.warn, null, null);
+            if (Context.User.CastToSocketGuildUser().IsHigherRankedThan(user))
+            {
+                return Context.Server.ModAction(user, Context.User as SocketGuildUser, Context.Channel, reason, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.warn, null, null);
+            }
+
+            throw new InvalidOperationException("Target user has higher permissions than current user");
         }
 
         [Command("Kick")]
@@ -67,8 +91,13 @@
                 throw new Exception("This user has admin or user kick permissions, therefore I cannot perform this action on them");
             }
 
-            // TODO Check Hierarchy before performing action
-            return Context.Server.ModAction(user, Context.User as SocketGuildUser, Context.Channel, reason, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.Kick, null, null);
+
+            if (Context.User.CastToSocketGuildUser().IsHigherRankedThan(user))
+            {
+                return Context.Server.ModAction(user, Context.User.CastToSocketGuildUser(), Context.Channel, reason, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.Kick, null, null);
+            }
+
+            throw new InvalidOperationException("Target user has higher permissions than current user");
         }
 
         [Command("Ban")]
@@ -80,8 +109,12 @@
                 throw new Exception("This user has admin or user ban permissions, therefore I cannot perform this action on them");
             }
 
-            // TODO Check Hierarchy before performing action
-            return Context.Server.ModAction(user, Context.User as SocketGuildUser, Context.Channel, reason, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.ban, null, null);
+            if (Context.User.CastToSocketGuildUser().IsHigherRankedThan(user))
+            {
+                return Context.Server.ModAction(user, Context.User.CastToSocketGuildUser(), Context.Channel, reason, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.ban, null, null);
+            }
+
+            throw new InvalidOperationException("Target user has higher permissions than current user");
         }
 
         [Command("SoftBan")]
@@ -99,8 +132,12 @@
                 time = null;
             }
 
-            // TODO Check Hierarchy before performing action
-            return Context.Server.ModAction(user, Context.User as SocketGuildUser, Context.Channel, reason, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.ban, null, time);
+            if (Context.User.CastToSocketGuildUser().IsHigherRankedThan(user))
+            {
+                return Context.Server.ModAction(user, Context.User.CastToSocketGuildUser(), Context.Channel, reason, GuildModel.Moderation.ModEvent.AutoReason.none, GuildModel.Moderation.ModEvent.EventType.ban, null, time);
+            }
+
+            throw new InvalidOperationException("Target user has higher rank than current user");
         }
 
         public List<IMessage> GetMessagesAsync(int count = 100)
