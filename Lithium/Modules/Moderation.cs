@@ -31,7 +31,7 @@
             action.ExpiredOrRemoved = true;
             Context.Server.Save();
 
-            return ReplyAsync(new EmbedBuilder { Title = "Action was cleared:", Fields = new List<EmbedFieldBuilder> { action.GetLongField() } });
+            return ReplyAsync(new EmbedBuilder { Title = "Action was cleared:", Fields = new List<EmbedFieldBuilder> { action.GetLongField(Context.Guild) } });
         }
 
         [Command("ClearWarn")]
@@ -114,7 +114,7 @@
                 {
                     pages.Add(new PaginatedMessage.Page
                                   {
-                                      Fields = actionGroup.Select(a => a.GetLongField()).ToList()
+                                      Fields = actionGroup.Select(a => a.GetLongField(Context.Guild)).ToList()
                                   });
                 }
                 return PagedReplyAsync(new PaginatedMessage

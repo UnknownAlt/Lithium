@@ -6,6 +6,7 @@
 
     using global::Discord.WebSocket;
 
+    using Lithium.Discord.Services;
     using Lithium.Models;
 
     /// <summary>

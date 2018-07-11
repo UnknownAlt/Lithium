@@ -27,7 +27,7 @@
                 throw new Exception("No action found with that ID");
             }
 
-            return ReplyAsync(new EmbedBuilder { Title = $"Action ${actionID}", Fields = new List<EmbedFieldBuilder> { action.GetLongField() } });
+            return ReplyAsync(new EmbedBuilder { Title = $"Action ${actionID}", Fields = new List<EmbedFieldBuilder> { action.GetLongField(Context.Guild) } });
         }
 
         [Command("Bans")]
@@ -90,29 +90,63 @@
             return GetModActionsAsync(null, userId);
         }
 
-        public Task GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType? type, ulong? userID = null)
+        [Command("LongModLog")]
+        public Task ViewLongModLogAsync()
+        {
+            return GetModActionsAsync(null, null, true);
+        }
+
+        public Task GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType? type, ulong? userID = null, bool showExpired = false)
         {
             List<GuildModel.Moderation.ModEvent> modEvents;
-            if (type != null && userID == null)
+            if (showExpired)
             {
-                // Show the given mod action for ALL users
-                modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.Action == type).OrderByDescending(x => x.TimeStamp).ToList();
-            }
-            else if (type == null && userID == null)
-            {
-                // Show ALL Mod actions for ALL users
-                modEvents = Context.Server.ModerationSetup.ModActions.OrderByDescending(x => x.TimeStamp).ToList();
-            }
-            else
-            {
-                if (type == null)
+                if (type != null && userID == null)
                 {
-                    modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID).OrderByDescending(x => x.TimeStamp).ToList();
+                    // Show the given mod action for ALL users
+                    modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.Action == type).OrderByDescending(x => x.TimeStamp).ToList();
+                }
+                else if (type == null && userID == null)
+                {
+                    // Show ALL Mod actions for ALL users
+                    modEvents = Context.Server.ModerationSetup.ModActions.OrderByDescending(x => x.TimeStamp).ToList();
                 }
                 else
                 {
-                    modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID && x.Action == type).OrderByDescending(x => x.TimeStamp).ToList();
+                    if (type == null)
+                    {
+                        modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID).OrderByDescending(x => x.TimeStamp).ToList();
+                    }
+                    else
+                    {
+                        modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID && x.Action == type).OrderByDescending(x => x.TimeStamp).ToList();
+                    }
                 }
+            }
+            else
+            {               
+                if (type != null && userID == null)
+                {
+                    // Show the given mod action for ALL users
+                    modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.Action == type && !x.ExpiredOrRemoved).OrderByDescending(x => x.TimeStamp).ToList();
+                }
+                else if (type == null && userID == null)
+                {
+                    // Show ALL Mod actions for ALL users
+                    modEvents = Context.Server.ModerationSetup.ModActions.Where(x => !x.ExpiredOrRemoved).OrderByDescending(x => x.TimeStamp).ToList();
+                }
+                else
+                {
+                    if (type == null)
+                    {
+                        modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID && !x.ExpiredOrRemoved).OrderByDescending(x => x.TimeStamp).ToList();
+                    }
+                    else
+                    {
+                        modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID && x.Action == type && !x.ExpiredOrRemoved).OrderByDescending(x => x.TimeStamp).ToList();
+                    }
+                }
+                
             }
 
             var pages = new List<PaginatedMessage.Page>();
@@ -120,18 +154,15 @@
             {
                 pages.Add(new PaginatedMessage.Page
                               {
-                                  Fields = modGroup.Select(m => new EmbedFieldBuilder
-                                                                    {
-                                                                        Name = $"{((Context.Guild.GetUser(m.UserId)?.Nickname ?? Context.Guild.GetUser(m.UserId)?.Username) ?? $"{m.UserName} [{m.UserId}]")} {(m.ExpiredOrRemoved ? "Expired" : null)}",
-                                                                        Value = $"**Action:** {m.Action}\n" +
-                                                                                $"**Mod:** {Context.Guild.GetUser(m.ModId)?.Mention ?? $"{m.ModName} [{m.ModId}]"}\n" +
-                                                                                $"**Expiry:** {(m.ExpiryDate.HasValue ? $"{m.ExpiryDate.Value.ToLongDateString()} {m.ExpiryDate.Value.ToLongTimeString()}" : "Never")}\n" +
-                                                                                (m.AutoModReason == GuildModel.Moderation.ModEvent.AutoReason.none ? $"**Reason**: {m.ProvidedReason ?? "N/A"}" : $"**AutoModReason:** {m.AutoModReason}\n{(m.ReasonTrigger == null ? null : $"Trigger ({Context.Guild.GetTextChannel(m.ReasonTrigger.ChannelId)?.Mention ?? m.ReasonTrigger.ChannelId.ToString()}): {m.ReasonTrigger.Message}")}")
-                                                                    }).ToList()
+                                  Fields = modGroup.Select(m => m.GetLongField(Context.Guild)).ToList()
                               });
             }
 
-            return PagedReplyAsync(new PaginatedMessage { Pages = pages }, new ReactionList { Forward = true, Backward = true, Trash = true });
+            return PagedReplyAsync(new PaginatedMessage
+                                       {
+                                           Pages = pages, 
+                                           Title = userID.HasValue ? $"{Context.Guild.GetUser(userID.Value)}{(type == null ? null : $" {type}")} {modEvents.Count} Actions" : null
+                                       }, new ReactionList { Forward = true, Backward = true, Trash = true });
         }
     }
 }

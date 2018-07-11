@@ -15,18 +15,19 @@
 
     public class AutoModerator
     {
-        public static List<Delays> AntiSpamMsgDelays { get; set; } = new List<Delays>();
+        public List<Delays> AntiSpamMsgDelays { get; set; } = new List<Delays>();
 
         public AutoModerator(DatabaseHandler handler)
         {
             ToxicityAPI = new Perspective.Api(handler.Execute<ConfigModel>(DatabaseHandler.Operation.LOAD, null, "Config").ToxicityToken);
+            LogHandler.LogMessage("Check");
         }
 
-        public static Dictionary<ulong, List<NoSpam>> NoSpamList { get; set; } = new Dictionary<ulong, List<NoSpam>>();
+        public Dictionary<ulong, List<NoSpam>> NoSpamList { get; set; } = new Dictionary<ulong, List<NoSpam>>();
 
-        private static Perspective.Api ToxicityAPI { get; set; }
+        private Perspective.Api ToxicityAPI { get; set; }
 
-        public static async Task<bool> AntiInviteAsync(Context context)
+        internal async Task<bool> AntiInviteAsync(Context context)
         {
             if (Regex.Match(context.Message.Content, @"(http|https)?(:)?(\/\/)?(discordapp|discord).(gg|io|me|com)\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?").Success)
             {
@@ -42,7 +43,7 @@
                 {
                     await context.Server.ModActionAsync(
                         context.User.CastToSocketGuildUser(),
-                        context.Client.CurrentUser.CastToSocketGuildUser(),
+                        context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
                         context.Channel,
                         null,
                         GuildModel.Moderation.ModEvent.AutoReason.discordInvites,
@@ -61,7 +62,7 @@
             return false;
         }
 
-        public static async Task<bool> AntiIpAsync(Context context)
+        internal async Task<bool> AntiIpAsync(Context context)
         {
             if (Regex.IsMatch(context.Message.Content, @"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
             {
@@ -72,7 +73,7 @@
                 {
                     await context.Server.ModActionAsync(
                         context.User.CastToSocketGuildUser(),
-                        context.Client.CurrentUser.CastToSocketGuildUser(),
+                        context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
                         context.Channel,
                         null,
                         GuildModel.Moderation.ModEvent.AutoReason.ipAddresses,
@@ -91,23 +92,20 @@
             return false;
         }
 
-        public static async Task<bool> AntiMentionAsync(Context context)
+        internal async Task<bool> AntiMentionAsync(Context context)
         {
             if (context.Server.AntiSpam.Mention.RemoveMassMention)
             {
-                if (context.Message.MentionedRoles.Count + context.Message.MentionedUsers.Count >= 5)
+                if (context.Message.MentionedRoles.Count + context.Message.MentionedUsers.Count >= context.Server.AntiSpam.Mention.MassMentionLimit)
                 {
                     await context.Message?.DeleteAsync();
                     var emb = new EmbedBuilder { Description = $"{context.User} - This server does not allow you to mention 5+ roles or uses at once" };
                     await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
                     if (context.Server.AntiSpam.Mention.WarnOnDetection)
                     {
-                        // TODO Auto-Warn
-                        // await context.Server.AddWarn("AutoMod - Mass Mention", context.User as IGuildUser, context.Client.CurrentUser, context.Channel, context.Message.Content);
-                        // context.Server.Save();
                         await context.Server.ModActionAsync(
                             context.User.CastToSocketGuildUser(),
-                            context.Client.CurrentUser.CastToSocketGuildUser(),
+                            context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
                             context.Channel,
                             null,
                             GuildModel.Moderation.ModEvent.AutoReason.massMention,
@@ -144,7 +142,7 @@
                     {
                         await context.Server.ModActionAsync(
                             context.User.CastToSocketGuildUser(),
-                            context.Client.CurrentUser.CastToSocketGuildUser(),
+                            context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
                             context.Channel,
                             null,
                             GuildModel.Moderation.ModEvent.AutoReason.mentionAll,
@@ -164,7 +162,7 @@
             return false;
         }
 
-        public static async Task<bool> AntiSpamAsync(Context context)
+        internal async Task<bool> AntiSpamAsync(Context context)
         {
             var detected = false;
             NoSpamList.TryGetValue(context.Guild.Id, out var SpamGuild); // .FirstOrDefault(x => x.GuildID == ((SocketGuildUser)context.User).context.Server.Id);
@@ -224,7 +222,7 @@
                                 {
                                     await context.Server.ModActionAsync(
                                         context.User.CastToSocketGuildUser(),
-                                        context.Client.CurrentUser.CastToSocketGuildUser(),
+                                        context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
                                         context.Channel,
                                         null,
                                         GuildModel.Moderation.ModEvent.AutoReason.messageSpam,
@@ -251,7 +249,7 @@
             return false;
         }
 
-        public static async Task<bool> CheckBlacklistAsync(Context context)
+        internal async Task<bool> CheckBlacklistAsync(Context context)
         {
             if (context.Server.AntiSpam.Blacklist.BlacklistWordSet.Any())
             {
@@ -278,7 +276,7 @@
                     {
                         await context.Server.ModActionAsync(
                             context.User.CastToSocketGuildUser(),
-                            context.Client.CurrentUser.CastToSocketGuildUser(),
+                            context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
                             context.Channel,
                             null,
                             GuildModel.Moderation.ModEvent.AutoReason.blacklist,
@@ -298,12 +296,11 @@
             return false;
         }
 
-        public static async Task<bool> CheckToxicityAsync(Context context)
+        internal async Task<bool> CheckToxicityAsync(Context context)
         {
-            var guild = context.Server;
             if (context.Server.AntiSpam.Toxicity.UsePerspective)
             {
-                if (ToxicityAPI != null && !string.IsNullOrWhiteSpace(context.Message.Content))
+                if (!string.IsNullOrWhiteSpace(context.Message.Content))
                 {
                     try
                     {
@@ -317,7 +314,7 @@
                             {
                                 await context.Server.ModActionAsync(
                                     context.User.CastToSocketGuildUser(),
-                                    context.Client.CurrentUser.CastToSocketGuildUser(),
+                                    context.Guild.GetUser(context.Client.CurrentUser.Id),
                                     context.Channel,
                                     null,
                                     GuildModel.Moderation.ModEvent.AutoReason.toxicity,
@@ -333,9 +330,9 @@
                             return true;
                         }
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // Ignored
+                        LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
                     }
                 }
             }
@@ -343,7 +340,7 @@
             return false;
         }
 
-        public static Task RunChecksAsync(Context context)
+        internal Task RunChecksAsync(Context context)
         {
             if (context.Guild == null || context.IsPrivate || context.Server == null)
             {
@@ -352,8 +349,6 @@
 
             try
             {
-                var guild = context.Server;
-
                 var exemptCheck = context.Server.AntiSpam.IgnoreList.Where(i => context.User.CastToSocketGuildUser().Roles.Any(r => r.Id == i.Key)).ToList();
 
                 var _ = Task.Run(

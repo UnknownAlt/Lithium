@@ -48,14 +48,20 @@
         /// <param name="commandService">
         /// The command service.
         /// </param>
-        public EventHandler(DiscordShardedClient client, ConfigModel config, IServiceProvider service, CommandService commandService)
+        public EventHandler(DiscordShardedClient client, ConfigModel config, IServiceProvider service, CommandService commandService, AutoModerator autoModerator)
         {
             Client = client;
             Config = config;
             Provider = service;
             CommandService = commandService;
+            AutoModerator = autoModerator;
             CancellationToken = new CancellationTokenSource();
         }
+        
+        /// <summary>
+        /// Gets the auto moderator.
+        /// </summary>
+        private AutoModerator AutoModerator { get; }
 
         /// <summary>
         /// Gets the config.

@@ -87,7 +87,8 @@
 
                 // Please change increase this as your server count grows beyond 2000 guilds. ie. < 2000 = 1, 2000 = 2, 4000 = 2 ...
                 TotalShards = shards
-            }));
+            }))
+            .AddSingleton<AutoModerator>();
 
             // Build the service provider a second time so that the ShardedClient is now included.
             provider = services.BuildServiceProvider();
