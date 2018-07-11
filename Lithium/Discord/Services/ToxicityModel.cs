@@ -1,96 +1,39 @@
-﻿namespace Lithium.Discord.Services
+﻿// ReSharper disable All
+namespace Lithium.Discord.Services
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Net.Http;
     using System.Text;
 
     using Newtonsoft.Json;
 
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1404:CodeAnalysisSuppressionMustHaveJustification", Justification = "Reviewed. Suppression is OK here.")]
     public class Perspective
     {
-        public class Api
-        {
-            private readonly string url;
-
-            public Api(string apikey)
-            {
-                ApiKey = apikey;
-                url = $"https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key={ApiKey}";
-            }
-
-            private string ApiKey { get; }
-
-            public AnalyzeCommentResponse SendRequest(AnalyzeCommentRequest request)
-            {
-                using (var client = new HttpClient())
-                {
-                    var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8,
-                        "application/json");
-                    var response = client.PostAsync(url, content).Result;
-                    response.EnsureSuccessStatusCode();
-                    var data = response.Content.ReadAsStringAsync().Result;
-                    var result = JsonConvert.DeserializeObject<AnalyzeCommentResponse>(data);
-                    return result;
-                }
-            }
-
-            public string GetResponseString(AnalyzeCommentRequest request)
-            {
-                using (var client = new HttpClient())
-                {
-                    var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8,
-                        "application/json");
-                    var response = client.PostAsync(url, content).Result;
-                    response.EnsureSuccessStatusCode();
-                    return response.Content.ReadAsStringAsync().Result;
-                }
-            }
-
-            public AnalyzeCommentResponse QueryToxicity(string input)
-            {
-                var requestedAttributes =
-                    new Dictionary<string, RequestedAttributes> { { "TOXICITY", new RequestedAttributes() } };
-                var req = new AnalyzeCommentRequest(input, requestedAttributes);
-                var res = SendRequest(req);
-                return res;
-            }
-        }
-
         public class AnalyzeCommentRequest
         {
-            public string ClientToken { get; }
+            public string clientToken;
 
-            public Comment Comment { get; }
+            public Comment comment;
 
-            public bool DoNotStore { get; }
+            public bool doNotStore;
 
-            public string[] Languages { get; } = { "en" };
+            public string[] languages = { "en" };
 
-            public Dictionary<string, RequestedAttributes> Attributes { get; }
+            public Dictionary<string, RequestedAttributes> requestedAttributes;
 
-            public AnalyzeCommentRequest(string comment,
-                Dictionary<string, RequestedAttributes> requestedAttributes = null, bool doNotStore = true,
-                string clientToken = null)
+            public AnalyzeCommentRequest(string comment, Dictionary<string, RequestedAttributes> requestedAttributeses = null, bool doNotStore = true, string clienttoken = null)
             {
-                Comment = new Comment(comment);
-                DoNotStore = doNotStore;
-                if (requestedAttributes == null)
-                {
-                    Attributes.Add("TOXICITY", new RequestedAttributes());
-                }
+                this.comment = new Comment(comment);
+                this.doNotStore = doNotStore;
+                if (requestedAttributeses == null)
+                    requestedAttributes.Add("TOXICITY", new RequestedAttributes());
                 else
-                {
-                    Attributes = requestedAttributes;
-                }
-
-                ClientToken = clientToken;
+                    requestedAttributes = requestedAttributeses;
+                clientToken = clienttoken;
             }
         }
 
-        [SuppressMessage("ReSharper", "StyleCop.SA1300")]
         public class AnalyzeCommentResponse
         {
             public AttributeScores attributeScores { get; set; }
@@ -117,23 +60,67 @@
 
                         public class Score
                         {
-                            public double value { get; set; }
-
                             public string type { get; set; }
+
+                            public double value { get; set; }
                         }
                     }
 
                     public class SummaryScore
                     {
-                        public double value { get; set; }
-
                         public string type { get; set; }
+
+                        public double value { get; set; }
                     }
                 }
             }
         }
 
-        [SuppressMessage("ReSharper", "StyleCop.SA1300")]
+        public class Api
+        {
+            private readonly string URL;
+
+            public Api(string apikey)
+            {
+                ApiKey = apikey;
+                URL = $"https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key={ApiKey}";
+            }
+
+            private string ApiKey { get; }
+
+            public string GetResponseString(AnalyzeCommentRequest request)
+            {
+                using (var client = new HttpClient())
+                {
+                    var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+                    var response = client.PostAsync(URL, content).Result;
+                    response.EnsureSuccessStatusCode();
+                    return response.Content.ReadAsStringAsync().Result;
+                }
+            }
+
+            public AnalyzeCommentResponse QueryToxicity(string input)
+            {
+                var requestedAttributeses = new Dictionary<string, RequestedAttributes> { { "TOXICITY", new RequestedAttributes() } };
+                var req = new AnalyzeCommentRequest(input, requestedAttributeses);
+                var res = SendRequest(req);
+                return res;
+            }
+
+            public AnalyzeCommentResponse SendRequest(AnalyzeCommentRequest request)
+            {
+                using (var client = new HttpClient())
+                {
+                    var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+                    var response = client.PostAsync(URL, content).Result;
+                    response.EnsureSuccessStatusCode();
+                    var data = response.Content.ReadAsStringAsync().Result;
+                    var result = JsonConvert.DeserializeObject<AnalyzeCommentResponse>(data);
+                    return result;
+                }
+            }
+        }
+
         public class Comment
         {
             public Comment(string text, string type = "PLAIN_TEXT")
@@ -152,12 +139,11 @@
             }
         }
 
-        [SuppressMessage("ReSharper", "StyleCop.SA1300")]
         public class RequestedAttributes
         {
-            public float scoreThreshold { get; }
+            public float scoreThreshold;
 
-            public string scoreType { get; }
+            public string scoreType;
 
             public RequestedAttributes(string scoretype = "PROBABILITY", float scorethreshold = 0)
             {
