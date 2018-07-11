@@ -19,21 +19,10 @@
         {
             try
             {
-                //var toModify = guildModel.ModerationSetup.ModActions.Where(x => x.Action != GuildModel.Moderation.ModEvent.EventType.Kick && x.ExpiredOrRemoved == false && x.ExpiryDate.HasValue && x.ExpiryDate.Value < DateTime.UtcNow).ToList();
                 var now = DateTime.UtcNow;
                 bool hasChanges = false;
                 foreach (var action in guildModel.ModerationSetup.ModActions.Where(a => !a.ExpiredOrRemoved && a.Action != GuildModel.Moderation.ModEvent.EventType.Kick && a.ExpiryDate.HasValue))
                 {
-                    /*if (!action.ExpiryDate.HasValue)
-                    {
-                        continue;
-                    }
-
-                    if (action.ExpiredOrRemoved || action.Action == GuildModel.Moderation.ModEvent.EventType.Kick)
-                    {
-                        continue;
-                    }*/
-
                     if (action.ExpiryDate > now)
                     {
                         continue;
@@ -77,8 +66,26 @@
                                                                  $"**Expired:** {(action.ExpiryDate.HasValue ? $"{action.ExpiryDate.Value.ToLongDateString()} {action.ExpiryDate.Value.ToLongTimeString()}\n" : "Never\n")}" +
                                                                  (action.AutoModReason == GuildModel.Moderation.ModEvent.AutoReason.none ? $"**Reason:** {action.ProvidedReason ?? "N/A"}\n" : $"**Auto-Reason:** {action.AutoModReason}\n")
                                                          }
-                                                 }
+                                                 },
+                                    Color = Color.DarkTeal
                                 }.WithCurrentTimestamp();
+
+            if (action.AutoModReason != GuildModel.Moderation.ModEvent.AutoReason.none)
+            {
+                if (action.ReasonTrigger != null)
+                {
+                    undoEmbed.AddField("Trigger", $"In {user.Guild.GetTextChannel(action.ReasonTrigger.ChannelId)?.Mention}\n**Message:**\n{action.ReasonTrigger.Message}");
+                }
+            }
+
+            var auditReason = new RequestOptions
+                                  {
+                                      AuditLogReason =
+                                          $"Mod: {action.ModName} [{action.ModId}]\n"
+                                          + $"Action: {action.Action}\n"
+                                          + (action.AutoModReason == GuildModel.Moderation.ModEvent.AutoReason.none ? $"**Reason:** {action.ProvidedReason ?? "N/A"}\n" : $"**Auto-Reason:** {action.AutoModReason}\n")
+                                          + $"Trigger: {action.ReasonTrigger?.Message}\n"
+                                  };
             
             switch (action.Action)
             {
@@ -89,17 +96,7 @@
                         {
                             var _ = Task.Run(() =>
                                 {
-                                    user.RemoveRoleAsync(
-                                        role,
-                                        new RequestOptions
-                                            {
-                                                AuditLogReason =
-                                                    "Auto UnMuted user.\n"
-                                                    + $"Mod: {action.ModName} [{action.ModId}]\n"
-                                                    + $"AutoTrigger?: {action.AutoModReason}\n"
-                                                    + "Original Reason:\n" + $"{action.ProvidedReason}\n"
-                                                    + $"Message: {action.ReasonTrigger?.Message}"
-                                            }).ConfigureAwait(false);
+                                    user.RemoveRoleAsync(role, auditReason).ConfigureAwait(false);
                                     user.Guild.GetTextChannel(guildModel.ModerationSetup.Settings.ModLogChannel)?.SendMessageAsync("", false, undoEmbed.Build()).ConfigureAwait(false);
                                     return Task.CompletedTask;
                                 });
@@ -119,17 +116,7 @@
                         {
                             var _ = Task.Run(() =>
                                 {
-                                    guild.RemoveBanAsync(
-                                        action.UserId,
-                                        new RequestOptions
-                                            {
-                                                AuditLogReason =
-                                                    "Auto Unbanned user.\n"
-                                                    + $"Mod: {action.ModName} [{action.ModId}]\n"
-                                                    + $"AutoTrigger?: {action.AutoModReason}\n"
-                                                    + "Original Reason:\n" + $"{action.ProvidedReason}\n"
-                                                    + $"Message: {action.ReasonTrigger?.Message}"
-                                            }).ConfigureAwait(false);
+                                    guild.RemoveBanAsync(action.UserId, auditReason).ConfigureAwait(false);
                                     user.Guild.GetTextChannel(guildModel.ModerationSetup.Settings.ModLogChannel)?.SendMessageAsync("", false, undoEmbed.Build()).ConfigureAwait(false);
                                     return Task.CompletedTask;
                                 });
