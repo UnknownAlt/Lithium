@@ -25,6 +25,9 @@
         /// <param name="config">
         /// The config.
         /// </param>
+        /// <param name="logger">
+        /// The logger.
+        /// </param>
         public BotHandler(DiscordShardedClient client, EventHandler events, ConfigModel config, EventLogger logger)
         {
             Client = client;
@@ -69,7 +72,7 @@
             Client.ShardConnected += Event.ShardConnectedAsync;
             Client.MessageReceived += Event.MessageReceivedAsync;
 
-            // Event Logginh
+            // Event Logging
             Client.ChannelCreated += EventLogger.ChannelCreatedAsync;
             Client.ChannelDestroyed += EventLogger.ChannelDeletedAsync;
             Client.ChannelUpdated += EventLogger.ChannelUpdatedAsync;
@@ -86,6 +89,9 @@
             LogHandler.LogMessage("RavenBOT: Logged In");
             await Client.StartAsync();
             LogHandler.LogMessage("RavenBOT: Started");
+
+
+
         }
     }
 }

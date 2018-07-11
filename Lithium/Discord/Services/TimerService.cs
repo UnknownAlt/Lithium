@@ -9,23 +9,30 @@
     using Lithium.Handlers;
     using Lithium.Models;
 
+    using Microsoft.Extensions.DependencyInjection;
+
     public class TimerService
     {
         public static DateTime LastFireTime { get; set; } = DateTime.MinValue;
 
-        public static int FirePeriod { get; set; } = 10;
+        public static int FirePeriod { get; set; } = 1;
+
+        private DatabaseHandler Handler { get; }
 
         private readonly Timer _timer;
 
-        public TimerService(DiscordSocketClient client, DatabaseHandler handler)
+        public TimerService(DiscordShardedClient client, IServiceProvider provider)
         {
+            Handler = provider.GetRequiredService<DatabaseHandler>();
+
             _timer = new Timer(_ =>
                 {
+                    LogHandler.LogMessage("TimerService Run");
                     try
                     {
                         foreach (var guild in client.Guilds)
                         {
-                            var model = handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, guild.Id);
+                            var model = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, guild.Id);
                             if (model != null)
                             {
                                 TimerLoops.CheckModActions(model, guild);

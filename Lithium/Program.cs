@@ -10,6 +10,7 @@
 
     using global::Discord.WebSocket;
 
+    using Lithium.Discord.Services;
     using Lithium.Handlers;
     using Lithium.Models;
 
@@ -63,6 +64,7 @@
                     .AddSingleton<BotHandler>()
                     .AddSingleton<EventHandler>()
                     .AddSingleton<EventLogger>()
+                    .AddSingleton<TimerService>()
                     .AddSingleton<InteractiveService>()
                     .AddSingleton(new Random(Guid.NewGuid().GetHashCode()));
 
@@ -92,6 +94,7 @@
 
             await provider.GetRequiredService<BotHandler>().InitializeAsync();
             await provider.GetRequiredService<EventHandler>().InitializeAsync(dbConfig);
+            provider.GetRequiredService<TimerService>().Restart();
 
             // Indefinitely delay the method from finishing so that the program stays running until stopped.
             await Task.Delay(-1);

@@ -8,6 +8,18 @@
 
     public static class PermissionExtensions
     {
+        /// <summary>
+        /// Attempts to cast the current SocketUser to a SocketGuildUser
+        /// </summary>
+        /// <param name="currentUser">
+        /// The current user.
+        /// </param>
+        /// <returns>
+        /// The <see cref="SocketGuildUser"/>.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Throws if the user is unable to be cast
+        /// </exception>
         public static SocketGuildUser CastToSocketGuildUser(this SocketUser currentUser)
         {
             if (currentUser is SocketGuildUser user)

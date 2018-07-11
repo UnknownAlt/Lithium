@@ -2,11 +2,14 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using global::Discord;
     using global::Discord.WebSocket;
 
+    using Lithium.Discord.Extensions;
     using Lithium.Handlers;
 
     /// <summary>
@@ -38,7 +41,7 @@
             }
         }
 
-        public async Task ModAction(SocketGuildUser user, SocketGuildUser moderator, ISocketMessageChannel channel, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
+        public async Task ModActionAsync(SocketGuildUser user, SocketGuildUser moderator, ISocketMessageChannel channel, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
         {
             if (expires == null && autoModReason != Moderation.ModEvent.AutoReason.none)
             {
@@ -59,7 +62,7 @@
             var modEvent = new Moderation.ModEvent
             {
                 Action = modAction,
-                ExpiryDate = DateTime.UtcNow + expires,
+                ExpiryDate = expires == null ? null : DateTime.UtcNow + expires,
                 ModName = moderator.Username,
                 ModId = moderator.Id,
                 UserId = user.Id,
@@ -78,27 +81,31 @@
                                                  new EmbedFieldBuilder
                                                      {
                                                          Name =
-                                                             $"{user} was {modAction}ed",
+                                                             $"{user} was {modAction.GetDescription()}",
                                                          Value =
-                                                             $"Mod: {moderator.Mention}\n"
-                                                             + $"Auto Reason: {autoModReason}\n"
-                                                             + $"Reason: {reason}\n"
-                                                             + $"Expires: {(modEvent.ExpiryDate.HasValue ? $"{modEvent.ExpiryDate.Value.ToLongDateString()} {modEvent.ExpiryDate.Value.ToLongTimeString()}" : "Never")}"
+                                                             $"**Mod:** {moderator.Mention}\n" +
+                                                             $"**Expires:** {(modEvent.ExpiryDate.HasValue ? $"{modEvent.ExpiryDate.Value.ToLongDateString()} {modEvent.ExpiryDate.Value.ToLongTimeString()}\n" : "Never\n")}" +
+                                                             (modEvent.AutoModReason == Moderation.ModEvent.AutoReason.none ? $"**Reason:** {reason ?? "N/A"}\n" : $"**Auto-Reason:** {modEvent.AutoModReason}\n")
                                                      }
                                              }
-            };
+            }.WithCurrentTimestamp();
 
-            var request = new RequestOptions { AuditLogReason = $"Mod: {moderator.Mention}\n" + $"Auto Reason: {autoModReason}\n" + $"Action: {modAction}\n" + $"Trigger: {trigger?.Message}\n" + $"Reason: {reason}\n" };
+            var request = new RequestOptions
+            {
+                AuditLogReason =
+                                                         $"Mod: {moderator.Username} [{moderator.Id}]\n"
+                                                         + $"Action: {modAction}\n"
+                                                         + (modEvent.AutoModReason == Moderation.ModEvent.AutoReason.none ? $"**Reason:** {reason ?? "N/A"}\n" : $"**Auto-Reason:** {modEvent.AutoModReason}\n")
+                                                         + $"Trigger: {trigger?.Message}\n"
+            };
             bool success = true;
 
             if (modAction == Moderation.ModEvent.EventType.warn)
             {
-                // TODO Warn in chat then auto-delete if applicable
                 embed.Color = Color.DarkTeal;
             }
             else if (modAction == Moderation.ModEvent.EventType.Kick)
             {
-                // TODO Kick from server and log the event
                 embed.Color = Color.DarkRed;
                 try
                 {
@@ -114,13 +121,37 @@
             else if (modAction == Moderation.ModEvent.EventType.mute)
             {
                 embed.Color = Color.DarkPurple;
-                IRole muteRole = user.Guild.GetRole(ModerationSetup.Settings.MutedRoleId) ?? (IRole)await user.Guild.CreateRoleAsync("Muted", GuildPermissions.None);
+                IRole muteRole = user.Guild.GetRole(ModerationSetup.Settings.MutedRoleId);
+                if (muteRole == null)
+                {
+                    muteRole = user.Guild.Roles.FirstOrDefault(r => r.Name.Equals("Muted", StringComparison.OrdinalIgnoreCase));
+
+                    if (muteRole == null)
+                    {
+                        muteRole = await user.Guild.CreateRoleAsync("Muted", GuildPermissions.None);
+                        await channel.SendMessageAsync("", false, new EmbedBuilder
+                        {
+                            Description = $"Muted Role was not configured, I have auto-generated one for you. {muteRole.Mention} has been auto-set as the server's mute role"
+                        }.Build());
+                        ModerationSetup.Settings.MutedRoleId = muteRole.Id;
+                    }
+                    else
+                    {
+                        await channel.SendMessageAsync("", false, new EmbedBuilder
+                        {
+                            Description = $"Muted Role was not configured, but one was found. {muteRole.Mention} has been auto-set as the server's mute role"
+                        }.Build());
+                        ModerationSetup.Settings.MutedRoleId = muteRole.Id;
+                    }
+
+                    Save();
+                }
 
                 foreach (var guildChannel in user.Guild.Channels)
                 {
                     try
                     {
-                        await guildChannel.AddPermissionOverwriteAsync(muteRole, new OverwritePermissions(sendMessages: PermValue.Deny, addReactions: PermValue.Deny, attachFiles: PermValue.Deny, connect: PermValue.Deny, speak: PermValue.Deny, mentionEveryone: PermValue.Deny));
+                        var _ = Task.Run(() => guildChannel.AddPermissionOverwriteAsync(muteRole, new OverwritePermissions(sendMessages: PermValue.Deny, addReactions: PermValue.Deny, attachFiles: PermValue.Deny, connect: PermValue.Deny, speak: PermValue.Deny, mentionEveryone: PermValue.Deny)));
                     }
                     catch (Exception e)
                     {
@@ -138,11 +169,9 @@
                     await channel.SendMessageAsync(e.ToString());
                     success = false;
                 }
-
             }
             else if (modAction == Moderation.ModEvent.EventType.ban)
             {
-                // TODO Ban user from server, log in mod channel and give small message in chat
                 embed.Color = Color.DarkOrange;
 
                 try
@@ -166,9 +195,12 @@
 
             if (user.Guild.GetTextChannel(ModerationSetup.Settings.ModLogChannel) is SocketTextChannel modChannel)
             {
-                if (trigger != null)
+                if (modEvent.AutoModReason != Moderation.ModEvent.AutoReason.none)
                 {
-                    embed.AddField("Trigger", $"In {user.Guild.GetTextChannel(trigger.ChannelId)?.Mention}\n**Message:**\n{trigger.Message}");
+                    if (trigger != null)
+                    {
+                        embed.AddField("Trigger", $"In {user.Guild.GetTextChannel(trigger.ChannelId)?.Mention}\n**Message:**\n{trigger.Message}");
+                    }
                 }
 
                 if (!success)
@@ -264,9 +296,13 @@
             {
                 public enum EventType
                 {
+                    [Description("Kicked")]
                     Kick,
+                    [Description("Warned")]
                     warn,
+                    [Description("Banned")]
                     ban,
+                    [Description("Muted")]
                     mute
                 }
 
@@ -308,6 +344,8 @@
                 public DateTime? ExpiryDate { get; set; } = DateTime.MaxValue;
 
                 public bool ExpiredOrRemoved { get; set; } = false;
+
+                public DateTime TimeStamp { get; set; } = DateTime.UtcNow;
             }
         }
 
