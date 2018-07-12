@@ -29,7 +29,7 @@
 
         internal async Task<bool> AntiInviteAsync(Context context)
         {
-            if (Regex.Match(context.Message.Content, @"(http|https)?(:)?(\/\/)?(discordapp|discord).(gg|io|me|com)\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?").Success)
+            if (Regex.Match(context.Message.Content, @"discord(?:\.gg|\.me|app\.com\/invite)\/([\w\-]+)").Success)
             {
                 await context.Message?.DeleteAsync();
                 var emb = new EmbedBuilder();
