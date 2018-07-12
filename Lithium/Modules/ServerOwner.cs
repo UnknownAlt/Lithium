@@ -1,5 +1,6 @@
 ﻿namespace Lithium.Modules
 {
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     using global::Discord;
@@ -7,6 +8,7 @@
 
     using Lithium.Discord.Context;
     using Lithium.Discord.Preconditions;
+    using Lithium.Models;
 
     [GuildOwner]
     public class ServerOwner : Base
@@ -139,6 +141,16 @@
             {
                 await ReplyAsync("That is not a admin role.");
             }
+        }
+
+        [Command("WipeModEvents")]
+        [Summary("DELETES ALL Mod Events")]
+        [Remarks("Note: Only use this if you want to completely remove the logs")]
+        public Task WipeEventsAsync()
+        {
+            Context.Server.ModerationSetup.ModActions = new List<GuildModel.Moderation.ModEvent>();
+            Context.Server.Save();
+            return SimpleEmbedAsync("Success, all mod events deleted");
         }
     }
 }

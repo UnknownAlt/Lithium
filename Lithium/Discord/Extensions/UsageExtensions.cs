@@ -69,7 +69,7 @@
         /// <param name="fullList">Input list</param>
         /// <param name="groupSize">Size of Groups to output</param>
         /// <returns>A list of lists of the specified size</returns>
-        public static List<List<T>> SplitList<T>(this List<T> fullList, int groupSize = 30)
+        public static List<List<T>> SplitList<T>(this List<T> fullList, int groupSize)
         {
             var splitList = new List<List<T>>();
             for (var i = 0; i < fullList.Count; i += groupSize)

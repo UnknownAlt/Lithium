@@ -152,58 +152,40 @@
 
         public Task GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType? type, ulong? userID = null, bool showExpired = false)
         {
-            List<GuildModel.Moderation.ModEvent> modEvents;
-            if (showExpired)
+            IEnumerable<GuildModel.Moderation.ModEvent> modEvents = Context.Server.ModerationSetup.ModActions;
+
+            if (!showExpired)
             {
-                if (type != null && userID == null)
-                {
-                    // Show the given mod action for ALL users
-                    modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.Action == type).OrderByDescending(x => x.TimeStamp).ToList();
-                }
-                else if (type == null && userID == null)
-                {
-                    // Show ALL Mod actions for ALL users
-                    modEvents = Context.Server.ModerationSetup.ModActions.OrderByDescending(x => x.TimeStamp).ToList();
-                }
-                else
-                {
-                    if (type == null)
-                    {
-                        modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID).OrderByDescending(x => x.TimeStamp).ToList();
-                    }
-                    else
-                    {
-                        modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID && x.Action == type).OrderByDescending(x => x.TimeStamp).ToList();
-                    }
-                }
-            }
-            else
-            {               
-                if (type != null && userID == null)
-                {
-                    // Show the given mod action for ALL users
-                    modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.Action == type && !x.ExpiredOrRemoved).OrderByDescending(x => x.TimeStamp).ToList();
-                }
-                else if (type == null && userID == null)
-                {
-                    // Show ALL Mod actions for ALL users
-                    modEvents = Context.Server.ModerationSetup.ModActions.Where(x => !x.ExpiredOrRemoved).OrderByDescending(x => x.TimeStamp).ToList();
-                }
-                else
-                {
-                    if (type == null)
-                    {
-                        modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID && !x.ExpiredOrRemoved).OrderByDescending(x => x.TimeStamp).ToList();
-                    }
-                    else
-                    {
-                        modEvents = Context.Server.ModerationSetup.ModActions.Where(x => x.UserId == userID && x.Action == type && !x.ExpiredOrRemoved).OrderByDescending(x => x.TimeStamp).ToList();
-                    }
-                }
+                modEvents = modEvents.Where(m => !m.ExpiredOrRemoved).OrderByDescending(m => m.TimeStamp);
             }
 
+            if (type != null && userID == null)
+            {
+                // Show the given mod action for ALL users
+                modEvents = modEvents.Where(x => x.Action == type);
+            }
+            else if (type == null && userID == null)
+            {
+                // Show ALL Mod actions for ALL users
+                // modEvents = modEvents.ToList();
+                // Do nothing here as we are only using the default list
+            }
+            else
+            {
+                modEvents = type == null
+                                ? modEvents.Where(x => x.UserId == userID)
+                                : modEvents.Where(x => x.UserId == userID && x.Action == type);
+            }
+            
             var pages = new List<PaginatedMessage.Page>();
-            foreach (var modGroup in modEvents.SplitList(5))
+            var enumerable = modEvents.ToList();
+
+            if (enumerable.Count == 0)
+            {
+                return SimpleEmbedAsync("There are no actions that apply to your specifications");
+            }
+
+            foreach (var modGroup in enumerable.ToList().SplitList(5))
             {
                 pages.Add(new PaginatedMessage.Page
                               {
@@ -214,7 +196,7 @@
             return PagedReplyAsync(new PaginatedMessage
                                        {
                                            Pages = pages, 
-                                           Title = userID.HasValue ? $"{Context.Guild.GetUser(userID.Value)}{(type == null ? null : $" {type}")} {modEvents.Count} Actions" : null
+                                           Title = userID.HasValue ? $"{Context.Guild.GetUser(userID.Value)}{(type == null ? null : $" {type}")} {enumerable.Count} Actions" : null
                                        }, new ReactionList { Forward = true, Backward = true, Trash = true });
         }
     }
