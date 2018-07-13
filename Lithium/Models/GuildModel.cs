@@ -33,8 +33,6 @@
 
         public EventConfig EventLogger { get; set; } = new EventConfig();
 
-        public Ticketing Tickets { get; set; } = new Ticketing();
-
         /// <summary>
         /// Saves the GuildModel
         /// </summary>
@@ -546,59 +544,6 @@
                 public string Name { get; set; }
 
                 public DefaultPermissionLevel Setting { get; set; }
-            }
-        }
-
-        public class Ticketing
-        {
-            public TicketSettings Settings { get; set; } = new TicketSettings();
-
-            public List<Ticket> Tickets { get; set; } = new List<Ticket>();
-
-            public class TicketSettings
-            {
-                public ulong TicketChannelId { get; set; } = 0;
-
-                public bool UsingTickets { get; set; } = false;
-            }
-
-            public class Ticket
-            {
-                // The message ID of the original ticket
-                public ulong TicketMessageId { get; set; }
-
-                // Ticket ID
-                public int TicketId { get; set; }
-
-                // Info about current ticket
-                public string Message { get; set; }
-
-                public ulong CreatorID { get; set; }
-
-                // Solved Status
-                public bool Solved { get; set; } = false;
-
-                public string SolvedMessage { get; set; } = null;
-
-                // List of user IDs for upVotes and downVotes
-                public List<ulong> UpVotes { get; set; } = new List<ulong>();
-
-                public List<ulong> DownVotes { get; set; } = new List<ulong>();
-
-                public List<Comment> Comments { get; set; } = new List<Comment>();
-
-                public class Comment
-                {
-                    public int CommentId { get; set; }
-
-                    public ulong CreatorId { get; set; }
-
-                    public string Message { get; set; }
-
-                    public List<ulong> UpVotes { get; set; } = new List<ulong>();
-
-                    public List<ulong> DownVotes { get; set; } = new List<ulong>();
-                }
             }
         }
 
