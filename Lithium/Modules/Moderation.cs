@@ -10,6 +10,7 @@
     using global::Discord.Commands;
     using global::Discord.WebSocket;
 
+    using Lithium.Discord;
     using Lithium.Discord.Context;
     using Lithium.Discord.Extensions;
     using Lithium.Discord.Preconditions;
@@ -273,104 +274,156 @@
             return flatten.Where(x => x.Timestamp.UtcDateTime + TimeSpan.FromDays(14) > DateTime.UtcNow).ToList().Result;
         }
 
-        // TODO Kicks warns bans list commands
-
-        // TODO Logging for prune commands
-        // TODO Optional reason for pruning
         // TODO Hastebin upload prune log
+        [Priority(2)]
         [Command("prune")]
         [Alias("purge", "clear")]
         [Remarks("removes specified amount of messages")]
-        public async Task PruneAsync(int count = 100)
+        public Task PruneAsync(ulong countOrUserId = 100, [Remainder]string reason = null)
         {
-            if (count < 1)
+            if (countOrUserId < 1000)
             {
-                await ReplyAsync("**ERROR: **Please Specify the amount of messages you want to clear");
+                return PruneAsync(PruneType.All, null, (int)countOrUserId, reason);
             }
-            else if (count > 100)
-            {
-                await ReplyAsync("**Error: **I can only clear 100 Messages at a time!");
-            }
-            else
-            {
-                await Context.Message.DeleteAsync().ConfigureAwait(false);
-                var limit = count < 100 ? count : 100;
 
-                // var enumerable = await Context.Channel.GetMessagesAsync(limit).Flatten().ConfigureAwait(false);
-                var enumerable = GetMessagesAsync(limit);
-                try
-                {
-                    await (Context.Channel as ITextChannel).DeleteMessagesAsync(enumerable).ConfigureAwait(false);
-                }
-                catch
-                {
-                    // Ignored
-                }
-
-                await ReplyAsync($"Cleared **{enumerable.Count}** Messages");
-            }
+            return PruneAsync(PruneType.User, countOrUserId, 100, reason);
         }
 
+        [Priority(3)]
         [Command("prune")]
         [Alias("purge", "clear")]
         [Remarks("removes messages from a user in the last 100 messages")]
-        public async Task PruneAsync(IUser user)
+        public Task PruneAsync(IUser user, int amount = 100, [Remainder]string reason = null)
         {
-            await Context.Message.DeleteAsync().ConfigureAwait(false);
-            var enumerable = GetMessagesAsync();
-            var list = enumerable.Where(x => x.Author == user).ToList();
-            try
-            {
-                await (Context.Channel as ITextChannel).DeleteMessagesAsync(list).ConfigureAwait(false);
-            }
-            catch
-            {
-                // Ignored
-            }
-
-            await ReplyAsync($"Cleared **{user.Username}'s** Messages (Count = {list.Count})");
+            return PruneAsync(PruneType.User, user.Id, amount, reason);
         }
 
-        [Command("pruneID")]
-        [Remarks("removes messages from a user ID in the last 100 messages")]
-        public async Task PruneAsync(ulong userID)
-        {
-            await Context.Message.DeleteAsync().ConfigureAwait(false);
-            var enumerable = GetMessagesAsync();
-            var list = enumerable.Where(x => x.Author.Id == userID).ToList();
-            try
-            {
-                await (Context.Channel as ITextChannel).DeleteMessagesAsync(list).ConfigureAwait(false);
-            }
-            catch
-            {
-                // Ignored
-            }
-
-            await ReplyAsync($"Cleared Messages (Count = {list.Count})");
-        }
-
+        [Priority(2)]
         [Command("prune")]
         [Alias("purge", "clear")]
         [Remarks("removes messages from a role in the last 100 messages")]
-        public async Task PruneAsync(IRole role)
+        public Task PruneAsync(IRole role, int amount = 100, [Remainder]string reason = null)
         {
-            await Context.Message.DeleteAsync().ConfigureAwait(false);
-            var enumerable = GetMessagesAsync();
-            var list = enumerable.ToList().Where(x =>
-                Context.Guild.GetUser(x.Author.Id) != null &&
-                Context.Guild.GetUser(x.Author.Id).Roles.Any(r => r.Id == role.Id)).ToList();
+            return PruneAsync(PruneType.Role, role.Id, amount, reason);
+        }
+
+        public enum PruneType
+        {
+            Role,
+            User,
+            All
+        }
+
+        public enum PruneMethod
+        {
+            Bulk,
+            Individual
+        }
+
+        public Task PruneAsync(PruneType type, ulong? id, int count = 100, string reason = null, PruneMethod method = PruneMethod.Bulk)
+        {
+            if (type != PruneType.All && id == null)
+            {
+                throw new Exception("ID Must be provided for role and user prunes");
+            }
+
+            Context.Message.DeleteAsync().ConfigureAwait(false);
+            var enumerable = GetMessagesAsync(count);
+
+            List<IMessage> messages;
+            string response;
+            if (id.HasValue)
+            {
+                if (type == PruneType.Role)
+                {
+                    messages = enumerable.Where(m => !m.Author.IsWebhook && Context.Guild.GetUser(m.Author.Id)?.Roles.Any(r => r.Id == id.Value) == true).ToList();
+                    response = $"**Pruned Role:** {Context.Guild.GetRole(id.Value).Mention}\n";
+                }
+                else if (type == PruneType.User)
+                {
+                    messages = enumerable.Where(m => m.Author.Id == id).ToList();
+                    response = $"**Pruned User:** {Context.Guild.GetUser(id.Value)?.Mention ?? $"[{id.Value}]"}\n";
+                }
+                else
+                {
+                    throw new Exception("ID cannot be specified for all message pruning");
+                }
+            }
+            else
+            {
+                messages = enumerable;
+                response = "**Pruned Messages:** All Messages\n";
+            }
+
+            if (messages.Count == 0)
+            {
+                return SimpleEmbedAsync("No messages found with the given parameters");
+            }
+
+            var responseText = PruneMessagesAsync(messages, method);
+
+            Context.Server.ModLogAsync(
+                Context.Guild,
+                new EmbedBuilder
+                    {
+                        Description =
+                            $"Pruned **{messages.Count}** messages in **{Context.Channel.Name}**\n"
+                            + $"**Moderator:** {Context.User.Mention} [{Context.User.Id}]\n" + 
+                            $"{response}" + 
+                            $"**Reason:**\n{reason ?? "N/A"}\n" + 
+                            $"**Log:** {responseText.Result ?? "N/A"}"
+                    });
+
+            return SimpleEmbedAsync($"Cleared {messages.Count} messages");
+        }
+
+        public Task<string> PruneMessagesAsync(List<IMessage> messages, PruneMethod method)
+        {
+            if (method == PruneMethod.Bulk)
+            {
+                if (messages.Count > 100)
+                {
+                    var msgGroups = messages.ToList().SplitList(100);
+                    foreach (var msgGroup in msgGroups)
+                    {
+                        try
+                        {
+                            Context.Channel.CastToSocketTextChannel().DeleteMessagesAsync(msgGroup).ConfigureAwait(false);
+                        }
+                        catch (Exception e)
+                        {
+                            LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
+                        }
+                    }
+                }
+                else
+                {
+                    Context.Channel.CastToSocketTextChannel().DeleteMessagesAsync(messages).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                if (messages.Count > 20)
+                {
+                    throw new Exception("Please use bulk delete for more than 20 messages");
+                }
+
+                foreach (var message in messages)
+                {
+                    message.DeleteAsync();
+                }
+            }
 
             try
             {
-                await (Context.Channel as ITextChannel).DeleteMessagesAsync(list).ConfigureAwait(false);
+                return Haste.HasteBin(string.Join("\n", messages.Select(
+                    m => $"{m.Author.ToString()} at {m.Timestamp}\n" + 
+                         $"{m.Content}")), ".txt");
             }
-            catch
+            catch 
             {
-                // Ignored
+                return Task.FromResult("");
             }
-
-            await ReplyAsync($"Cleared Messages (Count = {list.Count})");
         }
     }
 }

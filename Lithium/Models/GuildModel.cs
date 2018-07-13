@@ -18,7 +18,12 @@
     /// </summary>
     public class GuildModel
     {
-        public ulong ID { get; set; }
+        public GuildModel(ulong id)
+        {
+            ID = id;
+        }
+
+        public ulong ID { get; }
 
         public Moderation ModerationSetup { get; set; } = new Moderation();
 
@@ -45,10 +50,27 @@
         public async Task CheckWarnLimitsAsync(SocketGuildUser user, SocketGuildUser client, SocketTextChannel channel, Moderation.ModEvent modEvent)
         {
             // Ensure that only warnings that apply to the user and aren't expired are counted
-            var currentWarns = ModerationSetup.ModActions.Where(m => m.UserId == user.Id && !m.ExpiredOrRemoved && m.Action == Moderation.ModEvent.EventType.Warn);
+            var currentWarns = ModerationSetup.ModActions.Where(m => m.UserId == user.Id && !m.ExpiredOrRemoved && m.Action == Moderation.ModEvent.EventType.Warn).ToList();
+
+            var warnCount = currentWarns.Count;
 
             // Check to see if the user's warnings are greater 
-            ModerationSetup.Settings.AutoTasks.TryGetValue(currentWarns.Count(), out var autoAction);
+            ModerationSetup.Settings.AutoTasks.TryGetValue(warnCount, out var autoAction);
+
+            if (autoAction == null)
+            {
+                var matchTasks = ModerationSetup.Settings.AutoTasks.Where(a => a.Key < warnCount).ToList();
+                if (matchTasks.Any())
+                {
+                    var maxTask = matchTasks.Max(t => t.Key);
+                    autoAction = matchTasks.FirstOrDefault(m => m.Key == maxTask).Value;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
             if (autoAction != null)
             {
                 switch (autoAction.LimitAction)
@@ -68,8 +90,23 @@
             }
         }
 
+        public Task ModLogAsync(SocketGuild guild, EmbedBuilder embed)
+        {
+            if (guild.GetTextChannel(ModerationSetup.Settings.ModLogChannel) is SocketTextChannel modChannel)
+            {
+                return modChannel.SendMessageAsync("", false, embed.Build());
+            }
+
+            return Task.CompletedTask;
+        }
+
         public async Task ModActionAsync(SocketGuildUser user, SocketGuildUser moderator, SocketTextChannel channel, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
         {
+            if (user.Id == moderator.Id)
+            {
+                throw new Exception("User can not be the same as the moderator");
+            }
+
             if (expires == null && autoModReason != Moderation.ModEvent.AutoReason.none)
             {
                 if (ModerationSetup.Settings.WarnExpiryTime != null && modAction == Moderation.ModEvent.EventType.Warn)
@@ -236,7 +273,7 @@
                     embed.AddField("FATAL ERROR", "Unable to mod action for user");
                 }
 
-                await modChannel.SendMessageAsync("", false, embed.Build());
+                await ModLogAsync(user.Guild, embed);
             }
 
             if (modAction == Moderation.ModEvent.EventType.Warn)
@@ -292,8 +329,11 @@
                 public enum WarnLimitAction
                 {
                     NoAction,
+                    [Description("Kicked")]
                     Kick,
+                    [Description("Banned")]
                     Ban,
+                    [Description("Muted")]
                     Mute
                 }
 
@@ -313,7 +353,7 @@
                 public ulong MutedRoleId { get; set; } = 0;
 
                 /// <summary>
-                /// A dictionary containing actions that wll be taken once a user reaches a certain amount of warnings
+                /// Gets or sets a dictionary containing actions that wll be taken once a user reaches a certain amount of warnings
                 /// </summary>
                 public Dictionary<int, AutoAction> AutoTasks { get; set; } = new Dictionary<int, AutoAction>();
 

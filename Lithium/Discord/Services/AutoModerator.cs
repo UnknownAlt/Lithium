@@ -20,7 +20,6 @@
         public AutoModerator(Perspective.Api _toxicityAPI)
         {
             ToxicityAPI = _toxicityAPI;
-            LogHandler.LogMessage("Check");
         }
 
         public Dictionary<ulong, List<NoSpam>> NoSpamList { get; set; } = new Dictionary<ulong, List<NoSpam>>();

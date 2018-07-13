@@ -6,6 +6,8 @@ namespace Lithium.Discord.Services
     using System.Net.Http;
     using System.Text;
 
+    using Lithium.Handlers;
+
     using Newtonsoft.Json;
 
     public class Perspective
@@ -88,6 +90,7 @@ namespace Lithium.Discord.Services
                              {
                                  BaseAddress = BaseAddress
                              };
+                LogHandler.LogMessage("Toxicity API Initialized");
             }
 
             public string GetResponseString(AnalyzeCommentRequest request)

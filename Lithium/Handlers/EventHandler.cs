@@ -171,7 +171,7 @@
                                 // Now if the bots server list contains a guild but 'Servers' does not, we create a new object for the guild
                                 foreach (var Guild in socketClient.Guilds.Select(x => x.Id).Where(x => !Servers.Contains(x)))
                                 {
-                                    handler.Execute<GuildModel>(DatabaseHandler.Operation.CREATE, new GuildModel { ID = Guild }, Guild);
+                                    handler.Execute<GuildModel>(DatabaseHandler.Operation.CREATE, new GuildModel(Guild), Guild);
                                 }
                             });
                 }
@@ -248,7 +248,7 @@
                 var handler = Provider.GetRequiredService<DatabaseHandler>();
                 if (handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, id: guild.Id) == null)
                 {
-                    handler.Execute<GuildModel>(DatabaseHandler.Operation.CREATE, new GuildModel { ID = guild.Id }, guild.Id);
+                    handler.Execute<GuildModel>(DatabaseHandler.Operation.CREATE, new GuildModel(guild.Id), guild.Id);
                 }
             });
         }
