@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Discord.Commands;
-
-namespace Lithium.Modules
+﻿namespace Lithium.Modules
 {
     using System.Linq;
     using System.Threading.Tasks;
+
+    using global::Discord.Commands;
 
     using Lithium.Discord.Context;
     using Lithium.Discord.Extensions;
     using Lithium.Discord.Preconditions;
     using Lithium.Discord.Services;
-    using Lithium.Models;
 
     [CustomPermissions(DefaultPermissionLevel.AllUsers)]
     public class Tickets : Base
