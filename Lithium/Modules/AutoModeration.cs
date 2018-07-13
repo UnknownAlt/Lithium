@@ -58,6 +58,19 @@
                                     $"{response}");
         }
 
+        [Command("DelAction")]
+        public Task DeleteActionAsync(int warns)
+        {
+            Context.Server.ModerationSetup.Settings.AutoTasks.Remove(warns, out var action);
+            if (action == null)
+            {
+                throw new Exception("There is no auto-action set for that amount of warns");
+            }
+
+            Context.Server.Save();
+            return SimpleEmbedAsync("Removed Auto Action\n" + $"{action.LimitAction} on {action.WarnLimit} warns");
+        }
+
         [Command("SetActionTimeout")]
         public Task AddActionAsync(int warns, int minutes)
         {
