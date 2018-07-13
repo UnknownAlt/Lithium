@@ -14,13 +14,6 @@
     {
         public List<EventLogDelay> EventLogDelays { get; set; } = new List<EventLogDelay>();
 
-        public DatabaseHandler Handler { get; }
-
-        public EventLogger(DatabaseHandler handler)
-        {
-            Handler = handler;
-        }
-
         public class EventLogDelay
         {
             public ulong GuildID { get; set; }
@@ -30,7 +23,7 @@
             public int Updates { get; set; }
         }
 
-        internal async Task LogEventAsync(GuildModel guildModel, IGuild guild, EmbedBuilder embed)
+        internal async Task LogEventAsync(EventConfig eventConfig, IGuild guild, EmbedBuilder embed)
         {
             if (EventLogDelays.All(x => x.GuildID != guild.Id))
             {
@@ -62,7 +55,7 @@
                     return;
                 }
 
-                if ((await guild.GetTextChannelAsync(guildModel.EventLogger.EventChannel)) is ITextChannel LogChannel && guildModel.EventLogger.LogEvents)
+                if ((await guild.GetTextChannelAsync(eventConfig.EventChannel)) is ITextChannel LogChannel && eventConfig.LogEvents)
                 {
                     try
                     {
@@ -104,14 +97,18 @@
                 return;
             }
 
-            var config = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, userAfter.Guild.Id);
-
-            if (!config.EventLogger.Settings.GuildMemberUpdated)
+            var eventConfig = EventConfig.Load(userAfter.Guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (config.EventLogger.LogEvents)
+            if (!eventConfig.Settings.GuildMemberUpdated)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder
                 {
@@ -123,7 +120,7 @@
                 };
 
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(config, userAfter.Guild, embed);
+                await LogEventAsync(eventConfig, userAfter.Guild, embed);
             }
         }
 
@@ -146,13 +143,18 @@
 
             var guild = ((SocketGuildChannel)channel).Guild;
 
-            var config = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, guild.Id);
-            if (!config.EventLogger.Settings.MessageUpdated)
+            var eventConfig = EventConfig.Load(guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (config.EventLogger.LogEvents)
+            if (!eventConfig.Settings.MessageUpdated)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder
                 {
@@ -170,7 +172,7 @@
                     $"**Channel:** {messageNew.Channel.Name}\n" +
                     $"**Embeds:** {messageNew.Embeds.Any()}");
                 
-                await LogEventAsync(config, guild, embed);
+                await LogEventAsync(eventConfig, guild, embed);
             }
         }
 
@@ -178,13 +180,18 @@
         {
             var channelBefore = s1 as SocketGuildChannel;
             var channelAfter = s2 as SocketGuildChannel;
-            var guildModel = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, s2);
-            if (!guildModel.EventLogger.Settings.ChannelUpdated)
+            var eventConfig = EventConfig.Load(channelAfter.Guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (guildModel.EventLogger.LogEvents)
+            if (!eventConfig.Settings.ChannelUpdated)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 if (channelBefore.Position != channelAfter.Position)
                 {
@@ -199,20 +206,25 @@
                 };
 
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(guildModel, channelAfter.Guild, embed);
+                await LogEventAsync(eventConfig, channelAfter.Guild, embed);
             }
         }
 
         internal async Task ChannelDeletedAsync(SocketChannel sChannel)
         {
             var guild = ((SocketGuildChannel)sChannel).Guild;
-            var guildModel = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, guild.Id);
-            if (!guildModel.EventLogger.Settings.ChannelDeleted)
+            var eventConfig = EventConfig.Load(guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (guildModel.EventLogger.LogEvents)
+            if (!eventConfig.Settings.ChannelDeleted)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder
                 {
@@ -222,20 +234,25 @@
                 };
 
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(guildModel, guild, embed);
+                await LogEventAsync(eventConfig, guild, embed);
             }
         }
 
         internal async Task ChannelCreatedAsync(SocketChannel sChannel)
         {
             var guild = ((SocketGuildChannel)sChannel).Guild;
-            var guildModel = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, guild.Id);
-            if (!guildModel.EventLogger.Settings.ChannelCreated)
+            var eventConfig = EventConfig.Load(guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (guildModel.EventLogger.LogEvents)
+            if (!eventConfig.Settings.ChannelCreated)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder
                 {
@@ -245,20 +262,25 @@
                 };
 
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(guildModel, guild, embed);
+                await LogEventAsync(eventConfig, guild, embed);
             }
         }
 
         internal async Task MessageDeletedAsync(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
             var guild = ((SocketGuildChannel)channel).Guild;
-            var guildModel = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, guild.Id);
-            if (!guildModel.EventLogger.Settings.MessageDeleted)
+            var eventConfig = EventConfig.Load(guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (guildModel.EventLogger.LogEvents)
+            if (!eventConfig.Settings.MessageDeleted)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder();
                 try
@@ -288,19 +310,24 @@
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
                 embed.Color = Color.DarkTeal;
 
-                await LogEventAsync(guildModel, guild, embed);
+                await LogEventAsync(eventConfig, guild, embed);
             }
         }
 
         internal async Task UserUnbannedAsync(SocketUser user, SocketGuild guild)
         {
-            var guildModel = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, guild.Id);
-            if (!guildModel.EventLogger.Settings.GuildUserUnBanned)
+            var eventConfig = EventConfig.Load(guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (guildModel.EventLogger.LogEvents)
+            if (!eventConfig.Settings.GuildUserUnBanned)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder
                 {
@@ -311,19 +338,24 @@
                 };
 
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(guildModel, guild, embed);
+                await LogEventAsync(eventConfig, guild, embed);
             }
         }
 
         internal async Task UserBannedAsync(SocketUser user, SocketGuild guild)
         {
-            var guildModel = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, guild.Id);
-            if (!guildModel.EventLogger.Settings.GuildUserBanned)
+            var eventConfig = EventConfig.Load(guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (guildModel.EventLogger.LogEvents)
+            if (!eventConfig.Settings.GuildUserBanned)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder
                 {
@@ -334,19 +366,24 @@
                 };
 
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(guildModel, guild, embed);
+                await LogEventAsync(eventConfig, guild, embed);
             }
         }
 
         internal async Task UserLeftAsync(SocketGuildUser user)
         {
-            var guildModel = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, user.Guild.Id);
-            if (!guildModel.EventLogger.Settings.GuildUserLeft)
+            var eventConfig = EventConfig.Load(user.Guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (guildModel.EventLogger.LogEvents)
+            if (!eventConfig.Settings.GuildUserLeft)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder
                 {
@@ -358,19 +395,24 @@
                 };
 
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(guildModel, user.Guild, embed);
+                await LogEventAsync(eventConfig, user.Guild, embed);
             }
         }
 
         internal async Task UserJoinedAsync(SocketGuildUser user)
         {
-            var guildModel = Handler.Execute<GuildModel>(DatabaseHandler.Operation.LOAD, null, user.Guild.Id);
-            if (!guildModel.EventLogger.Settings.GuildUserJoined)
+            var eventConfig = EventConfig.Load(user.Guild.Id);
+            if (eventConfig == null)
             {
                 return;
             }
 
-            if (guildModel.EventLogger.LogEvents)
+            if (!eventConfig.Settings.GuildUserJoined)
+            {
+                return;
+            }
+
+            if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder
                 {
@@ -382,7 +424,7 @@
                 };
 
                 embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(guildModel, user.Guild, embed);
+                await LogEventAsync(eventConfig, user.Guild, embed);
             }
         }
     }

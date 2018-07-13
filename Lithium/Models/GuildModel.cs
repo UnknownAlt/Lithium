@@ -31,7 +31,7 @@
 
         public AntiSpamSetup AntiSpam { get; set; } = new AntiSpamSetup();
 
-        public EventConfig EventLogger { get; set; } = new EventConfig();
+        // public EventConfig EventLogger { get; set; } = new EventConfig();
 
         /// <summary>
         /// Saves the GuildModel
@@ -383,38 +383,6 @@
             public bool success { get; set; }
 
             public EmbedBuilder embed { get; set; }
-        }
-
-        public class EventConfig
-        {
-            public bool LogEvents { get; set; } = false;
-
-            public ulong EventChannel { get; set; } = 0;
-
-            public EventSettings Settings { get; set; } = new EventSettings();
-
-            public class EventSettings
-            {
-                public bool GuildMemberUpdated { get; set; } = false;
-
-                public bool GuildUserJoined { get; set; } = true;
-
-                public bool GuildUserLeft { get; set; } = true;
-
-                public bool GuildUserBanned { get; set; } = true;
-
-                public bool GuildUserUnBanned { get; set; } = true;
-
-                public bool MessageUpdated { get; set; } = false;
-
-                public bool MessageDeleted { get; set; } = false;
-
-                public bool ChannelCreated { get; set; } = true;
-
-                public bool ChannelDeleted { get; set; } = true;
-
-                public bool ChannelUpdated { get; set; } = false;
-            }
         }
 
         public class Moderation

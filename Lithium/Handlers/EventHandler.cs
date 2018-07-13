@@ -48,6 +48,9 @@
         /// <param name="commandService">
         /// The command service.
         /// </param>
+        /// <param name="autoModerator">
+        /// The auto Moderator.
+        /// </param>
         public EventHandler(DiscordShardedClient client, ConfigModel config, IServiceProvider service, CommandService commandService, AutoModerator autoModerator)
         {
             Client = client;

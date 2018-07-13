@@ -7,6 +7,7 @@
 
     using Lithium.Discord.Context;
     using Lithium.Discord.Preconditions;
+    using Lithium.Models;
 
     [CustomPermissions(DefaultPermissionLevel.Administrators)]
     [Group("Event")]
@@ -17,9 +18,10 @@
         [Remarks("set the current channel for event logging")]
         public Task EventChannelAsync()
         {
-            Context.Server.EventLogger.EventChannel = Context.Channel.Id;
-            Context.Server.EventLogger.LogEvents = true;
-            Context.Server.Save();
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.EventChannel = Context.Channel.Id;
+            eventConfig.LogEvents = true;
+            eventConfig.Save();
             return ReplyAsync($"Success! Events will now be logged in {Context.Channel.Name}");
         }
 
@@ -28,9 +30,10 @@
         [Remarks("toggle event logging")]
         public Task LogEventToggleAsync()
         {
-            Context.Server.EventLogger.LogEvents = !Context.Server.EventLogger.LogEvents;
-            Context.Server.Save();
-            return ReplyAsync($"EventLogging: {Context.Server.EventLogger.LogEvents}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.LogEvents = !eventConfig.LogEvents;
+            eventConfig.Save();
+            return ReplyAsync($"EventLogging: {eventConfig.LogEvents}");
         }
 
         [Command("ChannelCreated")]
@@ -38,9 +41,10 @@
         [Remarks("toggle ChannelCreated event logging")]
         public Task ChannelCreatedAsync()
         {
-            Context.Server.EventLogger.Settings.ChannelCreated = !Context.Server.EventLogger.Settings.ChannelCreated;
-            Context.Server.Save();
-            return ReplyAsync($"Channel Created: {Context.Server.EventLogger.Settings.ChannelCreated}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.Settings.ChannelCreated = !eventConfig.Settings.ChannelCreated;
+            eventConfig.Save();
+            return ReplyAsync($"Channel Created: {eventConfig.Settings.ChannelCreated}");
         }
 
         [Command("ChannelDeleted")]
@@ -48,9 +52,10 @@
         [Remarks("toggle ChannelDeleted event logging")]
         public Task ChannelDeletedAsync()
         {
-            Context.Server.EventLogger.Settings.ChannelDeleted = !Context.Server.EventLogger.Settings.ChannelDeleted;
-            Context.Server.Save();
-            return ReplyAsync($"Channel Deleted: {Context.Server.EventLogger.Settings.ChannelDeleted}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.Settings.ChannelDeleted = !eventConfig.Settings.ChannelDeleted;
+            eventConfig.Save();
+            return ReplyAsync($"Channel Deleted: {eventConfig.Settings.ChannelDeleted}");
         }
 
         [Command("ChannelUpdated")]
@@ -58,9 +63,10 @@
         [Remarks("toggle ChannelUpdated event logging")]
         public Task ChannelUpdatedAsync()
         {
-            Context.Server.EventLogger.Settings.ChannelUpdated = !Context.Server.EventLogger.Settings.ChannelUpdated;
-            Context.Server.Save();
-            return ReplyAsync($"Channel Updated: {Context.Server.EventLogger.Settings.ChannelUpdated}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.Settings.ChannelUpdated = !eventConfig.Settings.ChannelUpdated;
+            eventConfig.Save();
+            return ReplyAsync($"Channel Updated: {eventConfig.Settings.ChannelUpdated}");
         }
 
         [Command("UserJoined")]
@@ -68,9 +74,10 @@
         [Remarks("toggle UserJoined event logging")]
         public Task UserJoinedAsync()
         {
-            Context.Server.EventLogger.Settings.GuildUserJoined = !Context.Server.EventLogger.Settings.GuildUserJoined;
-            Context.Server.Save();
-            return ReplyAsync($"User Joined: {Context.Server.EventLogger.Settings.GuildUserJoined}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.Settings.GuildUserJoined = !eventConfig.Settings.GuildUserJoined;
+            eventConfig.Save();
+            return ReplyAsync($"User Joined: {eventConfig.Settings.GuildUserJoined}");
         }
 
         [Command("UserLeft")]
@@ -78,9 +85,10 @@
         [Remarks("toggle UserLeft event logging")]
         public Task UserLeftAsync()
         {
-            Context.Server.EventLogger.Settings.GuildUserLeft = !Context.Server.EventLogger.Settings.GuildUserLeft;
-            Context.Server.Save();
-            return ReplyAsync($"User Left: {Context.Server.EventLogger.Settings.GuildUserLeft}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.Settings.GuildUserLeft = !eventConfig.Settings.GuildUserLeft;
+            eventConfig.Save();
+            return ReplyAsync($"User Left: {eventConfig.Settings.GuildUserLeft}");
         }
 
         [Command("UserUpdated")]
@@ -88,9 +96,10 @@
         [Remarks("toggle UserUpdated event logging")]
         public Task UserUpdatedAsync()
         {
-            Context.Server.EventLogger.Settings.GuildMemberUpdated = !Context.Server.EventLogger.Settings.GuildMemberUpdated;
-            Context.Server.Save();
-            return ReplyAsync($"User Updated: {Context.Server.EventLogger.Settings.GuildMemberUpdated}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.Settings.GuildMemberUpdated = !eventConfig.Settings.GuildMemberUpdated;
+            eventConfig.Save();
+            return ReplyAsync($"User Updated: {eventConfig.Settings.GuildMemberUpdated}");
         }
 
         [Command("MessageDeleted")]
@@ -98,9 +107,10 @@
         [Remarks("toggle MessageDeleted event logging")]
         public Task MessageDeletedAsync()
         {
-            Context.Server.EventLogger.Settings.MessageDeleted = !Context.Server.EventLogger.Settings.MessageDeleted;
-            Context.Server.Save();
-            return ReplyAsync($"Message Deleted: {Context.Server.EventLogger.Settings.MessageDeleted}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.Settings.MessageDeleted = !eventConfig.Settings.MessageDeleted;
+            eventConfig.Save();
+            return ReplyAsync($"Message Deleted: {eventConfig.Settings.MessageDeleted}");
         }
 
         [Command("MessageUpdated")]
@@ -108,9 +118,10 @@
         [Remarks("toggle MessageUpdated event logging")]
         public Task MessageUpdatedAsync()
         {
-            Context.Server.EventLogger.Settings.MessageUpdated = !Context.Server.EventLogger.Settings.MessageUpdated;
-            Context.Server.Save();
-            return ReplyAsync($"Message Updated: {Context.Server.EventLogger.Settings.MessageUpdated}");
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            eventConfig.Settings.MessageUpdated = !eventConfig.Settings.MessageUpdated;
+            eventConfig.Save();
+            return ReplyAsync($"Message Updated: {eventConfig.Settings.MessageUpdated}");
         }
 
         [Command("ViewConfig")]
@@ -118,7 +129,8 @@
         [Remarks("View the event logging config")]
         public Task LogEventConfigAsync()
         {
-            var g = Context.Server.EventLogger.Settings;
+            var eventConfig = EventConfig.Load(Context.Guild.Id);
+            var g = eventConfig.Settings;
             var embed = new EmbedBuilder
             {
                 Description = $"User Updated: {g.GuildMemberUpdated}\n" +
