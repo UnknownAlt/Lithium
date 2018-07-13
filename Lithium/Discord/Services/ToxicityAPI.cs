@@ -78,25 +78,24 @@ namespace Lithium.Discord.Services
 
         public class Api
         {
-            private readonly string URL;
+            private Uri BaseAddress { get; }
+            public HttpClient Client { get; }
 
             public Api(string apikey)
             {
-                ApiKey = apikey;
-                URL = $"https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key={ApiKey}";
+                BaseAddress = new Uri($"https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key={apikey}");
+                Client = new HttpClient
+                             {
+                                 BaseAddress = BaseAddress
+                             };
             }
-
-            private string ApiKey { get; }
 
             public string GetResponseString(AnalyzeCommentRequest request)
             {
-                using (var client = new HttpClient())
-                {
                     var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-                    var response = client.PostAsync(URL, content).Result;
+                    var response = Client.PostAsync(BaseAddress, content).Result;
                     response.EnsureSuccessStatusCode();
                     return response.Content.ReadAsStringAsync().Result;
-                }
             }
 
             public AnalyzeCommentResponse QueryToxicity(string input)
@@ -109,15 +108,12 @@ namespace Lithium.Discord.Services
 
             public AnalyzeCommentResponse SendRequest(AnalyzeCommentRequest request)
             {
-                using (var client = new HttpClient())
-                {
                     var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-                    var response = client.PostAsync(URL, content).Result;
+                    var response = Client.PostAsync(BaseAddress, content).Result;
                     response.EnsureSuccessStatusCode();
                     var data = response.Content.ReadAsStringAsync().Result;
                     var result = JsonConvert.DeserializeObject<AnalyzeCommentResponse>(data);
                     return result;
-                }
             }
         }
 
