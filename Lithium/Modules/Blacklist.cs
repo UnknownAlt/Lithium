@@ -13,7 +13,7 @@
     using Lithium.Discord.Preconditions;
     using Lithium.Models;
 
-    [CustomPermissions(true)]
+    [CustomPermissions(DefaultPermissionLevel.Administrators)]
     [Group("Blacklist")]
     public class Blacklist : Base
     {

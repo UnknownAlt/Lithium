@@ -8,7 +8,7 @@
     using Lithium.Discord.Context;
     using Lithium.Discord.Preconditions;
 
-    [CustomPermissions(true)]
+    [CustomPermissions(DefaultPermissionLevel.Administrators)]
     [Group("Event")]
     public class EventLogger : Base
     {

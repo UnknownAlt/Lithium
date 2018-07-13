@@ -30,7 +30,7 @@
 
                     var gUser = guild.GetUser(action.UserId);
 
-                    if (gUser == null && action.Action != GuildModel.Moderation.ModEvent.EventType.ban)
+                    if (gUser == null && action.Action != GuildModel.Moderation.ModEvent.EventType.Ban)
                     {
                         continue;
                     }
@@ -89,7 +89,7 @@
             
             switch (action.Action)
             {
-                case GuildModel.Moderation.ModEvent.EventType.mute:
+                case GuildModel.Moderation.ModEvent.EventType.Mute:
                     if (guild.GetRole(guildModel.ModerationSetup.Settings.MutedRoleId) is SocketRole role && user.Roles.Any(x => x.Id == role.Id))
                     {
                         try
@@ -108,7 +108,7 @@
                     }
 
                     break;
-                case GuildModel.Moderation.ModEvent.EventType.ban:
+                case GuildModel.Moderation.ModEvent.EventType.Ban:
                     var bans = await guild.GetBansAsync();
                     if (bans.Any(x => x.User.Id == action.UserId))
                     {

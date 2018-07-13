@@ -10,6 +10,7 @@
     using global::Discord.WebSocket;
 
     using Lithium.Discord.Extensions;
+    using Lithium.Discord.Preconditions;
     using Lithium.Handlers;
 
     /// <summary>
@@ -41,19 +42,45 @@
             }
         }
 
-        public async Task ModActionAsync(SocketGuildUser user, SocketGuildUser moderator, ISocketMessageChannel channel, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
+        public async Task CheckWarnLimitsAsync(SocketGuildUser user, SocketGuildUser client, SocketTextChannel channel, Moderation.ModEvent modEvent)
+        {
+            // Ensure that only warnings that apply to the user and aren't expired are counted
+            var currentWarns = ModerationSetup.ModActions.Where(m => m.UserId == user.Id && !m.ExpiredOrRemoved && m.Action == Moderation.ModEvent.EventType.Warn);
+
+            // Check to see if the user's warnings are greater 
+            ModerationSetup.Settings.AutoTasks.TryGetValue(currentWarns.Count(), out var autoAction);
+            if (autoAction != null)
+            {
+                switch (autoAction.LimitAction)
+                {
+                    case Moderation.ModerationSettings.WarnLimitAction.NoAction:
+                        break;
+                    case Moderation.ModerationSettings.WarnLimitAction.Kick:
+                        await ModActionAsync(user, client, channel, null, modEvent.AutoModReason, Moderation.ModEvent.EventType.Kick, modEvent.ReasonTrigger, autoAction.AutoActionExpiry);
+                        break;
+                    case Moderation.ModerationSettings.WarnLimitAction.Mute:
+                        await ModActionAsync(user, client, channel, null, modEvent.AutoModReason, Moderation.ModEvent.EventType.Mute, modEvent.ReasonTrigger, autoAction.AutoActionExpiry);
+                        break;
+                    case Moderation.ModerationSettings.WarnLimitAction.Ban:
+                        await ModActionAsync(user, client, channel, null, modEvent.AutoModReason, Moderation.ModEvent.EventType.Ban, modEvent.ReasonTrigger, autoAction.AutoActionExpiry);
+                        break;
+                }
+            }
+        }
+
+        public async Task ModActionAsync(SocketGuildUser user, SocketGuildUser moderator, SocketTextChannel channel, string reason, Moderation.ModEvent.AutoReason autoModReason, Moderation.ModEvent.EventType modAction, Moderation.ModEvent.Trigger trigger, TimeSpan? expires)
         {
             if (expires == null && autoModReason != Moderation.ModEvent.AutoReason.none)
             {
-                if (ModerationSetup.Settings.WarnExpiryTime != null && modAction == Moderation.ModEvent.EventType.warn)
+                if (ModerationSetup.Settings.WarnExpiryTime != null && modAction == Moderation.ModEvent.EventType.Warn)
                 {
                     expires = ModerationSetup.Settings.WarnExpiryTime;
                 }
-                else if (modAction == Moderation.ModEvent.EventType.ban && ModerationSetup.Settings.AutoBanExpiry != null)
+                else if (modAction == Moderation.ModEvent.EventType.Ban && ModerationSetup.Settings.AutoBanExpiry != null)
                 {
                     expires = ModerationSetup.Settings.AutoBanExpiry;
                 }
-                else if (modAction == Moderation.ModEvent.EventType.mute && ModerationSetup.Settings.AutoMuteExpiry != null)
+                else if (modAction == Moderation.ModEvent.EventType.Mute && ModerationSetup.Settings.AutoMuteExpiry != null)
                 {
                     expires = ModerationSetup.Settings.AutoMuteExpiry;
                 }
@@ -101,7 +128,7 @@
             };
             bool success = true;
 
-            if (modAction == Moderation.ModEvent.EventType.warn)
+            if (modAction == Moderation.ModEvent.EventType.Warn)
             {
                 embed.Color = Color.DarkTeal;
             }
@@ -119,7 +146,7 @@
                     success = false;
                 }
             }
-            else if (modAction == Moderation.ModEvent.EventType.mute)
+            else if (modAction == Moderation.ModEvent.EventType.Mute)
             {
                 embed.Color = Color.DarkPurple;
                 IRole muteRole = user.Guild.GetRole(ModerationSetup.Settings.MutedRoleId);
@@ -171,7 +198,7 @@
                     success = false;
                 }
             }
-            else if (modAction == Moderation.ModEvent.EventType.ban)
+            else if (modAction == Moderation.ModEvent.EventType.Ban)
             {
                 embed.Color = Color.DarkOrange;
 
@@ -210,6 +237,11 @@
                 }
 
                 await modChannel.SendMessageAsync("", false, embed.Build());
+            }
+
+            if (modAction == Moderation.ModEvent.EventType.Warn)
+            {
+                await CheckWarnLimitsAsync(user, channel.Guild.CurrentUser, channel, modEvent);
             }
         }
 
@@ -280,6 +312,9 @@
 
                 public ulong MutedRoleId { get; set; } = 0;
 
+                /// <summary>
+                /// A dictionary containing actions that wll be taken once a user reaches a certain amount of warnings
+                /// </summary>
                 public Dictionary<int, AutoAction> AutoTasks { get; set; } = new Dictionary<int, AutoAction>();
 
                 public class AutoAction
@@ -288,6 +323,8 @@
 
                     // Warnings before doing a specific action.
                     public int WarnLimit { get; set; } = int.MaxValue;
+
+                    public string Response { get; set; } = "Warn Limit Exceeded";
 
                     public TimeSpan? AutoActionExpiry { get; set; } = null;
                 }
@@ -300,11 +337,11 @@
                     [Description("Kicked")]
                     Kick,
                     [Description("Warned")]
-                    warn,
+                    Warn,
                     [Description("Banned")]
-                    ban,
+                    Ban,
                     [Description("Muted")]
-                    mute
+                    Mute
                 }
 
                 public enum AutoReason
@@ -316,6 +353,7 @@
                     massMention,
                     mentionAll,
                     toxicity,
+                    exceededWarnLimit,
                     none
                 }
 
@@ -358,19 +396,11 @@
 
             public class CustomPermission
             {
-                public enum AccessType
-                {
-                    ServerOwner,
-                    Admin,
-                    Moderator,
-                    All
-                }
-
                 public bool IsCommand { get; set; } = true;
 
                 public string Name { get; set; }
 
-                public AccessType Setting { get; set; } = AccessType.Admin;
+                public DefaultPermissionLevel Setting { get; set; }
             }
         }
 

@@ -10,7 +10,7 @@
     using Lithium.Discord.Preconditions;
     using Lithium.Models;
 
-    [GuildOwner]
+    [CustomPermissions(DefaultPermissionLevel.ServerOwner)]
     public class ServerOwner : Base
     {
         [Command("SetModLog")]

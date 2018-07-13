@@ -12,7 +12,7 @@
     using Lithium.Discord.Preconditions;
     using Lithium.Models;
 
-    [CustomPermissions(true)]
+    [CustomPermissions(DefaultPermissionLevel.Administrators)]
     public class AutoMod : Base
     {
         [Command("NoSpam")]

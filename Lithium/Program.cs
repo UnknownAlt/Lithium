@@ -78,7 +78,7 @@
 
             // The provider is split here so we can get our shard count from the database before actually logging into discord.
             // This is important to do so the bot always logs in with the required amount of shards.
-            var shards = provider.GetRequiredService<DatabaseHandler>().Execute<ConfigModel>(DatabaseHandler.Operation.LOAD, id: "Config").Shards;
+            var config = provider.GetRequiredService<DatabaseHandler>().Execute<ConfigModel>(DatabaseHandler.Operation.LOAD, id: "Config");
             services.AddSingleton(new DiscordShardedClient(new DiscordSocketConfig
             {
                 MessageCacheSize = 20,
@@ -86,9 +86,10 @@
                 LogLevel = dbConfig.Local.Developing ? LogSeverity.Debug : LogSeverity.Warning,
 
                 // Please change increase this as your server count grows beyond 2000 guilds. ie. < 2000 = 1, 2000 = 2, 4000 = 2 ...
-                TotalShards = shards
+                TotalShards = config.Shards
             }))
-            .AddSingleton<AutoModerator>();
+            .AddSingleton<AutoModerator>()
+            .AddSingleton(new Perspective.Api(config.ToxicityToken));
 
             // Build the service provider a second time so that the ShardedClient is now included.
             provider = services.BuildServiceProvider();

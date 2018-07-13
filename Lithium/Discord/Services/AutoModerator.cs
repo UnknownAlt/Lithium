@@ -17,15 +17,15 @@
     {
         public List<Delays> AntiSpamMsgDelays { get; set; } = new List<Delays>();
 
-        public AutoModerator(DatabaseHandler handler)
+        public AutoModerator(Perspective.Api _toxicityAPI)
         {
-            ToxicityAPI = new Perspective.Api(handler.Execute<ConfigModel>(DatabaseHandler.Operation.LOAD, null, "Config").ToxicityToken);
+            ToxicityAPI = _toxicityAPI;
             LogHandler.LogMessage("Check");
         }
 
         public Dictionary<ulong, List<NoSpam>> NoSpamList { get; set; } = new Dictionary<ulong, List<NoSpam>>();
 
-        private Perspective.Api ToxicityAPI { get; set; }
+        private Perspective.Api ToxicityAPI { get; }
 
         internal async Task<bool> AntiInviteAsync(Context context)
         {
@@ -44,10 +44,10 @@
                     await context.Server.ModActionAsync(
                         context.User.CastToSocketGuildUser(),
                         context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
-                        context.Channel,
+                        context.Channel.CastToSocketTextChannel(),
                         null,
                         GuildModel.Moderation.ModEvent.AutoReason.discordInvites,
-                        GuildModel.Moderation.ModEvent.EventType.warn,
+                        GuildModel.Moderation.ModEvent.EventType.Warn,
                         new GuildModel.Moderation.ModEvent.Trigger
                             {
                                 Message = context.Message.Content,
@@ -74,10 +74,10 @@
                     await context.Server.ModActionAsync(
                         context.User.CastToSocketGuildUser(),
                         context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
-                        context.Channel,
+                        context.Channel.CastToSocketTextChannel(),
                         null,
                         GuildModel.Moderation.ModEvent.AutoReason.ipAddresses,
-                        GuildModel.Moderation.ModEvent.EventType.warn,
+                        GuildModel.Moderation.ModEvent.EventType.Warn,
                         new GuildModel.Moderation.ModEvent.Trigger
                             {
                                 Message = context.Message.Content,
@@ -106,10 +106,10 @@
                         await context.Server.ModActionAsync(
                             context.User.CastToSocketGuildUser(),
                             context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
-                            context.Channel,
+                            context.Channel.CastToSocketTextChannel(),
                             null,
                             GuildModel.Moderation.ModEvent.AutoReason.massMention,
-                            GuildModel.Moderation.ModEvent.EventType.warn,
+                            GuildModel.Moderation.ModEvent.EventType.Warn,
                             new GuildModel.Moderation.ModEvent.Trigger
                                 {
                                     Message = context.Message.Content,
@@ -126,7 +126,7 @@
             {
                 if (context.Message.Content.Contains("@everyone") || context.Message.Content.Contains("@here"))
                 {
-                    await context.Message?.DeleteAsync();
+                    await (context.Message?.DeleteAsync()).ConfigureAwait(false);
                     var emb = new EmbedBuilder();
                     if (context.Server.AntiSpam.Mention.MentionAllResponse != null)
                     {
@@ -143,10 +143,10 @@
                         await context.Server.ModActionAsync(
                             context.User.CastToSocketGuildUser(),
                             context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
-                            context.Channel,
+                            context.Channel.CastToSocketTextChannel(),
                             null,
                             GuildModel.Moderation.ModEvent.AutoReason.mentionAll,
-                            GuildModel.Moderation.ModEvent.EventType.warn,
+                            GuildModel.Moderation.ModEvent.EventType.Warn,
                             new GuildModel.Moderation.ModEvent.Trigger
                                 {
                                     Message = context.Message.Content,
@@ -223,10 +223,10 @@
                                     await context.Server.ModActionAsync(
                                         context.User.CastToSocketGuildUser(),
                                         context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
-                                        context.Channel,
+                                        context.Channel.CastToSocketTextChannel(),
                                         null,
                                         GuildModel.Moderation.ModEvent.AutoReason.messageSpam,
-                                        GuildModel.Moderation.ModEvent.EventType.warn,
+                                        GuildModel.Moderation.ModEvent.EventType.Warn,
                                         new GuildModel.Moderation.ModEvent.Trigger
                                             {
                                                 Message = context.Message.Content,
@@ -277,10 +277,10 @@
                         await context.Server.ModActionAsync(
                             context.User.CastToSocketGuildUser(),
                             context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
-                            context.Channel,
+                            context.Channel.CastToSocketTextChannel(),
                             null,
                             GuildModel.Moderation.ModEvent.AutoReason.blacklist,
-                            GuildModel.Moderation.ModEvent.EventType.warn,
+                            GuildModel.Moderation.ModEvent.EventType.Warn,
                             new GuildModel.Moderation.ModEvent.Trigger
                                 {
                                     Message = context.Message.Content,
@@ -315,10 +315,10 @@
                                 await context.Server.ModActionAsync(
                                     context.User.CastToSocketGuildUser(),
                                     context.Guild.GetUser(context.Client.CurrentUser.Id),
-                                    context.Channel,
+                                    context.Channel.CastToSocketTextChannel(),
                                     null,
                                     GuildModel.Moderation.ModEvent.AutoReason.toxicity,
-                                    GuildModel.Moderation.ModEvent.EventType.warn,
+                                    GuildModel.Moderation.ModEvent.EventType.Warn,
                                     new GuildModel.Moderation.ModEvent.Trigger
                                         {
                                             Message = context.Message.Content,

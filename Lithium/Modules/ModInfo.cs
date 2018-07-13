@@ -15,7 +15,7 @@
     using Lithium.Models;
     using Lithium.Discord.Extensions;
 
-    [CustomPermissions(true)]
+    [CustomPermissions(DefaultPermissionLevel.Administrators)]
     public class ModInfo : Base
     {
         [Command("GetAction")]
@@ -33,25 +33,25 @@
         [Command("Bans")]
         public Task ViewBansAsync(SocketGuildUser user = null)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.ban, user?.Id);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Ban, user?.Id);
         }
 
         [Command("Bans")]
         public Task ViewBansAsync(ulong userId)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.ban, userId);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Ban, userId);
         }
                 
         [Command("LongBans")]
         public Task ViewLongBansAsync(SocketGuildUser user = null)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.ban, user?.Id, true);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Ban, user?.Id, true);
         }
 
         [Command("LongBans")]
         public Task ViewLongBansAsync(ulong userId)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.ban, userId, true);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Ban, userId, true);
         }
 
         [Command("Kicks")]
@@ -81,49 +81,49 @@
         [Command("Warns")]
         public Task ViewWarnsAsync(SocketGuildUser user = null)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.warn, user?.Id);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Warn, user?.Id);
         }
 
         [Command("Warns")]
         public Task ViewWarnsAsync(ulong userId)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.warn, userId);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Warn, userId);
         }
                 
         [Command("LongWarns")]
         public Task ViewLongWarnsAsync(SocketGuildUser user = null)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.warn, user?.Id, true);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Warn, user?.Id, true);
         }
 
         [Command("LongWarns")]
         public Task ViewLongWarnsAsync(ulong userId)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.warn, userId, true);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Warn, userId, true);
         }
 
         [Command("Mutes")]
         public Task ViewMutesAsync(SocketGuildUser user = null)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.mute, user?.Id);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Mute, user?.Id);
         }
 
         [Command("Mutes")]
         public Task ViewMutesAsync(ulong userId)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.mute, userId);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Mute, userId);
         }
         
         [Command("LongMutes")]
         public Task ViewLongMutesAsync(SocketGuildUser user = null)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.mute, user?.Id, true);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Mute, user?.Id, true);
         }
 
         [Command("LongMutes")]
         public Task ViewLongMutesAsync(ulong userId)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.mute, userId, true);
+            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Mute, userId, true);
         }
 
         [Command("ModLog")]
