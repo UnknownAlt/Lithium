@@ -1,4 +1,4 @@
-﻿namespace Lithium
+namespace Lithium
 {
     using System;
     using System.IO;
@@ -35,7 +35,7 @@
         /// <param name="args">Discarded Args</param>
         public static void Main(string[] args)
         {
-             StartAsync().GetAwaiter().GetResult();
+            StartAsync().GetAwaiter().GetResult();
         }
 
         /// <summary>
