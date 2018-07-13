@@ -14,9 +14,10 @@ namespace Lithium.Modules
     using Lithium.Discord.Services;
     using Lithium.Models;
 
-    [CustomPermissions(DefaultPermissionLevel.Moderators)]
+    [CustomPermissions(DefaultPermissionLevel.AllUsers)]
     public class Tickets : Base
     {
+        [CustomPermissions(DefaultPermissionLevel.Administrators)]
         [Command("SetChannel")]
         public Task SetChannelAsync()
         {
@@ -26,6 +27,7 @@ namespace Lithium.Modules
             return SimpleEmbedAsync("Channel Set");
         }
 
+        [CustomPermissions(DefaultPermissionLevel.Moderators)]
         [Command("RefreshTickets")]
         public Task RefreshTicketsAsync()
         {
@@ -78,6 +80,7 @@ namespace Lithium.Modules
             return SimpleEmbedAsync("Success. DownVoted");
         }
 
+        [CustomPermissions(DefaultPermissionLevel.Administrators)]
         [Command("SolveTicket")]
         public Task SolveAsync(int ticketId, [Remainder]string reason)
         {
@@ -87,6 +90,7 @@ namespace Lithium.Modules
             return SimpleEmbedAsync("Success. Set as solved");
         }
 
+        [CustomPermissions(DefaultPermissionLevel.Administrators)]
         [Command("OpenTicket")]
         public Task OpenAsync(int ticketId, [Remainder]string reason)
         {
