@@ -167,7 +167,7 @@
                 embed.AddField("Old Message:", $"{messageOld.Value.Content}");
                 embed.AddField("New Message:", $"{messageNew.Content}");
                 embed.AddField("Info",
-                    $"**Author:** {messageNew.Author.Username}\n" +
+                    $"**Author:** {messageNew.Author}\n" +
                     $"**Author ID:** {messageNew.Author.Id}\n" +
                     $"**Channel:** {messageNew.Channel.Name}\n" +
                     $"**Embeds:** {messageNew.Embeds.Any()}");
@@ -283,17 +283,10 @@
             if (eventConfig.LogEvents)
             {
                 var embed = new EmbedBuilder();
-                try
-                {
-                    embed.AddField("Message Deleted", $"Message: {message.Value.Content}\n" +
-                                                      $"Author: {message.Value.Author}\n" +
-                                                      $"Channel: {channel.Name}");
-                }
-                catch
-                {
-                    embed.AddField("Message Deleted", "Message was unable to be retrieved\n" +
-                                                      $"Channel: {channel.Name}");
-                }
+
+                embed.AddField("Message Deleted", $"Author: {message.Value.Author}\n" +
+                                                  $"Channel: {channel.Name}");
+                embed.AddField("Message", $"{(message.HasValue ? $"{message.Value.Content}" : "Message unable to be retrieved")}");
 
                 /*
                 if (guild.CurrentUser.GuildPermissions.ViewAuditLog)
@@ -333,7 +326,7 @@
                 {
                     Title = "User UnBanned",
                     ThumbnailUrl = user.GetAvatarUrl(),
-                    Description = $"**Username:** {user.Username}",
+                    Description = $"**Username:** {user}",
                     Color = Color.DarkTeal
                 };
 
@@ -361,7 +354,7 @@
                 {
                     Title = "User Banned",
                     ThumbnailUrl = user.GetAvatarUrl(),
-                    Description = $"**Username:** {user.Username}",
+                    Description = $"**Username:** {user}",
                     Color = Color.DarkRed
                 };
 
@@ -388,7 +381,7 @@
                 var embed = new EmbedBuilder
                 {
                     Title = "User Left",
-                    Description = $"{user.Mention} {user.Username}#{user.Discriminator}\n" +
+                    Description = $"{user.Mention} {user}\n" +
                                   $"ID: {user.Id}",
                     ThumbnailUrl = user.GetAvatarUrl(),
                     Color = Color.Red
@@ -417,7 +410,7 @@
                 var embed = new EmbedBuilder
                 {
                     Title = "User Joined",
-                    Description = $"{user.Mention} {user.Username}#{user.Discriminator}\n" +
+                    Description = $"{user.Mention} {user}\n" +
                                   $"ID: {user.Id}",
                     ThumbnailUrl = user.GetAvatarUrl(),
                     Color = Color.Green
