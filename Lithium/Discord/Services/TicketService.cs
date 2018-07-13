@@ -12,18 +12,18 @@
 
     public static class TicketService
     {
-        public static Guild GetTickets(this IGuild guild)
+        public static TicketModel GetTickets(this IGuild guild)
         {
             using (var session = DatabaseHandler.Store.OpenSession())
             {
-                return session.Load<Guild>($"{guild.Id}-Tickets") ?? new Guild
+                return session.Load<TicketModel>($"{guild.Id}-Tickets") ?? new TicketModel
                 {
                     ID = guild.Id
                 };
             }
         }
 
-        public class Guild
+        public class TicketModel
         {
             public void Save()
             {
