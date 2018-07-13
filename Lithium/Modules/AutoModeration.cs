@@ -1,8 +1,10 @@
 ﻿namespace Lithium.Modules
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
+    using global::Discord;
     using global::Discord.Commands;
 
     using Lithium.Discord.Context;
@@ -49,6 +51,11 @@
                 throw new Exception("There is already an auto-action set for that amount of warns");
             }
 
+            if (Context.Server.ModerationSetup.Settings.AutoTasks.Any(a => a.Value.LimitAction == action))
+            {
+                throw new Exception($"There is already a {action} auto-action");
+            }
+
             Context.Server.ModerationSetup.Settings.AutoTasks.Add(warns, newAction);
             Context.Server.Save();
 
@@ -68,7 +75,22 @@
             }
 
             Context.Server.Save();
-            return SimpleEmbedAsync("Removed Auto Action\n" + $"{action.LimitAction} on {action.WarnLimit} warns");
+            return SimpleEmbedAsync($"Removed Auto Action\n**{action.LimitAction}** on **{action.WarnLimit}** warns");
+        }
+        
+        [Command("GetActions")]
+        public Task GetActionsAsync()
+        {
+            var embed = new EmbedBuilder();
+            foreach (var task in Context.Server.ModerationSetup.Settings.AutoTasks)
+            {
+                embed.AddField(
+                    task.Value.LimitAction.ToString(),
+                    $"Users will be **{task.Value.LimitAction.GetDescription()}** after **{task.Value.WarnLimit}** Warns\n"
+                    + $"**Expires?:** {(task.Value.AutoActionExpiry.HasValue ? $"after {task.Value.AutoActionExpiry.Value.TotalMinutes} minutes" : "Never")}");
+            }
+
+            return ReplyAsync(embed);
         }
 
         [Command("SetActionTimeout")]

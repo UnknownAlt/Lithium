@@ -371,7 +371,8 @@
                             + $"**Moderator:** {Context.User.Mention} [{Context.User.Id}]\n" + 
                             $"{response}" + 
                             $"**Reason:**\n{reason ?? "N/A"}\n" + 
-                            $"**Log:** {responseText.Result ?? "N/A"}"
+                            $"**Log:** {responseText.Result ?? "N/A"}",
+                        Color = Color.DarkMagenta
                     });
 
             return SimpleEmbedAsync($"Cleared {messages.Count} messages");
