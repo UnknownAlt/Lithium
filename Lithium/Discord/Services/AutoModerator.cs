@@ -52,7 +52,8 @@
                                 Message = context.Message.Content,
                                 ChannelId = context.Channel.Id
                             },
-                        null);
+                        null,
+                        GuildModel.AdditionalDetails.Default());
                 }
 
                 return true;
@@ -82,7 +83,8 @@
                                 Message = context.Message.Content,
                                 ChannelId = context.Channel.Id
                             },
-                        null);
+                        null,
+                        GuildModel.AdditionalDetails.Default());
                 }
 
                 return true;
@@ -114,7 +116,8 @@
                                     Message = context.Message.Content,
                                     ChannelId = context.Channel.Id
                                 },
-                            null);
+                            null,
+                        GuildModel.AdditionalDetails.Default());
                     }
 
                     return true;
@@ -151,7 +154,8 @@
                                     Message = context.Message.Content,
                                     ChannelId = context.Channel.Id
                                 },
-                            null);
+                            null,
+                        GuildModel.AdditionalDetails.Default());
                     }
 
                     return true;
@@ -231,7 +235,8 @@
                                                 Message = context.Message.Content,
                                                 ChannelId = context.Channel.Id
                                             },
-                                        null);
+                                        null,
+                        GuildModel.AdditionalDetails.Default());
                                 }
                             }
                             else
@@ -255,10 +260,12 @@
                 var detected = false;
                 var blacklistMessage = context.Server.AntiSpam.Blacklist.DefaultBlacklistMessage;
                 var blacklistWords = context.Server.AntiSpam.Blacklist.BlacklistWordSet.FirstOrDefault(words => words.WordList.Any(x => context.Message.Content.ToLower().Contains(x.ToLower())));
+                string blacklistMatch = null;
                 if (blacklistWords != null)
                 {
                     detected = true;
                     blacklistMessage = blacklistWords.BlacklistResponse ?? context.Server.AntiSpam.Blacklist.DefaultBlacklistMessage;
+                    blacklistMatch = blacklistWords.WordList.FirstOrDefault(w => context.Message.Content.Contains(w, StringComparison.OrdinalIgnoreCase));
                 }
 
                 if (detected)
@@ -285,7 +292,8 @@
                                     Message = context.Message.Content,
                                     ChannelId = context.Channel.Id
                                 },
-                            null);
+                            null,
+                            GuildModel.AdditionalDetails.QuickModOnlyDetails("Blacklist Match", $"{blacklistMatch ?? "N/A"}"));
                     }
 
                     return true;
@@ -307,7 +315,7 @@
                         if (res.attributeScores.TOXICITY.summaryScore.value * 100 > context.Server.AntiSpam.Toxicity.ToxicityThreshold)
                         {
                             await context.Message?.DeleteAsync();
-                            var emb = new EmbedBuilder { Title = "Toxicity Threshold Breached", Description = $"{context.User.Mention}" };
+                            var emb = new EmbedBuilder { Title = $"Toxicity Threshold Breached ({res.attributeScores.TOXICITY.summaryScore.value * 100})", Description = $"{context.User.Mention}" };
                             await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
                             if (context.Server.AntiSpam.Toxicity.WarnOnDetection)
                             {
@@ -323,7 +331,8 @@
                                             Message = context.Message.Content,
                                             ChannelId = context.Channel.Id
                                         },
-                                    null);
+                                    null,
+                                    GuildModel.AdditionalDetails.QuickModOnlyDetails("Toxicity Reading", $"{res.attributeScores.TOXICITY.summaryScore.value * 100}"));
                             }
 
                             return true;
