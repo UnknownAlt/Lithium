@@ -37,7 +37,7 @@
         public string DefaultPrefix { get; set; }
 
         /// <summary>
-        /// Saves the GuildModel
+        /// Saves the Dictionary
         /// </summary>
         /// <param name="defaultPrefix">
         /// The default Prefix.

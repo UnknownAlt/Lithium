@@ -96,7 +96,7 @@
                 {
                     blacklistWords.WordList.AddRange(keywords);
                     await Context.Message.DeleteAsync();
-                    await ReplyAsync("Added to the Blacklist");
+                    await SimpleEmbedAsync("Added to the Blacklist");
                 }
                 else
                 {
@@ -108,13 +108,13 @@
                     };
                     Context.Server.AntiSpam.Blacklist.BlacklistWordSet.Add(blacklistWords);
                     await Context.Message.DeleteAsync();
-                    await ReplyAsync("Added to the Blacklist");
+                    await SimpleEmbedAsync("Added to the Blacklist");
                 }
             }
             else
             {
                 await Context.Message.DeleteAsync();
-                await ReplyAsync("Keyword is already in the blacklist");
+                await SimpleEmbedAsync("Keyword is already in the blacklist");
                 return;
             }
 
@@ -138,11 +138,11 @@
                         Context.Server.AntiSpam.Blacklist.BlacklistWordSet.Remove(blacklistWords);
                     }
 
-                    await ReplyAsync($"{keyword} is has been removed from the blacklist");
+                    await SimpleEmbedAsync($"{keyword} is has been removed from the blacklist");
                 }
                 else
                 {
-                    await ReplyAsync($"{keyword} is not in the blacklist");
+                    await SimpleEmbedAsync($"{keyword} is not in the blacklist");
                 }
             }
 

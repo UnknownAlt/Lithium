@@ -1,4 +1,4 @@
-﻿namespace Lithium.Modules
+namespace Lithium.Modules
 {
     using System;
     using System.Collections.Generic;
@@ -186,7 +186,7 @@
                 if (i == 0)
                 {
                     Context.Server.AntiSpam.IgnoreList.Remove(role.Id);
-                    await ReplyAsync("Success, Role has been removed form the ignore list");
+                    await SimpleEmbedAsync("Success, Role has been removed form the ignore list");
                     Context.Server.Save();
                     return;
                 }
@@ -197,7 +197,7 @@
                     {
                         if (i1 < 1 || i1 > 6)
                         {
-                            await ReplyAsync($"Invalid Input {s}\n" + "only 1-6 are accepted.");
+                            await SimpleEmbedAsync($"Invalid Input {s}\n" + "only 1-6 are accepted.");
                             return;
                         }
 
@@ -225,7 +225,7 @@
                     }
                     else
                     {
-                        await ReplyAsync($"Invalid Input {s}");
+                        await SimpleEmbedAsync($"Invalid Input {s}");
                         return;
                     }
                 }
@@ -241,7 +241,7 @@
                                   $"Bypass IP Removal: {ignore.Privacy}\n" +
                                   $"Bypass Toxicity Check: {ignore.Toxicity}"
                 };
-                await ReplyAsync("", false, embed.Build());
+                await ReplyAsync(embed.Build());
 
                 if (addRole)
                 {
@@ -252,7 +252,7 @@
             }
             else
             {
-                await ReplyAsync("Input Error!");
+                await SimpleEmbedAsync("Input Error!");
             }
         }
 
@@ -310,7 +310,7 @@
                     Context.Server.AntiSpam.Mention.WarnOnDetection = false;
                     Context.Server.AntiSpam.Toxicity.WarnOnDetection = false;
                     Context.Server.AntiSpam.Privacy.WarnOnDetection = false;
-                    await ReplyAsync("Success, All have been reset.");
+                    await SimpleEmbedAsync("Success, All have been reset.");
                 }
                 else
                 {
@@ -320,7 +320,7 @@
                         {
                             if (i1 < 1 || i1 > 6)
                             {
-                                await ReplyAsync($"Invalid Input {s}\n" +
+                                await SimpleEmbedAsync($"Invalid Input {s}\n" +
                                                  "only 1-6 are accepted.");
                                 return;
                             }
@@ -349,7 +349,7 @@
                         }
                         else
                         {
-                            await ReplyAsync($"Invalid Input {s}");
+                            await SimpleEmbedAsync($"Invalid Input {s}");
                             return;
                         }
                     }
@@ -365,12 +365,12 @@
                                   $"Warn on IP Removal: {Context.Server.AntiSpam.Privacy.WarnOnDetection}\n" +
                                   $"Warn on Toxicity Check: {Context.Server.AntiSpam.Toxicity.WarnOnDetection}"
                 };
-                await ReplyAsync("", false, embed.Build());
+                await ReplyAsync(embed.Build());
                 Context.Server.Save();
             }
             else
             {
-                await ReplyAsync("Input Error!");
+                await SimpleEmbedAsync("Input Error!");
             }
         }
 
@@ -436,21 +436,21 @@
         {
             if (message == null)
             {
-                await ReplyAsync("Please provide a message that will be skipped.");
+                await SimpleEmbedAsync("Please provide a message that will be skipped.");
                 return;
             }
 
             if (Context.Server.AntiSpam.AntiSpam.WhiteList.Any(x =>
                 string.Equals(x, message, StringComparison.CurrentCultureIgnoreCase)))
             {
-                await ReplyAsync($"`{message}` is already included in the WhiteList");
+                await SimpleEmbedAsync($"`{message}` is already included in the WhiteList");
                 return;
             }
 
             Context.Server.AntiSpam.AntiSpam.WhiteList.Add(message);
 
             Context.Server.Save();
-            await ReplyAsync("Complete.");
+            await SimpleEmbedAsync("Complete.");
         }
 
         [Command("RemoveWhiteList")]
@@ -459,21 +459,21 @@
         {
             if (message == null)
             {
-                await ReplyAsync("Please provide a message that will be removed.");
+                await SimpleEmbedAsync("Please provide a message that will be removed.");
                 return;
             }
 
             if (!Context.Server.AntiSpam.AntiSpam.WhiteList.Any(x =>
                 string.Equals(x, message, StringComparison.CurrentCultureIgnoreCase)))
             {
-                await ReplyAsync($"`{message}` is not on the WhiteList");
+                await SimpleEmbedAsync($"`{message}` is not on the WhiteList");
                 return;
             }
 
             Context.Server.AntiSpam.AntiSpam.WhiteList.Remove(message);
 
             Context.Server.Save();
-            await ReplyAsync("Complete.");
+            await SimpleEmbedAsync("Complete.");
         }
 
         [Command("ClearWhiteList")]

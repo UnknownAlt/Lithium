@@ -35,7 +35,7 @@
         {
             if (modRole == null)
             {
-                await ReplyAsync("Please provide a role to add");
+                await SimpleEmbedAsync("Please provide a role to add");
                 return;
             }
 
@@ -45,7 +45,7 @@
                 Context.Server.Save();
             }
 
-            await ReplyAsync("Moderator Role added.");
+            await SimpleEmbedAsync("Moderator Role added.");
         }
 
         [Command("DelMod")]
@@ -54,7 +54,7 @@
         {
             if (modRole == null)
             {
-                await ReplyAsync("Please provide a role to add");
+                await SimpleEmbedAsync("Please provide a role to add");
                 return;
             }
 
@@ -62,11 +62,11 @@
             {
                 Context.Server.ModerationSetup.ModeratorRoles.Remove(modRole.Id);
                 Context.Server.Save();
-                await ReplyAsync("Moderator Role Removed.");
+                await SimpleEmbedAsync("Moderator Role Removed.");
             }
             else
             {
-                await ReplyAsync("That is not a moderator role.");
+                await SimpleEmbedAsync("That is not a moderator role.");
             }
         }
 
@@ -78,11 +78,11 @@
             {
                 Context.Server.ModerationSetup.ModeratorRoles.Remove(modRole);
                 Context.Server.Save();
-                await ReplyAsync("Moderator Role Removed.");
+                await SimpleEmbedAsync("Moderator Role Removed.");
             }
             else
             {
-                await ReplyAsync("That is not a moderator role.");
+                await SimpleEmbedAsync("That is not a moderator role.");
             }
         }
 
@@ -92,7 +92,7 @@
         {
             if (adminRole == null)
             {
-                await ReplyAsync("Please provide a role to add");
+                await SimpleEmbedAsync("Please provide a role to add");
                 return;
             }
 
@@ -102,7 +102,7 @@
                 Context.Server.Save();
             }
 
-            await ReplyAsync("Admin Role added.");
+            await SimpleEmbedAsync("Admin Role added.");
         }
 
         [Command("DelAdmin")]
@@ -111,7 +111,7 @@
         {
             if (adminRole == null)
             {
-                await ReplyAsync("Please provide a role to add");
+                await SimpleEmbedAsync("Please provide a role to add");
                 return;
             }
 
@@ -119,11 +119,11 @@
             {
                 Context.Server.ModerationSetup.AdminRoles.Remove(adminRole.Id);
                 Context.Server.Save();
-                await ReplyAsync("Admin Role Removed.");
+                await SimpleEmbedAsync("Admin Role Removed.");
             }
             else
             {
-                await ReplyAsync("That is not a admin role.");
+                await SimpleEmbedAsync("That is not a admin role.");
             }
         }
         
@@ -135,11 +135,11 @@
             {
                 Context.Server.ModerationSetup.AdminRoles.Remove(adminRole);
                 Context.Server.Save();
-                await ReplyAsync("Admin Role Removed.");
+                await SimpleEmbedAsync("Admin Role Removed.");
             }
             else
             {
-                await ReplyAsync("That is not a admin role.");
+                await SimpleEmbedAsync("That is not a admin role.");
             }
         }
 
