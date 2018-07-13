@@ -110,7 +110,7 @@
                     databaseUrl = "http://127.0.0.1:8080";
                 }
 
-                File.WriteAllText("setup/DBConfig.json", JsonConvert.SerializeObject(new DatabaseObject
+                File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "setup/DBConfig.json"), JsonConvert.SerializeObject(new DatabaseObject
                 {
                     Name = databaseName,
                     URL = databaseUrl
