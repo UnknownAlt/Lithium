@@ -2,6 +2,7 @@
 {
     using System;
 
+    using global::Discord;
     using global::Discord.WebSocket;
 
     public static class GuildExtensions
@@ -14,6 +15,16 @@
             }
 
             throw new InvalidCastException("The channel cannot be cast to a SocketTextChannel");
+        }
+
+        public static SocketGuild CastToSocketGuild(this IGuild guild)
+        {
+            if (guild is SocketGuild socketGuild)
+            {
+                return socketGuild;
+            }
+
+            throw new InvalidCastException("The guild cannot be cast to a SocketGuild");
         }
     }
 }
