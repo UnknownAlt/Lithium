@@ -45,10 +45,18 @@
             // At this point, all users are registered, not the server owner and not the bot owner
             if (server.CustomAccess.CustomizedPermission.Any())
             {
-                var match = server.CustomAccess.CustomizedPermission.FirstOrDefault(x => string.Equals(command.Name, x.Name, StringComparison.CurrentCultureIgnoreCase));
+                var match = server.CustomAccess.CustomizedPermission.FirstOrDefault(x => x.Name.Equals(string.IsNullOrWhiteSpace(command.Aliases.FirstOrDefault()) ? command.Name : command.Aliases.FirstOrDefault(), StringComparison.OrdinalIgnoreCase));
                 if (match != null)
                 {
                     defaultPermissionLevel = match.Setting;
+                }
+                else
+                {
+                    match = server.CustomAccess.CustomizedPermission.FirstOrDefault(x => x.Name.Equals(string.IsNullOrWhiteSpace(command.Module.Aliases.FirstOrDefault()) ? command.Module.Name : command.Module.Aliases.FirstOrDefault(), StringComparison.OrdinalIgnoreCase));
+                    if (match != null)
+                    {
+                        defaultPermissionLevel = match.Setting;
+                    }
                 }
             }
 
