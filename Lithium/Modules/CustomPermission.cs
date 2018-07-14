@@ -27,6 +27,8 @@ namespace Lithium.Modules
         }
 
         [Command("AddModule")]
+        [Summary("Add a new permission overwrite for the specified module")]
+        
         public Task AddModulePermissionsAsync(DefaultPermissionLevel level, [Remainder]string moduleName)
         {
             if (level == DefaultPermissionLevel.BotOwner)
@@ -64,6 +66,8 @@ namespace Lithium.Modules
                 throw new Exception("Module not found");
             }
 
+            // TODO Filter out duplicates
+
             Context.Server.CustomAccess.CustomizedPermission.Add(new GuildModel.CommandAccess.CustomPermission
                                                                      {
                                                                          IsCommand = false,
@@ -77,6 +81,7 @@ namespace Lithium.Modules
         }
 
         [Command("AddCommand")]
+        [Summary("Add a new permissions overwrite for the specified command")]
         public Task AddCommandPermissionsAsync(DefaultPermissionLevel level, [Remainder]string commandName)
         {
             if (level == DefaultPermissionLevel.BotOwner)
@@ -130,6 +135,7 @@ namespace Lithium.Modules
         }
 
         [Command("Remove")]
+        [Summary("Remove a permission overwrite for the specified module or command")]
         public Task RemovePermissionsAsync([Remainder]string commandOrModuleName)
         {
             var match = Context.Server.CustomAccess.CustomizedPermission.FirstOrDefault(p => p.Name.Equals(commandOrModuleName, StringComparison.OrdinalIgnoreCase));
@@ -145,6 +151,7 @@ namespace Lithium.Modules
         }
 
         [Command("View")]
+        [Summary("View all custom permission overwrites")]
         public Task ViewCustomAsync()
         {
             if (!Context.Server.CustomAccess.CustomizedPermission.Any())
@@ -165,6 +172,7 @@ namespace Lithium.Modules
         }
 
         [Command("Clear")]
+        [Summary("Clear all permission overwrites")]
         public Task ClearCustomAsync()
         {
             if (!Context.Server.CustomAccess.CustomizedPermission.Any())

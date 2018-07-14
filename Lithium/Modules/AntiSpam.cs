@@ -16,8 +16,7 @@ namespace Lithium.Modules
     public class AutoMod : Base
     {
         [Command("NoSpam")]
-        [Summary("NoSpam")]
-        [Remarks("Toggle Auto Removal of spam messages")]
+        [Summary("Toggle Auto Removal of spam messages")]
         public Task NoSpamAsync()
         {
             Context.Server.AntiSpam.AntiSpam.NoSpam = !Context.Server.AntiSpam.AntiSpam.NoSpam;
@@ -26,8 +25,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoSpamCount")]
-        [Summary("NoSpamCount")]
-        [Remarks("Set amount of messages required before noSpam detects it")]
+        [Summary("Set amount of messages required before noSpam detects it")]
         public Task NoSpamCountAsync(int messages = 3)
         {
             Context.Server.AntiSpam.AntiSpam.RateLimiting.MessageCount = messages;
@@ -36,8 +34,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoSpamTimeout")]
-        [Summary("NoSpamTimeout")]
-        [Remarks("Set amount of seconds per message-limit to detect spam")]
+        [Summary("Set amount of seconds per message-limit to detect spam")]
         public Task NoSpamTimeAsync(int seconds = 5)
         {
             if (seconds > 30 || seconds < 2)
@@ -51,8 +48,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoSpamBlock")]
-        [Summary("NoSpamBlock")]
-        [Remarks("Set amount of time users must wait before sending messages again")]
+        [Summary("Set amount of time users must wait before sending messages again")]
         public Task NoSpamBlockAsync(int seconds = 5)
         {
             if (seconds > 30 || seconds < 2)
@@ -66,8 +62,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoInvite")]
-        [Summary("NoInvite")]
-        [Remarks("Disable the posting of discord invite links in the server")]
+        [Summary("Disable the posting of discord invite links in the server")]
         public Task NoInviteAsync()
         {
             Context.Server.AntiSpam.Advertising.Invite = !Context.Server.AntiSpam.Advertising.Invite;
@@ -77,8 +72,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoInviteMessage")]
-        [Summary("NoInviteMessage <message>")]
-        [Remarks("set the no invites message")]
+        [Summary("set the no invites message")]
         public Task NoInviteAsync([Remainder] string message = null)
         {
             Context.Server.AntiSpam.Advertising.Response = message;
@@ -89,8 +83,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoMentionAll")]
-        [Summary("NoMentionAll")]
-        [Remarks("Disable the use of @everyone and @here for users")]
+        [Summary("Disable the use of @everyone and @here for users")]
         public Task NoMentionAllAsync()
         {
             Context.Server.AntiSpam.Mention.MentionAll = !Context.Server.AntiSpam.Mention.MentionAll;
@@ -99,8 +92,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoMentionMessage")]
-        [Summary("NoMentionMessage")]
-        [Remarks("Set the No Mention Message response")]
+        [Summary("Set the No Mention Message response")]
         public Task NoMentionAllAsync([Remainder] string message = null)
         {
             Context.Server.AntiSpam.Mention.MentionAllResponse = message;
@@ -109,8 +101,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoMassMention")]
-        [Summary("NoMassMention")]
-        [Remarks("Toggle auto-deletion of messages with 5+ role or user mentions")]
+        [Summary("Toggle auto-deletion of messages with 5+ role or user mentions")]
         public Task NoMassMentionAsync()
         {
             Context.Server.AntiSpam.Mention.RemoveMassMention = !Context.Server.AntiSpam.Mention.RemoveMassMention;
@@ -119,8 +110,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoIPs")]
-        [Summary("NoIps")]
-        [Remarks("Toggle auto-deletion of messages containing valid IP addresses")]
+        [Summary("Toggle auto-deletion of messages containing valid IP addresses")]
         public Task NoIPsAsync()
         {
             Context.Server.AntiSpam.Privacy.RemoveIPs = !Context.Server.AntiSpam.Privacy.RemoveIPs;
@@ -129,8 +119,7 @@ namespace Lithium.Modules
         }
 
         [Command("NoToxicity")]
-        [Summary("NoToxicity <threshold>")]
-        [Remarks("Toggle auto-deletion of messages that are too toxic")]
+        [Summary("Toggle auto-deletion of messages that are too toxic")]
         public Task NoToxicityAsync(int threshold = 999)
         {
             if (threshold == 999 || threshold < 50 || threshold > 99)
@@ -146,8 +135,7 @@ namespace Lithium.Modules
         }
 
         [Command("HideAutoWarnDelay")]
-        [Summary("HideAutoWarnDelay <seconds>")]
-        [Remarks("Toggle the deletion of warn messages in channel after x sec.")]
+        [Summary("Toggle the deletion of warn messages in channel after x sec.")]
         public Task HideAWarnDelAsync(int seconds = 5)
         {
             TimeSpan? time = TimeSpan.FromSeconds(seconds);
@@ -162,8 +150,7 @@ namespace Lithium.Modules
         }
 
         [Command("ignore")]
-        [Summary("ignore <selection> <@role>")]
-        [Remarks("choose a role to ignore when using AntiSpam commands")]
+        [Summary("choose a role to ignore when using AntiSpam commands")]
         public Task IgnoreRoleAsync(string selection, IRole role = null)
         {
             if (role == null)
@@ -247,8 +234,7 @@ namespace Lithium.Modules
         }
 
         [Command("ignore")]
-        [Summary("ignore")]
-        [Remarks("ignore role setup information")]
+        [Summary("ignore role setup information")]
         public Task IgnoreRoleAsync()
         {
             return ReplyAsync("", false, new EmbedBuilder
@@ -271,8 +257,7 @@ namespace Lithium.Modules
         }
 
         [Command("IgnoreList")]
-        [Summary("IgnoreList")]
-        [Remarks("list ignore-roles and their setup")]
+        [Summary("list ignore-roles and their setup")]
         public Task IgnoreListAsync()
         {
             var list = Context.Server.AntiSpam.IgnoreList.Select(x => $"{Context.Guild.GetRole(x.Key)?.Mention ?? "N/A"} Invites: {x.Value.Advertising} AntiSpam: {x.Value.AntiSpam} Blacklist: {x.Value.Blacklist} Mention: {x.Value.Mention} IP: {x.Value.Privacy} Toxicity: {x.Value.Toxicity}");
@@ -284,8 +269,7 @@ namespace Lithium.Modules
 
         [Command("WarnSpammers")]
         [Alias("AutoWarn")]
-        [Summary("WarnSpammers <type>")]
-        [Remarks("Toggle Auto-Warning of people detected by any of the Anti Spam methods")]
+        [Summary("Toggle Auto-Warning of people detected by any of the Anti Spam methods")]
         public async Task WarnSpammersAsync([Remainder] string selection)
         {
             var split = selection.Split(',');
@@ -366,8 +350,7 @@ namespace Lithium.Modules
 
         [Command("WarnSpammers")]
         [Alias("AutoWarn")]
-        [Summary("WarnSpammers")]
-        [Remarks("Warn Spammers Setup Info")]
+        [Summary("Warn Spammers Setup Info")]
         public Task WarnSpammersAsync()
         {
             return ReplyAsync("", false, new EmbedBuilder
@@ -388,40 +371,8 @@ namespace Lithium.Modules
                                              }.Build());
         }
 
-        [Command("AutoMuteExpiry")]
-        [Remarks("set the amount of minutes it takes for an auto mute to expire")]
-        public Task WarnExpiryTimeAsync(int minutes = 0)
-        {
-            TimeSpan? time = TimeSpan.FromMinutes(minutes);
-            if (minutes == 0)
-            {
-                time = null;
-            }
-
-            Context.Server.ModerationSetup.Settings.AutoMuteExpiry = time;
-            Context.Server.Save();
-            return ReplyAsync($"Success! After {minutes} minutes, auto-mutes will automatically expire");
-        }
-
-        [Command("AutoBanExpiry")]
-        [Summary("Admin AutoBanExpiry <Hours>")]
-        [Remarks("set the amount of hours it takes for an auto ban to expire")]
-        public Task BanExpiryTimeAsync(int hours = 0)
-        {
-            TimeSpan? time = TimeSpan.FromHours(hours);
-            if (hours == 0)
-            {
-                time = null;
-            }
-
-            Context.Server.ModerationSetup.Settings.AutoBanExpiry = time;
-            Context.Server.Save();
-            return ReplyAsync($"Success! After {hours} hours, auto-bans will automatically expire");
-        }
-
         [Command("AddWhiteList")]
-        [Summary("AddWhiteList <message>")]
-        [Remarks("Skip AntiSpam on messages containing the given message")]
+        [Summary("Skip AntiSpam on messages containing the given message")]
         public async Task SkipAntiSpamAsync([Remainder] string message = null)
         {
             if (message == null)
@@ -444,7 +395,7 @@ namespace Lithium.Modules
         }
 
         [Command("RemoveWhiteList")]
-        [Remarks("Remove a message from anti spam skipper")]
+        [Summary("Remove a message from anti spam skipper")]
         public async Task RemSkipAntiSpamAsync([Remainder] string message = null)
         {
             if (message == null)
@@ -467,7 +418,7 @@ namespace Lithium.Modules
         }
 
         [Command("ClearWhiteList")]
-        [Remarks("Clear the SkipAntiSpam List")]
+        [Summary("Clear the SkipAntiSpam List")]
         public Task ClearAntiSpamAsync()
         {
             Context.Server.AntiSpam.AntiSpam.WhiteList = new List<string>();
@@ -476,7 +427,7 @@ namespace Lithium.Modules
         }
 
         [Command("ShowWhiteList")]
-        [Remarks("List of messages anti-spam will skip")]
+        [Summary("List of messages anti-spam will skip")]
         public Task SkipAntiSpamAsync()
         {
             var embed = new EmbedBuilder { Description = string.Join("\n", Context.Server.AntiSpam.AntiSpam.WhiteList) };

@@ -21,6 +21,7 @@
     public class Moderation : Base
     {
         [Command("ClearAction")]
+        [Summary("Expire a mod log action by specifying it's ID")]
         public Task ClearWarnsAsync(int actionID)
         {
             var action = Context.Server.ModerationSetup.ModActions.FirstOrDefault(x => x.ActionId == actionID);
@@ -29,67 +30,79 @@
                 throw new Exception("No action found with that ID");
             }
 
+            // TODO Ensure this is also edited ie, remove user from warn role/unban user
+
             action.ExpiredOrRemoved = true;
             Context.Server.Save();
 
             return ReplyAsync(new EmbedBuilder { Title = "Action was cleared:", Fields = new List<EmbedFieldBuilder> { action.GetLongField(Context.Guild) } });
         }
 
-        [Command("ClearWarn")]
+        [Command("ClearWarns")]
+        [Summary("Clear all warns on a user by user ID")]
         public Task ClearWarnsAsync(ulong userId)
         {
             return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Warn, userId);
         }
 
-        [Command("ClearKick")]
+        [Command("ClearKicks")]
+        [Summary("Clear all kicks on a user by user ID")]
         public Task ClearKicksAsync(ulong userId)
         {
             return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Kick, userId);
         }
 
-        [Command("ClearMute")]
+        [Command("ClearMutes")]
+        [Summary("Clear all mutes on a user by user ID")]
         public Task ClearMutesAsync(ulong userId)
         {
             return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Mute, userId);
         }
 
-        [Command("ClearBan")]
+        [Command("ClearBans")]
+        [Summary("Clear all bans on a user by user ID")]
         public Task ClearBansAsync(ulong userId)
         {
             return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Ban, userId);
         }
 
         [Command("ClearAll")]
+        [Summary("Clear all mod actions on a user via user iD")]
         public Task ClearAllAsync(ulong userId)
         {
             return ClearResponseAsync(null, userId);
         }
 
-        [Command("ClearWarn")]
+        [Command("ClearWarns")]
+        [Summary("Clear all warns on a user")]
         public Task ClearWarnsAsync(SocketGuildUser user)
         {
             return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Warn, user.Id);
         }
 
-        [Command("ClearKick")]
+        [Command("ClearKicks")]
+        [Summary("Clear all kicks on a user")]
         public Task ClearKicksAsync(SocketGuildUser user)
         {
             return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Kick, user.Id);
         }
 
-        [Command("ClearMute")]
+        [Command("ClearMutes")]
+        [Summary("Clear all mutes on a user")]
         public Task ClearMutesAsync(SocketGuildUser user)
         {
             return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Mute, user.Id);
         }
 
-        [Command("ClearBan")]
+        [Command("ClearBans")]
+        [Summary("Clear all bans on a user")]
         public Task ClearBansAsync(SocketGuildUser user)
         {
             return ClearResponseAsync(GuildModel.Moderation.ModEvent.EventType.Ban, user.Id);
         }
 
         [Command("ClearAll")]
+        [Summary("Clear all mod actions on a user")]
         public Task ClearAllAsync(SocketGuildUser user)
         {
             return ClearResponseAsync(null, user.Id);
@@ -136,7 +149,7 @@
 
         [RequireBotPermission(GuildPermission.ManageRoles)]
         [Command("UnMute")]
-        [Remarks("UnMute the specified user")]
+        [Summary("UnMute the specified user")]
         public Task UnMuteAsync(SocketGuildUser user)
         {
             var mutes = Context.Server.ModerationSetup.ModActions.Where(m => m.Action == GuildModel.Moderation.ModEvent.EventType.Mute && !m.ExpiredOrRemoved && m.UserId == user.Id);
@@ -171,7 +184,7 @@
         [Priority(1)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         [Command("Mute")]
-        [Remarks("Warn the specified user")]
+        [Summary("Warn the specified user")]
         public Task MuteUserAsync(SocketGuildUser user, [Remainder]string reason = null)
         {
             if (Context.User.CastToSocketGuildUser().IsHigherRankedThan(user))
@@ -185,7 +198,7 @@
         [Priority(2)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         [Command("Mute")]
-        [Remarks("Warn the specified user")]
+        [Summary("Warn the specified user")]
         public Task MuteUserAsync(SocketGuildUser user, int minutes = 0, [Remainder]string reason = null)
         {
             TimeSpan? time = TimeSpan.FromMinutes(minutes);
@@ -203,7 +216,7 @@
         }
 
         [Command("Warn")]
-        [Remarks("Warn the specified user")]
+        [Summary("Warn the specified user")]
         public Task WarnUserAsync(SocketGuildUser user, [Remainder] string reason = null)
         {
             if (Context.User.CastToSocketGuildUser().IsHigherRankedThan(user))
@@ -216,7 +229,7 @@
 
         [Command("Kick")]
         [RequireBotPermission(GuildPermission.KickMembers)]
-        [Remarks("Kick the specified user")]
+        [Summary("Kick the specified user")]
         public Task KickUserAsync(SocketGuildUser user, [Remainder] string reason = null)
         {
             if (user.GuildPermissions.Administrator || user.GuildPermissions.KickMembers)
@@ -234,7 +247,7 @@
 
         [Command("Ban")]
         [RequireBotPermission(GuildPermission.BanMembers)]
-        [Remarks("Ban the specified user")]
+        [Summary("Ban the specified user")]
         public Task BanUserAsync(SocketGuildUser user, [Remainder] string reason = null)
         {
             if (user.GuildPermissions.Administrator || user.GuildPermissions.BanMembers)
@@ -252,7 +265,7 @@
 
         [Command("SoftBan")]
         [RequireBotPermission(GuildPermission.BanMembers)]
-        [Remarks("Ban the specified user for the specified amount of hours")]
+        [Summary("Ban the specified user for the specified amount of hours")]
         public Task SoftBanUserAsync(SocketGuildUser user, int hours, [Remainder] string reason = null)
         {
             if (user.GuildPermissions.Administrator || user.GuildPermissions.BanMembers)
@@ -284,7 +297,7 @@
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [Command("prune")]
         [Alias("purge", "clear")]
-        [Remarks("removes specified amount of messages")]
+        [Summary("removes specified amount of messages")]
         public Task PruneAsync(ulong countOrUserId = 100, [Remainder]string reason = null)
         {
             if (countOrUserId < 1000)
@@ -299,7 +312,7 @@
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [Command("prune")]
         [Alias("purge", "clear")]
-        [Remarks("removes messages from a user in the last 100 messages")]
+        [Summary("removes messages from a user in the last 100 messages")]
         public Task PruneAsync(IUser user, int amount = 100, [Remainder]string reason = null)
         {
             return PruneAsync(PruneType.User, user.Id, amount, reason);
@@ -309,7 +322,7 @@
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [Command("prune")]
         [Alias("purge", "clear")]
-        [Remarks("removes messages from a role in the last 100 messages")]
+        [Summary("removes messages from a role in the last 100 messages")]
         public Task PruneAsync(IRole role, int amount = 100, [Remainder]string reason = null)
         {
             return PruneAsync(PruneType.Role, role.Id, amount, reason);

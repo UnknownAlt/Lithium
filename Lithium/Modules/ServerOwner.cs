@@ -21,6 +21,7 @@
         }
 
         [Command("SetModLog")]
+        [Summary("Set the current channel as the mod log channel")]
         public Task SetModLogAsync()
         {
             Context.Server.ModerationSetup.Settings.ModLogChannel = Context.Channel.Id;
@@ -29,6 +30,7 @@
         }
 
         [Command("SetMute")]
+        [Summary("Set the server's mute role")]
         public Task SetMuteAsync(IRole mute)
         {
             Context.Server.ModerationSetup.Settings.MutedRoleId = mute.Id;
@@ -37,7 +39,7 @@
         }
 
         [Command("AddMod")]
-        [Remarks("Add a new moderator role")]
+        [Summary("Add a new moderator role")]
         public async Task AddModRoleAsync(IRole modRole = null)
         {
             if (modRole == null)
@@ -56,7 +58,7 @@
         }
 
         [Command("DelMod")]
-        [Remarks("Delete a moderator role")]
+        [Summary("Delete a moderator role")]
         public async Task DelModRoleAsync(IRole modRole = null)
         {
             if (modRole == null)
@@ -78,7 +80,7 @@
         }
 
         [Command("DelMod")]
-        [Remarks("Delete a moderator role")]
+        [Summary("Delete a moderator role by ID")]
         public async Task DelModRoleAsync(ulong modRole)
         {
             if (Context.Server.ModerationSetup.ModeratorRoles.Contains(modRole))
@@ -94,7 +96,7 @@
         }
 
         [Command("AddAdmin")]
-        [Remarks("Add a new administrator role")]
+        [Summary("Add a new administrator role")]
         public async Task AddAdminRoleAsync(IRole adminRole = null)
         {
             if (adminRole == null)
@@ -113,7 +115,7 @@
         }
 
         [Command("DelAdmin")]
-        [Remarks("Delete an admin role")]
+        [Summary("Delete an admin role")]
         public async Task DelAdminAsync(IRole adminRole = null)
         {
             if (adminRole == null)
@@ -135,7 +137,7 @@
         }
         
         [Command("DelAdmin")]
-        [Remarks("Delete an admin role")]
+        [Summary("Delete an admin role by ID")]
         public async Task DelAdminAsync(ulong adminRole)
         {
             if (Context.Server.ModerationSetup.AdminRoles.Contains(adminRole))
@@ -161,6 +163,7 @@
         }
 
         [Command("SetPrefix")]
+        [Summary("Set the current guild's Prefix")]
         public Task SetPrefixAsync([Remainder]string prefix = null)
         {
             var dict = PrefixDictionary.Load(ConfigModel.Prefix);

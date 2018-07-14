@@ -14,8 +14,7 @@
     public class EventLogger : Base
     {
         [Command("SetChannel")]
-        [Summary("Event SetChannel")]
-        [Remarks("set the current channel for event logging")]
+        [Summary("set the current channel for event logging")]
         public Task EventChannelAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -26,8 +25,7 @@
         }
 
         [Command("ToggleLog")]
-        [Summary("Event ToggleLog")]
-        [Remarks("toggle event logging")]
+        [Summary("toggle event logging")]
         public Task LogEventToggleAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -37,8 +35,7 @@
         }
 
         [Command("ChannelCreated")]
-        [Summary("Event ChannelCreated")]
-        [Remarks("toggle ChannelCreated event logging")]
+        [Summary("toggle ChannelCreated event logging")]
         public Task ChannelCreatedAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -48,8 +45,7 @@
         }
 
         [Command("ChannelDeleted")]
-        [Summary("Event ChannelDeleted")]
-        [Remarks("toggle ChannelDeleted event logging")]
+        [Summary("toggle ChannelDeleted event logging")]
         public Task ChannelDeletedAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -59,8 +55,7 @@
         }
 
         [Command("ChannelUpdated")]
-        [Summary("Event ChannelUpdated")]
-        [Remarks("toggle ChannelUpdated event logging")]
+        [Summary("toggle ChannelUpdated event logging")]
         public Task ChannelUpdatedAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -70,8 +65,7 @@
         }
 
         [Command("UserJoined")]
-        [Summary("Event UserJoined")]
-        [Remarks("toggle UserJoined event logging")]
+        [Summary("toggle UserJoined event logging")]
         public Task UserJoinedAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -81,8 +75,7 @@
         }
 
         [Command("UserLeft")]
-        [Summary("Event UserLeft")]
-        [Remarks("toggle UserLeft event logging")]
+        [Summary("toggle UserLeft event logging")]
         public Task UserLeftAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -92,8 +85,7 @@
         }
 
         [Command("UserUpdated")]
-        [Summary("Event UserUpdated")]
-        [Remarks("toggle UserUpdated event logging")]
+        [Summary("toggle UserUpdated event logging")]
         public Task UserUpdatedAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -103,8 +95,7 @@
         }
 
         [Command("MessageDeleted")]
-        [Summary("Event MessageDeleted")]
-        [Remarks("toggle MessageDeleted event logging")]
+        [Summary("toggle MessageDeleted event logging")]
         public Task MessageDeletedAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -114,8 +105,7 @@
         }
 
         [Command("MessageUpdated")]
-        [Summary("Event MessageUpdated")]
-        [Remarks("toggle MessageUpdated event logging")]
+        [Summary("toggle MessageUpdated event logging")]
         public Task MessageUpdatedAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);
@@ -125,8 +115,7 @@
         }
 
         [Command("ViewConfig")]
-        [Summary("Event ViewConfig")]
-        [Remarks("View the event logging config")]
+        [Summary("View the event logging config")]
         public Task LogEventConfigAsync()
         {
             var eventConfig = EventConfig.Load(Context.Guild.Id);

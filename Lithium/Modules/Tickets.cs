@@ -15,6 +15,7 @@
     {
         [CustomPermissions(DefaultPermissionLevel.Administrators)]
         [Command("SetChannel")]
+        [Summary("Set the ticket channel")]
         public Task SetChannelAsync()
         {
             var tickets = Context.Guild.GetTickets();
@@ -25,6 +26,7 @@
 
         [CustomPermissions(DefaultPermissionLevel.Moderators)]
         [Command("RefreshTickets")]
+        [Summary("Refreshes the 10 most recent tickets in the ticket channel")]
         public Task RefreshTicketsAsync()
         {
             var tickets = Context.Guild.GetTickets();
@@ -42,6 +44,7 @@
         }
 
         [Command("AddTicket")]
+        [Summary("Create a new ticket")]
         public Task AddTicketAsync([Remainder]string message)
         {
             var tickets = Context.Guild.GetTickets();
@@ -50,6 +53,7 @@
         }
 
         [Command("AddComment")]
+        [Summary("Comment on a ticket")]
         public Task AddCommentAsync(int ticketId, [Remainder]string message)
         {
             var tickets = Context.Guild.GetTickets();
@@ -59,6 +63,7 @@
         }
 
         [Command("UpVoteTicket")]
+        [Summary("UpVote a ticket")]
         public Task UpVoteAsync(int ticketId)
         {
             var tickets = Context.Guild.GetTickets();
@@ -68,6 +73,7 @@
         }
 
         [Command("DownVoteTicket")]
+        [Summary("DownVote a ticket")]
         public Task DownVoteAsync(int ticketId)
         {
             var tickets = Context.Guild.GetTickets();
@@ -78,6 +84,7 @@
 
         [CustomPermissions(DefaultPermissionLevel.Administrators)]
         [Command("SolveTicket")]
+        [Summary("Set a ticket's status as solved")]
         public Task SolveAsync(int ticketId, [Remainder]string reason)
         {
             var tickets = Context.Guild.GetTickets();
@@ -87,7 +94,8 @@
         }
 
         [CustomPermissions(DefaultPermissionLevel.Administrators)]
-        [Command("OpenTicket")]
+        [Command("UnSolveTicket")]
+        [Summary("Re-Open a ticket")]
         public Task OpenAsync(int ticketId, [Remainder]string reason)
         {
             var tickets = Context.Guild.GetTickets();

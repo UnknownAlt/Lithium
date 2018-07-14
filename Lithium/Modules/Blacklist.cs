@@ -17,8 +17,9 @@
     [Group("Blacklist")]
     public class Blacklist : Base
     {
+        // TODO TEST ALL OF THIS
         [Command]
-        [Remarks("displays the blacklist")]
+        [Summary("displays the blacklist")]
         public Task BAsync()
         {
             var pages = new List<PaginatedMessage.Page>();
@@ -59,7 +60,7 @@
         }
 
         [Command("FormatHelp")]
-        [Remarks("help with adding multiple phrases or words to the blacklist at once")]
+        [Summary("help with adding multiple phrases or words to the blacklist at once")]
         public Task FormatHelpAsync()
         {
             return ReplyAsync(new EmbedBuilder
@@ -82,7 +83,7 @@
         }
 
         [Command("add")]
-        [Remarks("adds a word to the blacklist, leave response blank to use the default message, use the same response for different blacklisted words to be grouped. Also separate sentences like so: hi_there_person for the keyword")]
+        [Summary("adds a word to the blacklist, leave response blank to use the default message, use the same response for different blacklisted words to be grouped. Also separate sentences like so: hi_there_person for the keyword")]
         public async Task AbAsync(string keyword, [Remainder] string response = null)
         {
             keyword = keyword.Replace("_", " ");
@@ -122,7 +123,7 @@
         }
 
         [Command("del")]
-        [Remarks("removes a word from the blacklist")]
+        [Summary("removes a word from the blacklist")]
         public async Task DbAsync(string wordToRemove)
         {
             wordToRemove = wordToRemove.Replace("_", " ");
@@ -150,7 +151,7 @@
         }
 
         [Command("clear")]
-        [Remarks("clears the blacklist")]
+        [Summary("clears the blacklist")]
         public Task ClearAsync()
         {
             Context.Server.AntiSpam.Blacklist.BlacklistWordSet =
@@ -161,7 +162,7 @@
         }
 
         [Command("DefaultMessage")]
-        [Remarks("set the default blacklist message")]
+        [Summary("set the default blacklist message")]
         public Task BlMessageAsync([Remainder] string message = "")
         {
             Context.Server.AntiSpam.Blacklist.DefaultBlacklistMessage = message;

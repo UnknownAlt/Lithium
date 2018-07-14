@@ -16,6 +16,7 @@
     public class AutoModeration : Base
     {
         [Command("AddAction")]
+        [Summary("Add a new action to be taken when users exceed the specified amount of warns")]
         public Task AddActionAsync(int warns, GuildModel.Moderation.ModerationSettings.WarnLimitAction action, [Remainder]string response = null)
         {
             if (action == GuildModel.Moderation.ModerationSettings.WarnLimitAction.NoAction)
@@ -66,6 +67,7 @@
         }
 
         [Command("DelAction")]
+        [Summary("Delete an action via warns")]
         public Task DeleteActionAsync(int warns)
         {
             Context.Server.ModerationSetup.Settings.AutoTasks.Remove(warns, out var action);
@@ -79,6 +81,7 @@
         }
         
         [Command("GetActions")]
+        [Summary("List all actions that have been setup in the current server")]
         public Task GetActionsAsync()
         {
             var embed = new EmbedBuilder();
@@ -94,6 +97,7 @@
         }
 
         [Command("SetActionTimeout")]
+        [Summary("Set the default timeout for a specific action, ie. Minutes before a user is unmuted or unbanned")]
         public Task AddActionAsync(int warns, int minutes)
         {
             Context.Server.ModerationSetup.Settings.AutoTasks.TryGetValue(warns, out var matchAction);
@@ -124,6 +128,37 @@
 
             return SimpleEmbedAsync("Success, AutoAction edited\n" + 
                                     $"After **{warns}** warns, users will be **{matchAction.LimitAction.GetDescription()}** and this will expire {(expiry.HasValue ? $"after {expiry.Value.TotalMinutes} minutes" : "Never")}");
+        }
+
+        
+        [Command("AutoMuteExpiry")]
+        [Summary("set the amount of minutes it takes for an auto mute to expire")]
+        public Task WarnExpiryTimeAsync(int minutes = 0)
+        {
+            TimeSpan? time = TimeSpan.FromMinutes(minutes);
+            if (minutes == 0)
+            {
+                time = null;
+            }
+
+            Context.Server.ModerationSetup.Settings.AutoMuteExpiry = time;
+            Context.Server.Save();
+            return ReplyAsync($"Success! After {minutes} minutes, auto-mutes will automatically expire");
+        }
+
+        [Command("AutoBanExpiry")]
+        [Summary("set the amount of hours it takes for an auto ban to expire")]
+        public Task BanExpiryTimeAsync(int hours = 0)
+        {
+            TimeSpan? time = TimeSpan.FromHours(hours);
+            if (hours == 0)
+            {
+                time = null;
+            }
+
+            Context.Server.ModerationSetup.Settings.AutoBanExpiry = time;
+            Context.Server.Save();
+            return ReplyAsync($"Success! After {hours} hours, auto-bans will automatically expire");
         }
     }
 }

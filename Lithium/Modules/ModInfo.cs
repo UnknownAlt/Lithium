@@ -18,8 +18,10 @@
     [CustomPermissions(DefaultPermissionLevel.Administrators)]
     public class ModInfo : Base
     {
+        [Priority(5)]
         [Command("GetAction")]
-        public Task ClearWarnsAsync(int actionID)
+        [Summary("Get a moderation log action via ID")]
+        public Task GetActionAsync(int actionID)
         {
             var action = Context.Server.ModerationSetup.ModActions.FirstOrDefault(x => x.ActionId == actionID);
             if (action == null)
@@ -30,121 +32,52 @@
             return ReplyAsync(new EmbedBuilder { Title = $"Action ${actionID}", Fields = new List<EmbedFieldBuilder> { action.GetLongField(Context.Guild) } });
         }
 
-        [Command("Bans")]
-        public Task ViewBansAsync(SocketGuildUser user = null)
+        [Priority(3)]
+        [Command("GetActions")]
+        [Summary("Get mod logs of a specific type (optionally specify a user)")]
+        public Task GetActionsAsync(GuildModel.Moderation.ModEvent.EventType type, SocketGuildUser user = null)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Ban, user?.Id);
+            return GetModActionsAsync(type, user?.Id);
         }
 
-        [Command("Bans")]
-        public Task ViewBansAsync(ulong userId)
+        [Priority(4)]
+        [Command("GetActions")]
+        [Summary("Get mod logs of a specific type by user ID")]
+        public Task GetActionsAsync(GuildModel.Moderation.ModEvent.EventType type, ulong userID)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Ban, userId);
-        }
-                
-        [Command("LongBans")]
-        public Task ViewLongBansAsync(SocketGuildUser user = null)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Ban, user?.Id, true);
+            return GetModActionsAsync(type, userID);
         }
 
-        [Command("LongBans")]
-        public Task ViewLongBansAsync(ulong userId)
+        [Command("GetLongActions")]
+        [Summary("Get full mod logs of a specific type (optionally specify a user)")]
+        public Task GetLongActionsAsync(GuildModel.Moderation.ModEvent.EventType type, SocketGuildUser user = null)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Ban, userId, true);
+            return GetModActionsAsync(type, user?.Id, true);
         }
 
-        [Command("Kicks")]
-        public Task ViewKicksAsync(SocketGuildUser user = null)
+        [Command("GetLongActions")]
+        [Summary("Get full mod logs of a specific type by user ID")]
+        public Task GetLongActionsAsync(GuildModel.Moderation.ModEvent.EventType type, ulong userID)
         {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Kick, user?.Id);
-        }
-
-        [Command("Kicks")]
-        public Task ViewKicksAsync(ulong userId)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Kick, userId);
-        }
-        
-        [Command("LongKicks")]
-        public Task ViewLongKicksAsync(SocketGuildUser user = null)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Kick, user?.Id, true);
-        }
-
-        [Command("LongKicks")]
-        public Task ViewLongKicksAsync(ulong userId)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Kick, userId, true);
-        }
-
-        [Command("Warns")]
-        public Task ViewWarnsAsync(SocketGuildUser user = null)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Warn, user?.Id);
-        }
-
-        [Command("Warns")]
-        public Task ViewWarnsAsync(ulong userId)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Warn, userId);
-        }
-                
-        [Command("LongWarns")]
-        public Task ViewLongWarnsAsync(SocketGuildUser user = null)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Warn, user?.Id, true);
-        }
-
-        [Command("LongWarns")]
-        public Task ViewLongWarnsAsync(ulong userId)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Warn, userId, true);
-        }
-
-        [Command("Mutes")]
-        public Task ViewMutesAsync(SocketGuildUser user = null)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Mute, user?.Id);
-        }
-
-        [Command("Mutes")]
-        public Task ViewMutesAsync(ulong userId)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Mute, userId);
-        }
-        
-        [Command("LongMutes")]
-        public Task ViewLongMutesAsync(SocketGuildUser user = null)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Mute, user?.Id, true);
-        }
-
-        [Command("LongMutes")]
-        public Task ViewLongMutesAsync(ulong userId)
-        {
-            return GetModActionsAsync(GuildModel.Moderation.ModEvent.EventType.Mute, userId, true);
+            return GetModActionsAsync(type, userID, true);
         }
 
         [Command("ModLog")]
-        public Task ViewModLogAsync(SocketGuildUser user = null)
-        {
-            return GetModActionsAsync(null, user?.Id);
-        }
-
-        [Command("ModLog")]
+        [Summary("Get the mod logs of a user by ID")]
         public Task ViewModLogAsync(ulong userId)
         {
             return GetModActionsAsync(null, userId);
         }
 
         [Command("LongModLog")]
+        [Summary("Get all mod logs (optionally filter for a user)")]
         public Task ViewLongModLogAsync(SocketGuildUser user = null)
         {
             return GetModActionsAsync(null, user?.Id, true);
         }
 
         [Command("LongModLog")]
+        [Summary("Get all mod logs by user ID")]
         public Task ViewLongModLogAsync(ulong userId)
         {
             return GetModActionsAsync(null, userId, true);
