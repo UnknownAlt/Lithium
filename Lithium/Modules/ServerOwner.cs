@@ -13,6 +13,13 @@
     [CustomPermissions(DefaultPermissionLevel.ServerOwner)]
     public class ServerOwner : Base
     {
+        private ConfigModel ConfigModel { get; }
+
+        public ServerOwner(ConfigModel model)
+        {
+            ConfigModel = model;
+        }
+
         [Command("SetModLog")]
         public Task SetModLogAsync()
         {
@@ -145,12 +152,29 @@
 
         [Command("WipeModEvents")]
         [Summary("DELETES ALL Mod Events")]
-        [Remarks("Note: Only use this if you want to completely remove the logs")]
+        [Remarks("Only use this if you want to completely remove the logs")]
         public Task WipeEventsAsync()
         {
             Context.Server.ModerationSetup.ModActions = new List<GuildModel.Moderation.ModEvent>();
             Context.Server.Save();
             return SimpleEmbedAsync("Success, all mod events deleted");
+        }
+
+        [Command("SetPrefix")]
+        public Task SetPrefixAsync([Remainder]string prefix = null)
+        {
+            var dict = PrefixDictionary.Load(ConfigModel.Prefix);
+            dict.PrefixList.Remove(Context.Guild.Id);
+
+            if (prefix != null)
+            {
+                dict.PrefixList.Add(Context.Guild.Id, prefix);
+                dict.Save();
+                return SimpleEmbedAsync($"Prefix is now `{prefix}`");
+            }
+
+            dict.Save();
+            return SimpleEmbedAsync($"Prefix is now `{dict.DefaultPrefix}`");
         }
     }
 }
