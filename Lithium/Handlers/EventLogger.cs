@@ -2,74 +2,156 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using global::Discord;
     using global::Discord.WebSocket;
 
+    using Lithium.Discord.Extensions;
     using Lithium.Models;
 
     public class EventLogger
     {
-        public List<EventLogDelay> EventLogDelays { get; set; } = new List<EventLogDelay>();
+        private readonly Timer _timer;
 
-        public class EventLogDelay
+        public EventLogger(DiscordShardedClient client)
         {
-            public ulong GuildID { get; set; }
+            _timer = new Timer(_ =>
+                                 {
+                                     LogHandler.LogMessage("EventLogger Run", LogSeverity.Debug);
+                                     foreach (var guild in eventQueue)
+                                     {
+                                         if (guild.Value.Events.Count(e => e.Value.Type == EventType.messageDeleted) > 20)
+                                         {
+                                             guild.Value.Events = guild.Value.Events.Where(e => e.Value.Type != EventType.messageDeleted).ToDictionary(k => k.Key, k => k.Value);
+                                         }
 
-            public DateTime LastUpdate { get; set; } = DateTime.UtcNow;
+                                         if (guild.Value.Events.Any())
+                                         {
+                                             var ordered = guild.Value.Events.OrderBy(x => x.Key).Take(10).ToList();
+                                             if (client.GetGuild(guild.Key) is SocketGuild eventGuild)
+                                             {
+                                                 if (eventGuild.GetTextChannel(guild.Value.EventChannel) is ITextChannel eventChannel)
+                                                 {
+                                                     var most = GetColor(ordered
+                                                         .GroupBy(i => i.Value.Type)
+                                                         .OrderByDescending(grp => grp.Count())
+                                                         .Select(grp => grp.Key)
+                                                         .First());
 
-            public int Updates { get; set; }
+
+
+                                                    var embed = new EmbedBuilder { Fields = ordered.SelectMany(o => o.Value.Fields).ToList(), Color = most };
+                                                    eventChannel.SendMessageAsync("", false, embed.Build());
+                                                 }
+                                             }
+
+                                             foreach (var pair in ordered)
+                                             {
+                                                 guild.Value.Events.Remove(pair.Key);
+                                             }
+                                         }
+                                     }
+                                 },
+            null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
         }
 
-        internal async Task LogEventAsync(EventConfig eventConfig, IGuild guild, EmbedBuilder embed)
+        public Color GetColor(EventType eventType)
         {
-            if (EventLogDelays.All(x => x.GuildID != guild.Id))
+            switch (eventType)
             {
-                EventLogDelays.Add(new EventLogDelay
-                {
-                    GuildID = guild.Id,
-                    LastUpdate = DateTime.UtcNow,
-                    Updates = 0
-                });
-            }
-            else
-            {
-                var delay = EventLogDelays.First(x => x.GuildID == guild.Id);
-
-                // Ensure that we are only logging 1 event per second (to reduce lag from the bot and overall spam)
-                if (delay.LastUpdate + TimeSpan.FromSeconds(5) >= DateTime.UtcNow)
-                {
-                    delay.Updates++;
-                }
-                else
-                {
-                    delay.LastUpdate = DateTime.UtcNow;
-                    delay.Updates = 0;
-                }
-
-                if (delay.Updates >= 3 && delay.LastUpdate + TimeSpan.FromSeconds(5) > DateTime.UtcNow)
-                {
-                    LogHandler.LogMessage($"RateLimiting Events in {guild.Name}", LogSeverity.Verbose);
-                    return;
-                }
-
-                if ((await guild.GetTextChannelAsync(eventConfig.EventChannel)) is ITextChannel LogChannel && eventConfig.LogEvents)
-                {
-                    try
-                    {
-                        await LogChannel.SendMessageAsync("", false, embed.Build());
-                    }
-                    catch (Exception e)
-                    {
-                        LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
-                    }
-                }
+                case EventType.messageDeleted:
+                    return Color.Gold;
+                case EventType.messageUpdated:
+                    return Color.DarkMagenta;
+                case EventType.userBanned:
+                    return Color.DarkRed;
+                case EventType.guildMemberUpdated:
+                    return Color.DarkPurple;
+                case EventType.channelCreated:
+                case EventType.channelUpdated:
+                case EventType.channelDeleted:
+                    return Color.Blue;
+                case EventType.userUnbanned:
+                case EventType.userJoined:
+                    return Color.Green;
+                case EventType.userLeft:
+                    return Color.Red;
+                default:
+                    return Color.Teal;
             }
         }
 
-        internal async Task GuildMemberUpdatedAsync(SocketGuildUser userBefore, SocketGuildUser userAfter)
+        public void Restart()
+        {
+            _timer.Change(TimeSpan.FromMinutes(0), TimeSpan.FromSeconds(10));
+        }
+        
+        private readonly Dictionary<ulong, GuildEventInfo> eventQueue = new Dictionary<ulong, GuildEventInfo>();
+
+        public enum EventType
+        {
+            [Description("Message Deleted")]
+            messageDeleted,
+            [Description("Message Updated")]
+            messageUpdated,
+            [Description("Channel Created")]
+            channelCreated,
+            [Description("Channel Deleted")]
+            channelDeleted,
+            [Description("Channel Updated")]
+            channelUpdated,
+            [Description("Member Updated")]
+            guildMemberUpdated,
+            [Description("User Left")]
+            userLeft,
+            [Description("User Joined")]
+            userJoined,
+            [Description("User Banned")]
+            userBanned,
+            [Description("User Unbanned")]
+            userUnbanned
+        }
+
+        public static GuildEventInfo.Event QuickEvent(EventType type, string value)
+        {
+            return new GuildEventInfo.Event { Type = type, Fields = new List<EmbedFieldBuilder> { new EmbedFieldBuilder { Name = type.GetDescription(), Value = value.FixLength() } } };
+        }
+
+        public class GuildEventInfo
+        {
+            public Dictionary<DateTime, Event> Events { get; set; } = new Dictionary<DateTime, Event>();
+
+            public ulong EventChannel { get; set; }
+
+            public class Event
+            {
+                public EventType Type { get; set; }
+
+                public List<EmbedFieldBuilder> Fields { get; set; }
+            }
+        }
+
+        internal void LogEvent(EventConfig eventConfig, GuildEventInfo.Event _event, IGuild guild)
+        {
+            eventQueue.Remove(guild.Id, out var Queue);
+
+            if (Queue == null)
+            {
+                Queue = new GuildEventInfo
+                            {
+                                EventChannel = eventConfig.EventChannel
+                            };
+            }
+
+            Queue.Events.Add(DateTime.UtcNow, _event);
+            eventQueue.Add(guild.Id, Queue);
+        }
+
+        internal Task GuildMemberUpdatedAsync(SocketGuildUser userBefore, SocketGuildUser userAfter)
         {
             string logMessage = null;
             if (userBefore.Nickname != userAfter.Nickname)
@@ -94,51 +176,43 @@
 
             if (logMessage == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             var eventConfig = EventConfig.Load(userAfter.Guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.GuildMemberUpdated)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder
-                {
-                    Title = "User Updated",
-                    Description = $"**User:** {userAfter.Mention}\n" +
-                                  $"**ID:** {userAfter.Id}\n\n" + logMessage,
-                    ThumbnailUrl = userAfter.GetAvatarUrl(),
-                    Color = Color.Blue
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(eventConfig, userAfter.Guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.guildMemberUpdated, $"**User:** {userAfter.Mention}\n**ID:** {userAfter.Id}\n\n" + logMessage), userAfter.Guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task MessageUpdatedAsync(Cacheable<IMessage, ulong> messageOld, SocketMessage messageNew, ISocketMessageChannel channel)
+        internal Task MessageUpdatedAsync(Cacheable<IMessage, ulong> messageOld, SocketMessage messageNew, ISocketMessageChannel channel)
         {
             if (messageNew.Author.IsBot)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (string.Equals(messageOld.Value.Content, messageNew.Content, StringComparison.CurrentCultureIgnoreCase))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (messageOld.Value?.Embeds.Count > 0 || messageNew.Embeds.Count > 0)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             var guild = ((SocketGuildChannel)channel).Guild;
@@ -146,279 +220,202 @@
             var eventConfig = EventConfig.Load(guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.MessageUpdated)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder
-                {
-                    Title = "Message Updated",
-                    ThumbnailUrl = messageNew.Author.GetAvatarUrl(),
-                    Color = Color.Blue
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                embed.AddField("Old Message:", $"{messageOld.Value.Content}");
-                embed.AddField("New Message:", $"{messageNew.Content}");
-                embed.AddField("Info",
-                    $"**Author:** {messageNew.Author}\n" +
-                    $"**Author ID:** {messageNew.Author.Id}\n" +
-                    $"**Channel:** {messageNew.Channel.Name}\n" +
-                    $"**Embeds:** {messageNew.Embeds.Any()}");
-                
-                await LogEventAsync(eventConfig, guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.messageUpdated, $"**Author:** {messageNew.Author}\n" +
+                                                                                $"**Author ID:** {messageNew.Author.Id}\n" +
+                                                                                $"**Channel:** {messageNew.Channel.Name}\n" +
+                                                                                $"**Embeds:** {messageNew.Embeds.Any()}\n" +
+                                                                                $"**OLD:**\n{messageOld.Value.Content}\n\n**NEW:**\n{messageNew.Content}"), guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task ChannelUpdatedAsync(SocketChannel s1, SocketChannel s2)
+        internal Task ChannelUpdatedAsync(SocketChannel s1, SocketChannel s2)
         {
             var channelBefore = s1 as SocketGuildChannel;
             var channelAfter = s2 as SocketGuildChannel;
             var eventConfig = EventConfig.Load(channelAfter.Guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.ChannelUpdated)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                if (channelBefore.Position != channelAfter.Position)
-                {
-                    return;
-                }
-
-                var embed = new EmbedBuilder
-                {
-                    Title = "Channel Updated",
-                    Description = channelAfter.Name,
-                    Color = Color.Blue
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(eventConfig, channelAfter.Guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.channelUpdated, $"**Name:** {channelBefore.Name ?? "[No_Name]"} => {channelAfter.Name ?? "[No_Name]"}\n" + 
+                                                                                $"**Position:** {channelBefore.Position} => {channelAfter.Position}\n" + 
+                                                                                $"**Permission Changes:** {!Equals(channelBefore.PermissionOverwrites, channelAfter.PermissionOverwrites)}"), channelAfter.Guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task ChannelDeletedAsync(SocketChannel sChannel)
+        internal Task ChannelDeletedAsync(SocketChannel sChannel)
         {
             var guild = ((SocketGuildChannel)sChannel).Guild;
             var eventConfig = EventConfig.Load(guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.ChannelDeleted)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder
-                {
-                    Title = "Channel Deleted",
-                    Description = ((SocketGuildChannel)sChannel)?.Name,
-                    Color = Color.DarkTeal
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(eventConfig, guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.channelDeleted, $"{((SocketGuildChannel)sChannel)?.Name ?? "[Unknown_Name]"}"), guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task ChannelCreatedAsync(SocketChannel sChannel)
+        internal Task ChannelCreatedAsync(SocketChannel sChannel)
         {
             var guild = ((SocketGuildChannel)sChannel).Guild;
             var eventConfig = EventConfig.Load(guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.ChannelCreated)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder
-                {
-                    Title = "Channel Created",
-                    Description = ((SocketGuildChannel)sChannel)?.Name,
-                    Color = Color.Green
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(eventConfig, guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.channelCreated, $"{((SocketGuildChannel)sChannel)?.Name ?? "[Unknown_Name]"}"), guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task MessageDeletedAsync(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
+        internal Task MessageDeletedAsync(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
             var guild = ((SocketGuildChannel)channel).Guild;
             var eventConfig = EventConfig.Load(guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.MessageDeleted)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder();
-
-                embed.AddField("Message Deleted", $"Author: {message.Value.Author}\n" +
-                                                  $"Channel: {channel.Name}");
-                embed.AddField("Message", $"{(message.HasValue ? $"{message.Value.Content}" : "Message unable to be retrieved")}");
-
-                /*
-                if (guild.CurrentUser.GuildPermissions.ViewAuditLog)
-                {
-                    var logs = await guild.GetAuditLogsAsync(100).FlattenAsync();
-                    var logMatch = logs.Where(a => a.Action == ActionType.MessageDeleted && (a.Data as MessageDeleteAuditLogData)?.ChannelId == channel.Id && a.User.Id != message.Value?.Author.Id);
-                    if (logMatch.FirstOrDefault() != null)
-                    {
-                        embed.AddField($"Message deleted by", logMatch.User.Mention);
-                    }
-                }
-                */
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                embed.Color = Color.DarkTeal;
-
-                await LogEventAsync(eventConfig, guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.messageDeleted, $"**Author:** {(message.HasValue ? message.Value.Author.ToString() : "[Unknown Author]")}\n" +
+                                                                                $"**Channel:** {channel.Name}\n**Message:**\n{(message.HasValue ? $"{message.Value.Content ?? "[Empty]"}" : "Message unable to be retrieved")}"), guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task UserUnbannedAsync(SocketUser user, SocketGuild guild)
+        internal Task UserUnbannedAsync(SocketUser user, SocketGuild guild)
         {
             var eventConfig = EventConfig.Load(guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.GuildUserUnBanned)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder
-                {
-                    Title = "User UnBanned",
-                    ThumbnailUrl = user.GetAvatarUrl(),
-                    Description = $"**Username:** {user}",
-                    Color = Color.DarkTeal
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(eventConfig, guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.userUnbanned, $"**Username:** {user.Mention} {user} [{user.Id}]"), guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task UserBannedAsync(SocketUser user, SocketGuild guild)
+        internal Task UserBannedAsync(SocketUser user, SocketGuild guild)
         {
             var eventConfig = EventConfig.Load(guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.GuildUserBanned)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder
-                {
-                    Title = "User Banned",
-                    ThumbnailUrl = user.GetAvatarUrl(),
-                    Description = $"**Username:** {user}",
-                    Color = Color.DarkRed
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(eventConfig, guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.userBanned, $"**Username:** {user.Mention} {user} [{user.Id}]"), guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task UserLeftAsync(SocketGuildUser user)
+        internal Task UserLeftAsync(SocketGuildUser user)
         {
             var eventConfig = EventConfig.Load(user.Guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.GuildUserLeft)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder
-                {
-                    Title = "User Left",
-                    Description = $"{user.Mention} {user}\n" +
-                                  $"ID: {user.Id}",
-                    ThumbnailUrl = user.GetAvatarUrl(),
-                    Color = Color.Red
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(eventConfig, user.Guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.userLeft, $"{user.Mention} {user}\n" +
+                                                                          $"ID: {user.Id}"), user.Guild);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal async Task UserJoinedAsync(SocketGuildUser user)
+        internal Task UserJoinedAsync(SocketGuildUser user)
         {
             var eventConfig = EventConfig.Load(user.Guild.Id);
             if (eventConfig == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!eventConfig.Settings.GuildUserJoined)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (eventConfig.LogEvents)
             {
-                var embed = new EmbedBuilder
-                {
-                    Title = "User Joined",
-                    Description = $"{user.Mention} {user}\n" +
-                                  $"ID: {user.Id}",
-                    ThumbnailUrl = user.GetAvatarUrl(),
-                    Color = Color.Green
-                };
-
-                embed.WithTimestamp(DateTimeOffset.UtcNow);
-                await LogEventAsync(eventConfig, user.Guild, embed);
+                LogEvent(eventConfig, QuickEvent(EventType.userJoined, $"{user.Mention} {user}\n" +
+                                                                              $"ID: {user.Id}"), user.Guild);
             }
+
+            return Task.CompletedTask;
         }
     }
 }
