@@ -9,6 +9,7 @@
 
     using Serilog;
     using Serilog.Core;
+    using Serilog.Events;
 
     /// <summary>
     /// The Log handler.
@@ -122,6 +123,27 @@
             }
         }
 
+        public static LogEventLevel GetEventLevel(LogSeverity logSeverity)
+        {
+            switch (logSeverity)
+            {
+                case LogSeverity.Info:
+                    return LogEventLevel.Information;
+                case LogSeverity.Warning:
+                    return LogEventLevel.Warning;
+                case LogSeverity.Error:
+                    return LogEventLevel.Error;
+                case LogSeverity.Debug:
+                    return LogEventLevel.Debug;
+                case LogSeverity.Critical:
+                    return LogEventLevel.Fatal;
+                case LogSeverity.Verbose:
+                    return LogEventLevel.Verbose;
+                default:
+                    return LogEventLevel.Information;
+            }
+        }
+
         /// <summary>
         /// Prints application info to console
         /// </summary>
@@ -136,7 +158,8 @@
             Console.WriteLine("-> INFORMATION\n" +
                               $"-> Database URL: {settings?.URL}\n" +
                               $"-> Database Name: {settings?.Name}\n" +
-                              $"-> Prefix: {config.Prefix}\n" +
+                              $"-> Prefix: {config.Prefix}\n" + 
+                              $"-> LogLevel: {settings.Local.LogLevel}\n" +
                               "    Author: PassiveModding | Discord: https://discord.me/Passive\n" +
                               $"=======================[ {DateTime.UtcNow} ]=======================");
         }
