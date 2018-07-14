@@ -2,6 +2,8 @@
 {
     using System.IO;
 
+    using global::Discord;
+
     /// <summary>
     /// The object used for initializing and using our database
     /// </summary>
@@ -53,6 +55,8 @@
             /// Gets or sets the prefix override.
             /// </summary>
             public string PrefixOverride { get; set; } = null;
+
+            public LogSeverity LogLevel { get; set; } = LogSeverity.Info;
         }
     }
 }

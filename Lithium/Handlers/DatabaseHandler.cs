@@ -19,6 +19,7 @@
     using Raven.Client.ServerWide.Operations;
 
     using Serilog;
+    using Serilog.Events;
 
     /// <summary>
     /// The database handler.
@@ -199,6 +200,7 @@
 
             LogHandler.PrintApplicationInformation(Settings, configModel);
             LogHandler.Log = new LoggerConfiguration()
+                .MinimumLevel.Is(LogHandler.GetEventLevel(Settings.Local.LogLevel))
                 .WriteTo
                 .Console()
                 .WriteTo

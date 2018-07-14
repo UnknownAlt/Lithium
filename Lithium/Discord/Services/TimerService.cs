@@ -27,7 +27,7 @@
 
             _timer = new Timer(_ =>
                 {
-                    LogHandler.LogMessage("TimerService Run");
+                    LogHandler.LogMessage("TimerService Run", LogSeverity.Debug);
                     try
                     {
                         foreach (var guild in client.Guilds)

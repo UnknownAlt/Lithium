@@ -25,11 +25,6 @@ namespace Lithium
     public class Program
     {
         /// <summary>
-        /// Gets or sets The client.
-        /// </summary>
-        public static DiscordShardedClient Client { get; set; }
-
-        /// <summary>
         /// Entry point of the program
         /// </summary>
         /// <param name="args">Discarded Args</param>
@@ -63,7 +58,6 @@ namespace Lithium
                     }))
                     .AddSingleton<BotHandler>()
                     .AddSingleton<EventHandler>()
-                    .AddSingleton<EventLogger>()
                     .AddSingleton<TimerService>()
                     .AddSingleton<InteractiveService>()
                     .AddSingleton(new Random(Guid.NewGuid().GetHashCode()));
@@ -83,13 +77,14 @@ namespace Lithium
             {
                 MessageCacheSize = 20,
                 AlwaysDownloadUsers = true,
-                LogLevel = dbConfig.Local.Developing ? LogSeverity.Debug : LogSeverity.Warning,
+                LogLevel = dbConfig.Local.LogLevel,
 
                 // Please change increase this as your server count grows beyond 2000 guilds. ie. < 2000 = 1, 2000 = 2, 4000 = 2 ...
                 TotalShards = config.Shards
             }))
             .AddSingleton<AutoModerator>()
-            .AddSingleton(new Perspective.Api(config.ToxicityToken));
+            .AddSingleton(new Perspective.Api(config.ToxicityToken))
+            .AddSingleton<EventLogger>();
 
             // Build the service provider a second time so that the ShardedClient is now included.
             provider = services.BuildServiceProvider();
