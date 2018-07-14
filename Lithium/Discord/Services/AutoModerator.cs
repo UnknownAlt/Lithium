@@ -15,14 +15,13 @@
 
     public class AutoModerator
     {
-        public List<Delays> AntiSpamMsgDelays { get; set; } = new List<Delays>();
+        public Dictionary<ulong, List<NoSpam>> NoSpamList { get; set; } = new Dictionary<ulong, List<NoSpam>>();
+
 
         public AutoModerator(Perspective.Api _toxicityAPI)
         {
             ToxicityAPI = _toxicityAPI;
         }
-
-        public Dictionary<ulong, List<NoSpam>> NoSpamList { get; set; } = new Dictionary<ulong, List<NoSpam>>();
 
         private Perspective.Api ToxicityAPI { get; }
 
@@ -185,63 +184,58 @@
                     user.Messages.Add(new NoSpam.Msg { LastMessage = context.Message.Content, LastMessageDate = DateTime.UtcNow });
                     if (user.Messages.Count >= 2)
                     {
-                        // TODO Try to change the timespan.fromseconds into something more guild specific
-                        var messages = user.Messages.Where(x => x.LastMessageDate > DateTime.UtcNow - TimeSpan.FromSeconds(60)).ToList();
+                        var messages = user.Messages.Where(x => x.LastMessageDate > DateTime.UtcNow - context.Server.AntiSpam.AntiSpam.RateLimiting.BlockPeriod).ToList();
 
                         // Here we detect spam based on whether or not a user is sending the same message repeatedly
-                        // Or whether they have sent a message more than 3 times in the last 5 seconds
-                        if (messages.GroupBy(n => n.LastMessage.ToLower()).Any(c => c.Count() > 1) || messages.Count(x => x.LastMessageDate > DateTime.UtcNow - context.Server.AntiSpam.AntiSpam.RateLimiting.TimePeriod) > context.Server.AntiSpam.AntiSpam.RateLimiting.MessageCount)
+                        if (messages.GroupBy(n => n.LastMessage.ToLower()).Any(c => c.Count() > 2)
+
+                            // Count the amount of messages in the no-spam period and compare to the anti spam message limit
+                            || messages.Count(x => x.LastMessageDate > DateTime.UtcNow - context.Server.AntiSpam.AntiSpam.RateLimiting.TimePeriod) > context.Server.AntiSpam.AntiSpam.RateLimiting.MessageCount)
                         {
                             detected = true;
                         }
                     }
 
-                    if (user.Messages.Count > context.Server.AntiSpam.AntiSpam.RateLimiting.MessageCount)
+                    if (user.Messages.Count > context.Server.AntiSpam.AntiSpam.RateLimiting.MessageCount + 5)
                     {
-                        // Filter out messages so that we only keep a log of the most recent ones within the last 30 seconds.
-                        var messages = user.Messages.OrderBy(x => x.LastMessageDate).ToList();
-                        messages.RemoveRange(0, 1);
-                        messages = messages.Where(x => x.LastMessageDate <= DateTime.UtcNow - TimeSpan.FromSeconds(30)).ToList();
-                        user.Messages = messages;
+                        // Filter out messages so that we only keep a log of the most recent messages
+                        user.Messages = user.Messages.Where(x => x.LastMessageDate <= DateTime.UtcNow - TimeSpan.FromMinutes(2)).ToList();
                     }
 
                     if (detected)
                     {
+                        if (DateTime.UtcNow < user.RateLimitUntil)
+                        {
+                            LogHandler.LogMessage("Deleted Message (BlockPeriod)", LogSeverity.Debug);
+                            await context.Message?.DeleteAsync();
+                            return true;
+                        }
+
                         if (!context.Server.AntiSpam.AntiSpam.WhiteList.Any(x => context.Message.Content.ToLower().Contains(x.ToLower())))
                         {
                             await context.Message?.DeleteAsync();
-                            var delay = AntiSpamMsgDelays.FirstOrDefault(x => x.GuildID == context.Server.ID);
-                            if (delay != null)
-                            {
-                                if (delay._delay > DateTime.UtcNow)
-                                {
-                                    return true;
-                                }
 
-                                delay._delay = DateTime.UtcNow.AddSeconds(10);
-                                var emb = new EmbedBuilder { Description = $"{context.User} - No Spamming!!" };
-                                await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
-                                if (context.Server.AntiSpam.AntiSpam.WarnOnDetection)
-                                {
-                                    await context.Server.ModActionAsync(
-                                        context.User.CastToSocketGuildUser(),
-                                        context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
-                                        context.Channel.CastToSocketTextChannel(),
-                                        null,
-                                        GuildModel.Moderation.ModEvent.AutoReason.messageSpam,
-                                        GuildModel.Moderation.ModEvent.EventType.Warn,
-                                        new GuildModel.Moderation.ModEvent.Trigger
-                                            {
-                                                Message = context.Message.Content,
-                                                ChannelId = context.Channel.Id
-                                            },
-                                        null,
-                        GuildModel.AdditionalDetails.Default());
-                                }
-                            }
-                            else
+                            LogHandler.LogMessage("Deleted Message and Updated Block period", LogSeverity.Debug);
+                            user.RateLimitUntil = DateTime.UtcNow + context.Server.AntiSpam.AntiSpam.RateLimiting.BlockPeriod;
+
+                            var emb = new EmbedBuilder { Description = $"{context.User} - No Spamming!!" };
+                            await context.Channel.SendMessageAsync(string.Empty, false, emb.Build());
+                            if (context.Server.AntiSpam.AntiSpam.WarnOnDetection)
                             {
-                                AntiSpamMsgDelays.Add(new Delays { _delay = DateTime.UtcNow.AddSeconds(10), GuildID = context.Server.ID });
+                                await context.Server.ModActionAsync(
+                                    context.User.CastToSocketGuildUser(),
+                                    context.Guild.GetUser(context.Client.CurrentUser.Id) ?? throw new NullReferenceException(),
+                                    context.Channel.CastToSocketTextChannel(),
+                                    null,
+                                    GuildModel.Moderation.ModEvent.AutoReason.messageSpam,
+                                    GuildModel.Moderation.ModEvent.EventType.Warn,
+                                    new GuildModel.Moderation.ModEvent.Trigger
+                                        {
+                                            Message = context.Message.Content,
+                                            ChannelId = context.Channel.Id
+                                        },
+                                    null,
+                                    GuildModel.AdditionalDetails.Default());
                             }
 
                             return true;
@@ -431,6 +425,8 @@
             public List<Msg> Messages { get; set; } = new List<Msg>();
 
             public ulong UserID { get; set; }
+
+            public DateTime RateLimitUntil { get; set; } = DateTime.MinValue;
 
             public class Msg
             {

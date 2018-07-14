@@ -164,12 +164,11 @@ namespace Lithium.Modules
         [Command("ignore")]
         [Summary("ignore <selection> <@role>")]
         [Remarks("choose a role to ignore when using AntiSpam commands")]
-        public async Task IgnoreRoleAsync(string selection, IRole role = null)
+        public Task IgnoreRoleAsync(string selection, IRole role = null)
         {
             if (role == null)
             {
-                await IgnoreRoleAsync();
-                return;
+                return IgnoreRoleAsync();
             }
 
             var split = selection.Split(',');
@@ -186,19 +185,22 @@ namespace Lithium.Modules
                 if (i == 0)
                 {
                     Context.Server.AntiSpam.IgnoreList.Remove(role.Id);
-                    await SimpleEmbedAsync("Success, Role has been removed form the ignore list");
                     Context.Server.Save();
-                    return;
+                    return SimpleEmbedAsync("Success, Role has been removed form the ignore list");
                 }
+            }
+            else
+            {
+                return SimpleEmbedAsync("Input Error!");
+            }
 
-                foreach (var s in split)
+            foreach (var s in split)
                 {
                     if (int.TryParse(s, out var i1))
                     {
                         if (i1 < 1 || i1 > 6)
                         {
-                            await SimpleEmbedAsync($"Invalid Input {s}\n" + "only 1-6 are accepted.");
-                            return;
+                            return SimpleEmbedAsync($"Invalid Input {s}\n" + "only 1-6 are accepted.");
                         }
 
                         switch (i1)
@@ -225,23 +227,9 @@ namespace Lithium.Modules
                     }
                     else
                     {
-                        await SimpleEmbedAsync($"Invalid Input {s}");
-                        return;
+                        return SimpleEmbedAsync($"Invalid Input {s}");
                     }
                 }
-
-                var embed = new EmbedBuilder
-                {
-                    Description = $"{role.Mention}\n" +
-                                  "__Ignore AntiSpam Detections__\n" +
-                                  $"Bypass AntiSpam: {ignore.AntiSpam}\n" +
-                                  $"Bypass Blacklist: {ignore.Blacklist}\n" +
-                                  $"Bypass Mention Everyone and 5+ Role Mentions: {ignore.Mention}\n" +
-                                  $"Bypass Invite Link Removal: {ignore.Advertising}\n" +
-                                  $"Bypass IP Removal: {ignore.Privacy}\n" +
-                                  $"Bypass Toxicity Check: {ignore.Toxicity}"
-                };
-                await ReplyAsync(embed.Build());
 
                 if (addRole)
                 {
@@ -249,11 +237,13 @@ namespace Lithium.Modules
                 }
 
                 Context.Server.Save();
-            }
-            else
-            {
-                await SimpleEmbedAsync("Input Error!");
-            }
+
+                return SimpleEmbedAsync(
+                    $"{role.Mention}\n" + "__Ignore AntiSpam Detections__\n" + $"Bypass AntiSpam: {ignore.AntiSpam}\n"
+                    + $"Bypass Blacklist: {ignore.Blacklist}\n"
+                    + $"Bypass Mention Everyone and 5+ Role Mentions: {ignore.Mention}\n"
+                    + $"Bypass Invite Link Removal: {ignore.Advertising}\n" + $"Bypass IP Removal: {ignore.Privacy}\n"
+                    + $"Bypass Toxicity Check: {ignore.Toxicity}");
         }
 
         [Command("ignore")]

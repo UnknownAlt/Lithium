@@ -1,5 +1,7 @@
 ﻿namespace Lithium.Models
 {
+    using global::Discord;
+
     /// <summary>
     /// The config model.
     /// </summary>
