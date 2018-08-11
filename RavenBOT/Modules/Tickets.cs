@@ -57,8 +57,8 @@
         public Task AddTicketAsync([Remainder]string message)
         {
             var tickets = ticketService.GetTickets(Context.Guild);
-            tickets.AddTicket(message, Context.User.CastToSocketGuildUser(), Context.Guild);
-            return SimpleEmbedAsync("Success, added ticket");
+            var id = tickets.AddTicket(message, Context.User.CastToSocketGuildUser(), Context.Guild);
+            return SimpleEmbedAsync($"Success, added ticket [#{id}]");
         }
 
         [Command("AddComment")]

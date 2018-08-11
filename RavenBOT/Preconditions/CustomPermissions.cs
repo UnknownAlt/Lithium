@@ -90,6 +90,8 @@
             }
             else if (defaultPermissionLevel == DefaultPermissionLevel.BotOwner)
             {
+                // This could possibly be overridden? 
+                // In the case that someone sets a 'bot owner only' command to a lower permission level?
                 if (context.Client.GetApplicationInfoAsync().Result.Owner.Id == context.User.Id)
                 {
                     return Task.FromResult(PreconditionResult.FromSuccess());

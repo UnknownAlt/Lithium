@@ -73,7 +73,10 @@
             /// <exception cref="Exception">
             /// If the ticket channel is unavailable
             /// </exception>
-            public void AddTicket(string message, IGuildUser creator, IGuild guild)
+            /// <returns>
+            /// The ticket ID
+            /// </returns>
+            public int AddTicket(string message, IGuildUser creator, IGuild guild)
             {
                 var ticket = new Ticket()
                 {
@@ -99,6 +102,7 @@
                 Tickets.Add(TicketCounter, ticket);
 
                 Save();
+                return TicketCounter;
             }
 
             /// <summary>
