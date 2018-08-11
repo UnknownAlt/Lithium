@@ -49,6 +49,13 @@ namespace RavenBOT.Modules
         /// </summary>
         private CommandInfo Command { get; set; }
 
+        [Command("Invite")]
+        [Summary("Sends the bot's invite code")]
+        public Task InviteAsync()
+        {
+            return SimpleEmbedAsync($"You can invite the bot using the following link: {Context.Client.GetInvite()}");
+        }
+
         /// <summary>
         /// The help command.
         /// </summary>
