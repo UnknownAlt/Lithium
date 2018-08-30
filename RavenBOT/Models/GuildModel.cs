@@ -170,7 +170,30 @@
                 ModerationSetup.ModActions.Add(modEvent);
                 Save();
 
-                var responseFields = new List<EmbedFieldBuilder> { new EmbedFieldBuilder { Name = $"{user} was {modAction.GetDescription()} [#{modEvent.ActionId}]", Value = $"**Mod:** {moderator.Mention}\n" + $"**Expires:** {(modEvent.ExpiryDate.HasValue ? $"{modEvent.ExpiryDate.Value.ToLongDateString()} {modEvent.ExpiryDate.Value.ToLongTimeString()}\n" : "Never\n")}" + (modEvent.AutoModReason == Moderation.ModEvent.AutoReason.none ? $"**Reason:** {reason ?? "N/A"}\n" : $"**Auto-Reason:** {modEvent.AutoModReason}\n") } };
+                var responseFields = new List<EmbedFieldBuilder> 
+                                         { 
+                                             new EmbedFieldBuilder 
+                                                 { 
+                                                         Name = 
+                                                             $"{user} was {modAction.GetDescription()} [#{modEvent.ActionId}]", 
+                                                         Value = 
+                                                             $"**Mod:** {moderator.Mention}\n" + 
+                                                             $"**Expires:** {(modEvent.ExpiryDate.HasValue ? $"{modEvent.ExpiryDate.Value.ToLongDateString()} {modEvent.ExpiryDate.Value.ToLongTimeString()}\n" : "Never\n")}" + 
+                                                             (modEvent.AutoModReason == Moderation.ModEvent.AutoReason.none ? $"**Reason:** {reason ?? "N/A"}\n" : $"**Auto-Reason:** {modEvent.AutoModReason}\n")
+                                                 }
+                                         };
+
+                // Add all additional details that will be shown in regular chat
+                if (modAction == Moderation.ModEvent.EventType.Warn)
+                {
+                    additionalDetails.Details.Add(new AdditionalDetails.Detail
+                                                      {
+                                                          // Must increment the warns by 1 as the current one has not been added yet
+                                                          Content = $"{ModerationSetup.ModActions.Count(x => x.Action == Moderation.ModEvent.EventType.Warn && x.UserId == user.Id && x.ExpiredOrRemoved == false) + 1}",
+                                                          Title = "Total User Warns",
+                                                          ShowInRegularChat = true
+                                                      });
+                }
 
                 responseFields.AddRange(additionalDetails.Details.Where(d => d.ShowInRegularChat).Select(f => new EmbedFieldBuilder { Name = f.Title, Value = f.Content }));
 
@@ -218,6 +241,7 @@
                     embed.AddField("FATAL ERROR", "Unable to perform mod action for user");
                 }
 
+                // Add all hidden additional details
                 embed.Fields.AddRange(additionalDetails.Details.Where(d => !d.ShowInRegularChat).Select(f => new EmbedFieldBuilder { Name = f.Title, Value = f.Content }));
 
                 await ModLogAsync(user.Guild, embed);
@@ -288,11 +312,16 @@
                     Save();
                 }
 
+                var overwritePermissions = new OverwritePermissions(sendMessages: PermValue.Deny, addReactions: PermValue.Deny, attachFiles: PermValue.Deny, connect: PermValue.Deny, speak: PermValue.Deny, mentionEveryone: PermValue.Deny);
+
                 foreach (var guildChannel in user.Guild.Channels)
                 {
                     try
                     {
-                        var _ = Task.Run(() => guildChannel.AddPermissionOverwriteAsync(muteRole, new OverwritePermissions(sendMessages: PermValue.Deny, addReactions: PermValue.Deny, attachFiles: PermValue.Deny, connect: PermValue.Deny, speak: PermValue.Deny, mentionEveryone: PermValue.Deny)));
+                        if (!guildChannel.PermissionOverwrites.Any(x => x.TargetId == muteRole.Id && x.Permissions.AllowValue == overwritePermissions.AllowValue && x.Permissions.DenyValue == overwritePermissions.DenyValue))
+                        {
+                            var _ = Task.Run(() => guildChannel.AddPermissionOverwriteAsync(muteRole, overwritePermissions));
+                        }
                     }
                     catch (Exception e)
                     {

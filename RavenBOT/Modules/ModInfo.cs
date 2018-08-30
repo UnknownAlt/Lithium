@@ -11,8 +11,10 @@
     using Discord.WebSocket;
 
     using RavenBOT.Core.Bot.Context;
+    using RavenBOT.Core.Bot.Handlers;
     using RavenBOT.Extensions;
     using RavenBOT.Models;
+    using RavenBOT.Modules.Extras;
     using RavenBOT.Preconditions;
 
     [CustomPermissions(DefaultPermissionLevel.Administrators)]
@@ -69,55 +71,64 @@
 
         public async Task GetModActionsAsync(GuildService.GuildModel.Moderation.ModEvent.EventType? type, ulong? userID = null, bool showExpired = false)
         {
-            var g = await Context.DBService.LoadAsync<GuildService.GuildModel>($"{Context.Guild.Id}");
-            IEnumerable<GuildService.GuildModel.Moderation.ModEvent> modEvents = g.ModerationSetup.ModActions;
+            try
+            {
+                var g = await Context.DBService.LoadAsync<GuildService.GuildModel>($"{Context.Guild.Id}");
+                IEnumerable<GuildService.GuildModel.Moderation.ModEvent> modEvents = g.ModerationSetup.ModActions;
 
-            if (!showExpired)
-            {
-                modEvents = modEvents.Where(m => !m.ExpiredOrRemoved).OrderByDescending(m => m.TimeStamp);
-            }
+                if (!showExpired)
+                {
+                    modEvents = modEvents.Where(m => !m.ExpiredOrRemoved).OrderByDescending(m => m.TimeStamp);
+                }
 
-            if (type != null && userID == null)
-            {
-                // Show the given mod action for ALL users
-                modEvents = modEvents.Where(x => x.Action == type);
-            }
-            else if (type == null && userID == null)
-            {
-                // Show ALL Mod actions for ALL users
-                // modEvents = modEvents.ToList();
-                // Do nothing here as we are only using the default list
-            }
-            else
-            {
-                modEvents = type == null
-                                ? modEvents.Where(x => x.UserId == userID)
-                                : modEvents.Where(x => x.UserId == userID && x.Action == type);
-            }
-            
-            var pages = new List<PaginatedMessage.Page>();
-            var enumerable = modEvents.ToList();
+                if (type != null && userID == null)
+                {
+                    // Show the given mod action for ALL users
+                    modEvents = modEvents.Where(x => x.Action == type);
+                }
+                else if (type == null && userID == null)
+                {
+                    // Show ALL Mod actions for ALL users
+                    // modEvents = modEvents.ToList();
+                    // Do nothing here as we are only using the default list
+                }
+                else
+                {
+                    modEvents = type == null
+                                    ? modEvents.Where(x => x.UserId == userID)
+                                    : modEvents.Where(x => x.UserId == userID && x.Action == type);
+                }
 
-            if (enumerable.Count == 0)
-            {
-                await SimpleEmbedAsync("There are no actions that apply to your specifications");
-                return;
-            }
+                var pages = new List<PaginatedMessage.Page>();
+                var enumerable = modEvents.ToList();
 
-            foreach (var modGroup in enumerable.ToList().SplitList(5))
-            {
-                pages.Add(new PaginatedMessage.Page
-                              {
-                                  Fields = modGroup.Select(m => m.GetLongField(Context.Guild)).ToList()
-                              });
-            }
+                if (enumerable.Count == 0)
+                {
+                    await SimpleEmbedAsync("There are no actions that apply to your specifications");
+                    return;
+                }
 
-            await PagedReplyAsync(new PaginatedMessage
-                                       {
-                                           Pages = pages, 
-                                           Color = Color.DarkRed,
-                                           Title = userID.HasValue ? $"{Context.Guild.GetUser(userID.Value)}{(type == null ? null : $" {type}")} {enumerable.Count} Actions" : null
-                                       }, new ReactionList { Forward = true, Backward = true, Trash = true });
+                foreach (var modGroup in enumerable.ToList().SplitList(5))
+                {
+                    pages.Add(new PaginatedMessage.Page
+                    {
+                        Fields = modGroup.Select(m => m.GetLongField(Context.Guild)).ToList()
+                    });
+                }
+
+                await PagedReplyAsync(new PaginatedMessage
+                {
+                    Pages = pages,
+                    Color = Color.DarkRed,
+                    Title = userID.HasValue ? $"{Context.Guild.GetUser(userID.Value)}{(type == null ? null : $" {type}")} {enumerable.Count} Actions" : null
+                }, new ReactionList { Forward = true, Backward = true, Trash = true });
+
+            }
+            catch (Exception e)
+            {
+                LogHandler.LogMessage(e.ToString(), LogSeverity.Error);
+                await SimpleEmbedAsync($"Error loading, please message the bot owner with the following: {Haste.HasteBinAsync(e.ToString())}");
+            }
         }
     }
 }
