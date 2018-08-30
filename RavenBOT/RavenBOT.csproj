@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <Folder Include="Core\Bot\Handlers\Timer\" />
+    <Folder Include="Modules\NewFolder\" />
   </ItemGroup>
 
 </Project>

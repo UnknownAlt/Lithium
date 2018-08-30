@@ -100,9 +100,10 @@
                 var msg = channel.SendMessageAsync("", false, GenerateTicketEmbed(ticket).Build());
                 ticket.LiveMessageId = msg.Result.Id;
                 Tickets.Add(TicketCounter, ticket);
-
                 Save();
-                return TicketCounter;
+                
+                // Remember ticket counter gives the amount of tickets, not the index, so remove 1 from the returned value
+                return TicketCounter - 1;
             }
 
             /// <summary>
