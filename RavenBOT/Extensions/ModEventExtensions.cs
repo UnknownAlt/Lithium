@@ -46,13 +46,13 @@
             return new EmbedFieldBuilder
                        {
                            Name =
-                               $"{guild.GetUser(modEvent.UserId)?.ToString() ?? $"{modEvent.UserName} [{modEvent.UserId}]"} was {modEvent.Action.GetDescription()} [#{modEvent.ActionId}] {(modEvent.ExpiredOrRemoved ? "Expired" : null)}",
+                               $"{guild.GetUser(modEvent.UserId).ToString() ?? $"{modEvent.UserName} [{modEvent.UserId}]"} was {modEvent.Action.GetDescription()} [#{modEvent.ActionId}] {(modEvent.ExpiredOrRemoved ? "Expired" : null)}",
                            Value = $"**Mod:** {guild.GetUser(modEvent.ModId)?.Mention ?? $"{modEvent.ModName} [{modEvent.ModId}]"}\n"
                                    + $"**Expires:** {(modEvent.ExpiryDate.HasValue ? $"{modEvent.ExpiryDate.Value.ToLongDateString()} {modEvent.ExpiryDate.Value.ToLongTimeString()}\n" : "Never\n")}"
                                    + (modEvent.AutoModReason
                                       == GuildService.GuildModel.Moderation.ModEvent.AutoReason.none
-                                          ? $"**Reason:** {modEvent.ProvidedReason?.FixLength(256) ?? "N/A"}\n"
-                                          : $"**Auto-Reason:** {modEvent.AutoModReason}\n**Trigger: ({guild.GetTextChannel(modEvent.ReasonTrigger?.ChannelId ?? 0)?.Mention ?? "0"})**\n{modEvent.ReasonTrigger?.Message?.FixLength(256) ?? "N/A"}\n")
+                                          ? $"**Reason:** {modEvent.ProvidedReason ?? "N/A"}\n"
+                                          : $"**Auto-Reason:** {modEvent.AutoModReason}\n**Trigger: ({guild.GetTextChannel(modEvent.ReasonTrigger?.ChannelId ?? 0)?.Mention ?? "0"})**\n{modEvent.ReasonTrigger?.Message ?? "N/A"}\n")
                                    .FixLength()
                        };
         }
