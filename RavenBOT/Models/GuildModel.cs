@@ -177,7 +177,8 @@
                                                          Name = 
                                                              $"{user} was {modAction.GetDescription()} [#{modEvent.ActionId}]", 
                                                          Value = 
-                                                             $"**Mod:** {moderator.Mention}\n" + 
+                                                             $"**Mod:** {moderator.Mention} [{moderator.Id}]\n" + 
+                                                             $"**User:** {user.Mention} [{user.Id}]\n" + 
                                                              $"**Expires:** {(modEvent.ExpiryDate.HasValue ? $"{modEvent.ExpiryDate.Value.ToLongDateString()} {modEvent.ExpiryDate.Value.ToLongTimeString()}\n" : "Never\n")}" + 
                                                              (modEvent.AutoModReason == Moderation.ModEvent.AutoReason.none ? $"**Reason:** {reason ?? "N/A"}\n" : $"**Auto-Reason:** {modEvent.AutoModReason}\n")
                                                  }
